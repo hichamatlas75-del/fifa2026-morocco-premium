@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "calendar": "المباريات",
+    "live": "مباشر",
+    "teams": "المنتخبات",
+    "morocco": "🇲🇦 المغرب برو",
+    "standings": "الترتيب",
+    "analytics": "تحليلات",
+    "stadiums": "الملاعب"
+  },
+  "hero": {
+    "tagline": "يونايتد 2026 — نسخة المغرب",
+    "title": "كأس العالم",
+    "subtitle": "فيفا 2026",
+    "countdown": {
+      "days": "يوم",
+      "hours": "ساعة",
+      "minutes": "دقيقة",
+      "seconds": "ثانية"
+    }
+  }
+}

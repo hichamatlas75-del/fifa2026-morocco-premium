@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "home": "Home",
+    "calendar": "Calendar",
+    "live": "Live Scores",
+    "teams": "Teams",
+    "morocco": "🇲🇦 Morocco Pro",
+    "standings": "Standings",
+    "analytics": "Analytics",
+    "stadiums": "Stadiums"
+  },
+  "hero": {
+    "tagline": "UNITED 2026 — MOROCCO EDITION",
+    "title": "FIFA World Cup",
+    "subtitle": "2026",
+    "countdown": {
+      "days": "Days",
+      "hours": "Hours",
+      "minutes": "Mins",
+      "seconds": "Secs"
+    }
+  }
+}

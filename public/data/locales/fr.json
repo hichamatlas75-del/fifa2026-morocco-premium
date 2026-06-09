@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "calendar": "Calendrier",
+    "live": "Directs",
+    "teams": "Équipes",
+    "morocco": "🇲🇦 Maroc Pro",
+    "standings": "Classements",
+    "analytics": "Analyses",
+    "stadiums": "Stades"
+  },
+  "hero": {
+    "tagline": "UNITED 2026 — ÉDITION MAROC",
+    "title": "Coupe du Monde",
+    "subtitle": "FIFA 2026",
+    "countdown": {
+      "days": "Jours",
+      "hours": "Heures",
+      "minutes": "Min",
+      "seconds": "Sec"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "short_name": "FIFA2026.MA",
+  "name": "FIFA World Cup 2026 Morocco Premium Platform",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5323/5323977.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0B0B0B",
+  "theme_color": "#C1272D",
+  "display": "standalone",
+  "orientation": "portrait"
+}
