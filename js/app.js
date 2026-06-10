@@ -503,9 +503,23 @@ class WorldCupApp {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(registrations => {
                 for (let registration of registrations) {
-                    registration.unregister();
+                    registration.unregister().then(success => {
+                        if (success) console.log('SW: Désenregistré avec succès.');
+                    });
                 }
             }).catch(err => console.warn('SW error:', err));
+        }
+
+        // Vider activement le cache storage pour forcer le rechargement des nouveaux scripts
+        if ('caches' in window) {
+            caches.keys().then(keys => {
+                return Promise.all(keys.map(key => {
+                    console.log('SW: Suppression du cache:', key);
+                    return caches.delete(key);
+                }));
+            }).then(() => {
+                console.log('SW: Caches nettoyés.');
+            }).catch(err => console.warn('SW cache clear error:', err));
         }
     }
 

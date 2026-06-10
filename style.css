@@ -18,6 +18,9 @@
     /* Semantic modal and theme variables */
     --modal-bg: rgba(15, 15, 15, 0.96);
     --modal-text: #FFFFFF;
+    --text-main: #FFFFFF;
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --border-color: rgba(255, 255, 255, 0.07);
 
     /* Styling Tokens */
     --glass-bg: rgba(11, 11, 11, 0.65);
@@ -40,6 +43,9 @@ body.theme-light {
 
     --modal-bg: rgba(255, 255, 255, 0.98);
     --modal-text: #0B0B0B;
+    --text-main: #0B0B0B;
+    --text-muted: rgba(11, 11, 11, 0.7);
+    --border-color: rgba(0, 0, 0, 0.08);
 
     --glass-bg: rgba(255, 255, 255, 0.75);
     --glass-border: rgba(0, 0, 0, 0.08);
