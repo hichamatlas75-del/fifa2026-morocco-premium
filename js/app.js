@@ -518,10 +518,12 @@ class WorldCupApp {
     }
 
     setupMatchDetailsListener() {
+        console.log("⚽ [App] Enregistrement de l'écouteur de clic sur les cartes de match...");
         // Écouter les clics sur les cartes de match via délégation d'événements
         document.addEventListener('click', (e) => {
             const card = e.target.closest('.match-card');
             if (card) {
+                console.log("⚽ [App] Carte cliquée :", card.id);
                 const matchId = parseInt(card.id.replace('match-', ''), 10);
                 this.openMatchDetails(matchId);
             }
@@ -529,26 +531,34 @@ class WorldCupApp {
     }
 
     openMatchDetails(matchId) {
-        if (!this.data) return;
+        console.log("⚽ [App] Ouverture des détails du match ID :", matchId);
+        if (!this.data) {
+            console.error("⚽ [App] Données de match non disponibles");
+            return;
+        }
         const match = this.data.matches.find(m => m.id === matchId);
-        if (!match) return;
+        if (!match) {
+            console.error("⚽ [App] Match non trouvé dans la liste pour l'ID :", matchId);
+            return;
+        }
 
         // Récupérer l'historique H2H
         const h2h = getH2HData(match.homeTeam, match.awayTeam);
+        console.log("⚽ [App] Confrontations H2H récupérées :", h2h);
 
         // Créer l'élément de modal s'il n'existe pas
         let modal = document.getElementById('match-details-modal');
         if (!modal) {
             modal = document.createElement('div');
             modal.id = 'match-details-modal';
-            modal.className = 'match-details-modal';
+            modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 3000; display: none; align-items: center; justify-content: center; padding: 1rem;";
             document.body.appendChild(modal);
         }
 
         // Remplir le contenu du modal avec une structure premium et responsive
         modal.innerHTML = `
-            <div class="modal-backdrop"></div>
-            <div class="modal-content premium-card">
+            <div class="modal-backdrop" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);"></div>
+            <div class="modal-content premium-card" style="position: relative; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; background: rgba(15, 15, 15, 0.95); border: 1px solid rgba(255, 215, 0, 0.2); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.05); z-index: 3010; padding: 2.5rem; border-radius: 16px;">
                 <button class="modal-close-btn" id="close-match-modal" aria-label="Fermer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -643,6 +653,7 @@ class WorldCupApp {
         const backdrop = modal.querySelector('.modal-backdrop');
         
         const closeModal = () => {
+            console.log("⚽ [App] Fermeture du modal");
             modal.style.display = 'none';
             document.body.style.overflow = '';
         };
