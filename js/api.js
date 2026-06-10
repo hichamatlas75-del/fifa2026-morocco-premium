@@ -398,29 +398,47 @@ function getStaticMatches() {
 }
 
 export function getH2HData(home, away) {
-  const key = [home, away].sort().join(" vs ");
+  const normalize = (name) => {
+    const n = (name || '').toLowerCase().trim();
+    if (n.includes("brés") || n.includes("brazil") || n.includes("bra")) return "brazil";
+    if (n.includes("maroc") || n.includes("moroc") || n.includes("mar") || n.includes("mor")) return "morocco";
+    if (n.includes("mexic") || n.includes("mex")) return "mexico";
+    if (n.includes("afrique du sud") || n.includes("south africa") || n.includes("rsa")) return "southafrica";
+    if (n.includes("écosse") || n.includes("scotland") || n.includes("sco")) return "scotland";
+    if (n.includes("états-unis") || n.includes("usa") || n.includes("united states") || n.includes("us")) return "usa";
+    if (n.includes("paraguay") || n.includes("par")) return "paraguay";
+    if (n.includes("corée") || n.includes("korea") || n.includes("kor")) return "korea";
+    if (n.includes("tchèque") || n.includes("czech") || n.includes("cze")) return "czech";
+    if (n.includes("haït") || n.includes("haiti") || n.includes("hai") || n.includes("hti")) return "haiti";
+    return n.replace(/\s+/g, "");
+  };
+
+  const normHome = normalize(home);
+  const normAway = normalize(away);
+  const key = [normHome, normAway].sort().join(" vs ");
+
   const h2hDatabase = {
-    "Brésil vs Maroc": [
+    "brazil vs morocco": [
       { date: "25 Mars 2023", comp: "Match Amical", score: "Maroc 2 - 1 Brésil", details: "Victoire historique des Lions de l'Atlas à Tanger (Boufal 29', Sabiri 79' / Casemiro 67')" },
       { date: "16 Juin 1998", comp: "Coupe du Monde 1998", score: "Brésil 3 - 0 Maroc", details: "Phase de groupes à Nantes (Ronaldo 9', Rivaldo 45', Bebeto 50')" }
     ],
-    "Afrique du Sud vs Mexique": [
+    "mexico vs southafrica": [
       { date: "11 Juin 2010", comp: "Coupe du Monde 2010", score: "Afrique du Sud 1 - 1 Mexique", details: "Match d'ouverture historique à Johannesburg (Tshabalala 55' / Márquez 79')" },
       { date: "08 Juillet 2005", comp: "Gold Cup 2005", score: "Mexique 1 - 2 Afrique du Sud", details: "Phase de groupes (Rodriguez 40' / Evans 28', Sibaya 41' pen)" }
     ],
-    "Écosse vs Maroc": [
+    "morocco vs scotland": [
       { date: "23 Juin 1998", comp: "Coupe du Monde 1998", score: "Écosse 0 - 3 Maroc", details: "Phase de groupes à Saint-Étienne. Doublé légendaire de Salaheddine Bassir (22', 85') et but d'Abdeljalil Hadda (46')" },
       { date: "18 Décembre 1996", comp: "Match Amical", score: "Maroc 1 - 1 Écosse", details: "Match de préparation à Casablanca" }
     ],
-    "Paraguay vs États-Unis": [
+    "paraguay vs usa": [
       { date: "11 Juin 2016", comp: "Copa América Centenario", score: "États-Unis 1 - 0 Paraguay", details: "But décisif de Clint Dempsey à Philadelphie" },
       { date: "29 Mars 2011", comp: "Match Amical", score: "États-Unis 0 - 1 Paraguay", details: "Match amical disputé à Nashville" }
     ],
-    "Corée du Sud vs République Tchèque": [
+    "czech vs korea": [
       { date: "05 Juin 2016", comp: "Match Amical", score: "République Tchèque 1 - 2 Corée du Sud", details: "Victoire coréenne à Prague" },
       { date: "15 Août 2001", comp: "Match Amical", score: "République Tchèque 5 - 0 Corée du Sud", details: "Match amical à Drnovice" }
     ],
-    "Haïti vs Maroc": [
+    "haiti vs morocco": [
       { date: "17 Avril 2002", comp: "Match Amical", score: "Maroc 0 - 0 Haïti", details: "Rencontre amicale disputée à Rabat" }
     ]
   };
