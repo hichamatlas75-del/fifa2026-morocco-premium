@@ -14,7 +14,7 @@ import {
 class WorldCupApp {
     constructor() {
         this.socketUrl = 'wss://api.football-data-premium.com/live';
-        this.currentLang = localStorage.getItem('lang') || 'fr';
+        this.currentLang = 'fr';
         this.data = null;
         this.map = null;
         this.chart = null;
@@ -30,9 +30,8 @@ class WorldCupApp {
         // Configuration PWA
         this.registerServiceWorker();
 
-        // Gestion du thème & Multilingue
+        // Gestion du thème
         this.setupThemeToggle();
-        this.setupLanguageSelector();
         this.setupMobileMenu();
         await this.loadTranslations();
 
@@ -291,18 +290,7 @@ class WorldCupApp {
         });
     }
 
-    setupLanguageSelector() {
-        const select = document.getElementById('lang-select');
-        if (!select) return;
-
-        select.value = this.currentLang;
-
-        select.addEventListener('change', async (e) => {
-            this.currentLang = e.target.value;
-            localStorage.setItem('lang', this.currentLang);
-            await this.loadTranslations();
-        });
-    }
+    // Langue configurée uniquement en Français (FR)
 
     async loadTranslations() {
         try {
