@@ -49,7 +49,7 @@ export async function initApi() {
     }
 
     // Mapper les matchs de la Coupe du Monde 2026 de l'API
-    const matches = rawData.matches.map(m => {
+    const matches = (rawData.matches || []).map(m => {
       const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
       const isFinished = m.status === 'FINISHED';
       
@@ -75,8 +75,8 @@ export async function initApi() {
         awayTla: m.awayTeam.tla || "UN",
         homeFlag: m.homeTeam.crest ? `<img src="${m.homeTeam.crest}" class="flag-icon" alt="${m.homeTeam.tla}">` : getFlag(m.homeTeam.tla),
         awayFlag: m.awayTeam.crest ? `<img src="${m.awayTeam.crest}" class="flag-icon" alt="${m.awayTeam.tla}">` : getFlag(m.awayTeam.tla),
-        homeScore: m.score.fullTime.home ?? 0,
-        awayScore: m.score.fullTime.away ?? 0,
+        homeScore: m.score?.fullTime?.home ?? 0,
+        awayScore: m.score?.fullTime?.away ?? 0,
         status: isLive ? 'LIVE' : isFinished ? 'FINISHED' : 'SCHEDULED',
         time: isLive ? "Direct" : timeStr,
         date: dateStr,
@@ -110,7 +110,7 @@ export async function initApi() {
       news: getStaticNews()
     };
   } catch (error) {
-    console.warn("⚠️ Impossible de joindre l'API de production, chargement des données mockées locales :", error);
+    console.warn("⚠️ Impossible de joindre l'API de production, chargement des données de secours :", error);
     return getFallbackData();
   }
 }
@@ -277,8 +277,8 @@ function getFallbackData() {
       awayFlag: getFlag("RSA"),
       homeScore: 0,
       awayScore: 0,
-      status: "LIVE",
-      time: "5'",
+      status: "SCHEDULED",
+      time: "20:00",
       date: "11 Juin 2026",
       group: "Groupe A",
       stadium: "Mexico City Stadium",

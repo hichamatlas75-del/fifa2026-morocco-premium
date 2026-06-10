@@ -518,31 +518,22 @@ class WorldCupApp {
     }
 
     registerServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(registrations => {
-                for (let registration of registrations) {
-                    registration.unregister().then(success => {
-                        if (success) console.log('SW: Désenregistré avec succès.');
-                    });
-                }
-            }).catch(err => console.warn('SW error:', err));
-        }
+        if (!('serviceWorker' in navigator)) return;
 
-        // Vider activement le cache storage pour forcer le rechargement des nouveaux scripts
-        if ('caches' in window) {
-            caches.keys().then(keys => {
-                return Promise.all(keys.map(key => {
-                    console.log('SW: Suppression du cache:', key);
-                    return caches.delete(key);
-                }));
-            }).then(() => {
-                console.log('SW: Caches nettoyés.');
-            }).catch(err => console.warn('SW cache clear error:', err));
-        }
+        window.addEventListener('load', () => {
+            navigator.serviceWorker
+                .register('/service-worker.js')
+                .catch(err => console.warn('SW registration error:', err));
+        });
     }
 
     initMap(stadiums) {
         if (typeof L === 'undefined' || !document.getElementById('map')) return;
+
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+        }
 
         // Centrer sur l'Amérique du Nord (USA, Canada, Mexique)
         this.map = L.map('map', {

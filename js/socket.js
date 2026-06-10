@@ -5,8 +5,6 @@ let lastMatchesState = [];
 export function setupWebSockets(app) {
     console.log("🔌 Initialisation de la connexion temps réel...");
 
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
     // Tenter de faire une première requête pour tester la présence du proxy Cloudflare
     fetch('/api-proxy')
         .then(res => {
@@ -18,14 +16,9 @@ export function setupWebSockets(app) {
             startPolling(app);
         })
         .catch(err => {
-            if (isLocal) {
-                console.warn("⚠️ Proxy inaccessible en local. Activation du mode Simulation.");
-                startSimulation(app);
-            } else {
-                console.error("❌ Erreur de connexion au proxy d'API en production. Pas de simulation active.");
-                // En production, on lance quand même startPolling pour retenter la connexion en arrière-plan régulièrement
-                startPolling(app);
-            }
+            console.warn("⚠️ Proxy inaccessible. Les scores resteront en attente jusqu'au retour de l'API.", err);
+            // Continuer à retenter la connexion en arrière-plan, sans simulation locale.
+            startPolling(app);
         });
 }
 
@@ -47,8 +40,8 @@ function startPolling(app) {
             data.matches.forEach(m => {
                 const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
                 const status = isLive ? 'LIVE' : m.status === 'FINISHED' ? 'FINISHED' : 'SCHEDULED';
-                const homeScore = m.score.fullTime.home ?? 0;
-                const awayScore = m.score.fullTime.away ?? 0;
+                const homeScore = m.score?.fullTime?.home ?? 0;
+                const awayScore = m.score?.fullTime?.away ?? 0;
 
                 // Trouver l'état précédent stocké dans l'app
                 const prevMatch = lastMatchesState.find(x => x.id === m.id);
@@ -93,75 +86,4 @@ function startPolling(app) {
             console.warn("Erreur lors de la mise à jour des scores réels:", e);
         }
     }, 30000);
-}
-
-function startSimulation(app) {
-    let isSimulating = false;
-    if (isSimulating) return;
-    isSimulating = true;
-    console.log('⚡ Simulateur local démarré.');
-
-    let currentMinute = 5;
-    let homeScore = 0;
-    let awayScore = 0;
-
-    setInterval(() => {
-        const match = app.data && app.data.matches ? app.data.matches.find(m => m.id === 1) : null;
-        const homeName = match ? match.homeTeam : 'Mexique';
-        const awayName = match ? match.awayTeam : 'Afrique du Sud';
-
-        if (currentMinute >= 90) {
-            currentMinute = 0;
-            homeScore = 0;
-            awayScore = 0;
-        } else {
-            currentMinute += Math.floor(Math.random() * 6) + 1;
-            if (currentMinute > 90) currentMinute = 90;
-        }
-
-        let event = null;
-        let team = null;
-        let scoreStr = `${homeScore} - ${awayScore}`;
-
-        // 15% de chance de but
-        if (currentMinute > 0 && currentMinute < 90 && Math.random() < 0.15) {
-            event = 'GOAL';
-            if (Math.random() > 0.4) {
-                homeScore++;
-                team = homeName;
-            } else {
-                awayScore++;
-                team = awayName;
-            }
-            scoreStr = `${homeScore} - ${awayScore}`;
-        } else if (Math.random() < 0.25) {
-            event = 'CARD';
-            team = Math.random() > 0.5 ? homeName : awayName;
-        }
-
-        const updateData = {
-            matchId: 1,
-            homeScore: homeScore,
-            awayScore: awayScore,
-            time: currentMinute === 90 ? 'FT' : `${currentMinute}'`,
-            event: event,
-            team: team,
-            score: scoreStr,
-            status: currentMinute === 90 ? 'FINISHED' : 'LIVE'
-        };
-
-        // Appeler la mise à jour sur l'application
-        if (app && typeof app.updateMatchCard === 'function') {
-            app.updateMatchCard(updateData);
-        }
-
-        if (event === 'GOAL') {
-            if (app && typeof app.triggerGoalAnimation === 'function') {
-                app.triggerGoalAnimation(1);
-            }
-            if (app && typeof app.sendPushNotification === 'function') {
-                app.sendPushNotification(`BUT ! ${team} vient de marquer ! Score : ${scoreStr}`);
-            }
-        }
-    }, 12000);
 }
