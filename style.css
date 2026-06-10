@@ -886,3 +886,426 @@ body.theme-light .mobile-drawer {
     box-shadow: 0 15px 35px rgba(255, 215, 0, 0.15);
     border-color: var(--gold-premium);
 }
+
+/* ==========================================
+   STYLES PREMIUM POUR LES OUTILS INTERACTIFS
+   ========================================== */
+
+/* 1. Badge de source de données */
+.data-source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    padding: 0.35rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--white);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.data-source-badge span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.data-source-badge.is-api span {
+    background: #00e676;
+    box-shadow: 0 0 8px #00e676;
+}
+
+.data-source-badge.is-fallback span {
+    background: #ff9100;
+    box-shadow: 0 0 8px #ff9100;
+}
+
+/* 2. Boutons et Matchs Favoris */
+.favorite-match {
+    border: 1.5px solid var(--or-premium) !important;
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1) !important;
+}
+
+.favorite-toggle {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: color 0.3s ease, transform 0.2s ease;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.favorite-toggle:hover {
+    color: var(--or-premium);
+    transform: scale(1.2);
+}
+
+.favorite-toggle.active {
+    color: var(--or-premium);
+    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
+}
+
+/* 3. Centre d'Alertes */
+#alerts-center {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    height: 100%;
+}
+
+.alert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    transition: var(--transition-smooth);
+}
+
+.alert-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 215, 0, 0.15);
+}
+
+.alert-item i {
+    color: var(--or-premium);
+    font-size: 1rem;
+    margin-top: 2px;
+}
+
+/* 4. Comparateur de Forces & Prédicteur */
+.compare-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.compare-controls select {
+    flex: 1;
+    min-width: 0;
+}
+
+.comparison-result {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.comparison-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.comparison-bars > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.comparison-bars strong {
+    color: var(--or-premium);
+    font-size: 1rem;
+    font-family: var(--font-heading);
+}
+
+.bar-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.bar-track span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--green-maroc), var(--or-premium));
+    border-radius: 4px;
+    transition: width 0.5s ease-out;
+}
+
+.bar-track.away span {
+    background: linear-gradient(90deg, #ffdf00, #009c3b);
+}
+
+/* 5. Prochain Match Mini */
+.next-match-mini {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 1rem;
+    padding: 0.8rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+}
+
+.next-match-mini > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.next-match-mini span {
+    font-family: var(--font-heading);
+    color: var(--or-premium);
+    font-weight: 600;
+}
+
+/* 6. Simulateur de Groupes */
+.simulator-panel {
+    width: 100%;
+}
+
+.simulator-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 992px) {
+    .simulator-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+#simulator-matches {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.sim-match {
+    display: grid;
+    grid-template-columns: 1.5fr 50px 50px 1.5fr;
+    align-items: center;
+    gap: 10px;
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+}
+
+.sim-match span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sim-match span:last-child {
+    text-align: right;
+}
+
+.sim-match input {
+    width: 100%;
+    height: 36px;
+    background: rgba(11, 11, 11, 0.6);
+    border: 1px solid var(--glass-border);
+    color: var(--white);
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+}
+
+.sim-match input:focus {
+    border-color: var(--or-premium);
+    outline: none;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+}
+
+.feature-panel {
+    padding: 1.5rem;
+}
+
+.feature-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.feature-toolbar h3 {
+    color: var(--or-premium);
+    margin-bottom: 4px;
+}
+
+.feature-toolbar p {
+    font-size: 0.85rem;
+    opacity: 0.6;
+}
+
+.feature-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.feature-table th {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    opacity: 0.6;
+    padding: 8px;
+    border-bottom: 1px solid var(--glass-border);
+    text-align: left;
+}
+
+.feature-table th:last-child, 
+.feature-table td:last-child {
+    text-align: center;
+}
+
+.feature-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.qualified-row {
+    background: rgba(255, 215, 0, 0.03);
+}
+
+.qualified-row td:first-child {
+    color: var(--or-premium);
+    font-weight: bold;
+}
+
+/* 7. Espace Lions de l'Atlas Dashboard */
+.feature-grid-wide {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.feature-stat-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-stat-card span {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+    margin-bottom: 0.5rem;
+}
+
+.feature-stat-card strong {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+}
+
+.feature-stat-card small {
+    font-size: 0.75rem;
+    opacity: 0.5;
+    line-height: 1.4;
+}
+
+/* 8. Modal Actions & Prediction Strip */
+.modal-actions-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.modal-calendar-btn, 
+.modal-favorite-btn {
+    flex: 1;
+    border-radius: 8px;
+    padding: 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: var(--transition-smooth);
+}
+
+.modal-calendar-btn {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--white);
+    border: 1px solid var(--glass-border);
+}
+
+.modal-calendar-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.modal-favorite-btn {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--or-premium);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.modal-favorite-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: var(--or-premium);
+}
+
+.prediction-strip {
+    background: linear-gradient(135deg, rgba(0, 98, 51, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+    border: 1px solid rgba(0, 98, 51, 0.2);
+    border-radius: 10px;
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.prediction-strip span {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+}
+
+.prediction-strip strong {
+    color: var(--or-premium);
+    font-size: 0.95rem;
+    font-family: var(--font-heading);
+}
+
+.prediction-strip small {
+    background: rgba(255, 255, 255, 0.06);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}

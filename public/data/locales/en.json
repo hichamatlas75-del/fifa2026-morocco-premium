@@ -34,7 +34,10 @@
     "allGroups": "All Groups",
     "allStadiums": "All Stadiums",
     "chrono": "Chronological",
-    "maroc": "Morocco Matches"
+    "maroc": "Morocco Matches",
+    "allHosts": "All host countries",
+    "allMatches": "All matches",
+    "myFavorites": "My favorites"
   },
   "moroccoZone": {
     "squad": "Probable Squad",

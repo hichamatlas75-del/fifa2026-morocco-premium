@@ -96,6 +96,7 @@ export async function initApi() {
     const groupAStandings = computeGroupStandings(matches, "Groupe A");
 
     return {
+      dataSource: "api",
       matches: matches,
       stadiums: getStaticStadiums(),
       moroccoSquad: getStaticSquad(),
@@ -423,6 +424,7 @@ function getFallbackData() {
   ];
 
   return {
+    dataSource: "fallback",
     matches: matches,
     stadiums: getStaticStadiums(),
     moroccoSquad: getStaticSquad(),

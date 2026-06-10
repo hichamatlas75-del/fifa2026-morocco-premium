@@ -38,6 +38,7 @@
             <li><a href="#teams">Équipes</a></li>
             <li><a href="#morocco" style="color: var(--vert-maroc); font-weight: 700;">🇲🇦 Maroc Pro</a></li>
             <li><a href="#standings">Classements</a></li>
+            <li><a href="#tools">Outils</a></li>
             <li><a href="#analytics">Analyses</a></li>
             <li><a href="#stadiums">Stades</a></li>
         </ul>
@@ -58,10 +59,12 @@
             <li><a href="#teams">Équipes</a></li>
             <li><a href="#morocco" class="highlight-maroc">🇲🇦 Maroc Pro</a></li>
             <li><a href="#standings">Classements</a></li>
+            <li><a href="#tools">Outils</a></li>
             <li><a href="#analytics">Analyses</a></li>
             <li><a href="#stadiums">Stades</a></li>
         </ul>
         <div class="nav-actions">
+            <span id="data-source-badge" class="data-source-badge">Synchronisation...</span>
             <!-- Language Switcher Selector -->
             <div class="lang-switcher">
                 <button class="lang-btn active" data-lang="fr">FR</button>
@@ -117,6 +120,9 @@
                     <select id="filter-group" class="control-btn" style="border-radius:8px;"><option value="" id="opt-all-groups">Tous les Groupes</option></select>
                     <select id="filter-stadium" class="control-btn" style="border-radius:8px;"><option value="" id="opt-all-stadiums">Tous les Stades</option></select>
                     <select id="sort-order" class="control-btn" style="border-radius:8px;"><option value="chrono" id="opt-sort-chrono">Chronologique</option><option value="maroc" id="opt-sort-maroc">Matchs du Maroc</option></select>
+                    <input type="date" id="filter-date" class="control-btn" style="border-radius:8px;">
+                    <select id="filter-host" class="control-btn" style="border-radius:8px;"><option value="">Tous les pays hôtes</option></select>
+                    <select id="filter-favorites" class="control-btn" style="border-radius:8px;"><option value="">Tous les matchs</option><option value="favorites">Mes favoris</option></select>
                 </div>
             </div>
 
@@ -145,6 +151,7 @@
             <div class="section-header" data-aos="fade-up">
                 <h2 class="section-title" id="sec-title-morocco" style="color: var(--vert-maroc);">Espace Lions de l'Atlas</h2>
             </div>
+            <div id="morocco-dashboard" class="feature-grid-wide" style="margin-bottom: 2rem;"></div>
             <div class="grid-3">
                 <div class="premium-card">
                     <h3 style="color:var(--or-premium); margin-bottom:1rem;" id="morocco-squad-title"><i class="fa-solid fa-shield-halved"></i> Composition Probable</h3>
@@ -159,6 +166,59 @@
                     <h3 style="margin-bottom:1rem;" id="morocco-media-title"><i class="fa-solid fa-photo-film"></i> Médias & Interviews</h3>
                     <div id="maroc-media-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                         </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="favorites" class="section-padding">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Mes Favoris</h2>
+            </div>
+            <div class="premium-card feature-panel">
+                <div class="feature-toolbar">
+                    <div>
+                        <h3>Équipe suivie</h3>
+                        <p>Choisis une nation à suivre pour filtrer les matchs et recevoir des rappels visuels.</p>
+                    </div>
+                    <select id="favorite-team-select" class="control-btn"></select>
+                </div>
+                <div id="favorites-grid" class="grid-3"></div>
+            </div>
+        </section>
+
+        <section id="tools" class="section-padding" style="background: rgba(255,255,255,0.01);">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Outils Interactifs</h2>
+            </div>
+            <div class="grid-3 feature-tools-grid">
+                <div class="premium-card feature-panel">
+                    <h3><i class="fa-solid fa-bell"></i> Centre d'Alertes</h3>
+                    <div id="alerts-center"></div>
+                </div>
+                <div class="premium-card feature-panel">
+                    <h3><i class="fa-solid fa-scale-balanced"></i> Comparateur & Prédicteur</h3>
+                    <div class="compare-controls">
+                        <select id="compare-team-a" class="control-btn"></select>
+                        <select id="compare-team-b" class="control-btn"></select>
+                    </div>
+                    <div id="comparison-result"></div>
+                </div>
+                <div class="premium-card feature-panel">
+                    <h3><i class="fa-solid fa-calendar-plus"></i> Prochain Match</h3>
+                    <div id="next-match-card"></div>
+                </div>
+            </div>
+            <div class="premium-card feature-panel simulator-panel">
+                <div class="feature-toolbar">
+                    <div>
+                        <h3><i class="fa-solid fa-table-list"></i> Simulateur de Groupes</h3>
+                        <p>Modifie les scores pour recalculer automatiquement le classement et les qualifiés.</p>
+                    </div>
+                    <select id="simulator-group-select" class="control-btn"></select>
+                </div>
+                <div class="simulator-layout">
+                    <div id="simulator-matches"></div>
+                    <div id="simulator-standings"></div>
                 </div>
             </div>
         </section>

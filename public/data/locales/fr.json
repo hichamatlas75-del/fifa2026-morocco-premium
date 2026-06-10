@@ -34,7 +34,10 @@
     "allGroups": "Tous les Groupes",
     "allStadiums": "Tous les Stades",
     "chrono": "Chronologique",
-    "maroc": "Matchs du Maroc"
+    "maroc": "Matchs du Maroc",
+    "allHosts": "Tous les pays hôtes",
+    "allMatches": "Tous les matchs",
+    "myFavorites": "Mes favoris"
   },
   "moroccoZone": {
     "squad": "Composition Probable",

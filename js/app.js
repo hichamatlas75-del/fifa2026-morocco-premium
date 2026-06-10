@@ -26,6 +26,7 @@ import {
     renderStandings, 
     renderNews 
 } from './components/matches.js';
+import { initPremiumFeatures, refreshPremiumFeatures } from './features.js';
 
 class WorldCupApp {
     constructor() {
@@ -36,6 +37,7 @@ class WorldCupApp {
         this.map = null;
         this.chart = null;
         this.i18n = null;
+        this.favoriteTeam = localStorage.getItem('favoriteTeam') || 'MAR';
         
         this.init();
     }
@@ -64,6 +66,7 @@ class WorldCupApp {
             
             // Initialisation des rendus de base
             this.applyInitialRender();
+            initPremiumFeatures(this);
 
             // Remplissage dynamique des filtres de recherche
             this.populateFilterDropdowns();
@@ -104,6 +107,7 @@ class WorldCupApp {
     populateFilterDropdowns() {
         const groupSelect = document.getElementById('filter-group');
         const stadiumSelect = document.getElementById('filter-stadium');
+        const hostSelect = document.getElementById('filter-host');
         
         if (!this.data) return;
 
@@ -117,6 +121,23 @@ class WorldCupApp {
             const firstOpt = stadiumSelect.firstElementChild;
             stadiumSelect.innerHTML = '';
             if (firstOpt) stadiumSelect.appendChild(firstOpt);
+        }
+
+        if (hostSelect) {
+            const firstOpt = hostSelect.firstElementChild;
+            hostSelect.innerHTML = '';
+            if (firstOpt) hostSelect.appendChild(firstOpt);
+
+            [
+                { value: 'mexico', label: this.t('teams.MEX', 'Mexique') },
+                { value: 'canada', label: this.t('teams.CAN', 'Canada') },
+                { value: 'usa', label: this.t('teams.USA', 'États-Unis') }
+            ].forEach(host => {
+                const opt = document.createElement('option');
+                opt.value = host.value;
+                opt.innerText = host.label;
+                hostSelect.appendChild(opt);
+            });
         }
 
         // Groupes uniques
@@ -149,6 +170,9 @@ class WorldCupApp {
         const groupSelect = document.getElementById('filter-group');
         const stadiumSelect = document.getElementById('filter-stadium');
         const sortSelect = document.getElementById('sort-order');
+        const dateInput = document.getElementById('filter-date');
+        const hostSelect = document.getElementById('filter-host');
+        const favoritesSelect = document.getElementById('filter-favorites');
 
         const filterHandler = () => this.applyFilters();
 
@@ -156,6 +180,9 @@ class WorldCupApp {
         if (groupSelect) groupSelect.addEventListener('change', filterHandler);
         if (stadiumSelect) stadiumSelect.addEventListener('change', filterHandler);
         if (sortSelect) sortSelect.addEventListener('change', filterHandler);
+        if (dateInput) dateInput.addEventListener('change', filterHandler);
+        if (hostSelect) hostSelect.addEventListener('change', filterHandler);
+        if (favoritesSelect) favoritesSelect.addEventListener('change', filterHandler);
     }
 
     applyFilters() {
@@ -163,6 +190,9 @@ class WorldCupApp {
         const selectedGroup = document.getElementById('filter-group')?.value || '';
         const selectedStadium = document.getElementById('filter-stadium')?.value || '';
         const sortOrder = document.getElementById('sort-order')?.value || 'chrono';
+        const selectedDate = document.getElementById('filter-date')?.value || '';
+        const selectedHost = document.getElementById('filter-host')?.value || '';
+        const favoritesMode = document.getElementById('filter-favorites')?.value || '';
 
         let filtered = [...this.data.matches];
 
@@ -188,6 +218,24 @@ class WorldCupApp {
             filtered = filtered.filter(m => m.stadium === selectedStadium);
         }
 
+        if (selectedDate) {
+            const normalizedDate = new Date(selectedDate).toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                timeZone: 'Africa/Casablanca'
+            }).toLowerCase();
+            filtered = filtered.filter(m => (m.date || '').toLowerCase() === normalizedDate);
+        }
+
+        if (selectedHost) {
+            filtered = filtered.filter(m => this.getHostCountry(m.stadium) === selectedHost);
+        }
+
+        if (favoritesMode === 'favorites') {
+            filtered = filtered.filter(m => m.homeTla === this.favoriteTeam || m.awayTla === this.favoriteTeam);
+        }
+
         // 4. Trier les résultats
         if (sortOrder === 'maroc') {
             // Matchs du Maroc en premier, puis le reste
@@ -204,6 +252,14 @@ class WorldCupApp {
         }
 
         renderMatches(filtered);
+        refreshPremiumFeatures(this);
+    }
+
+    getHostCountry(stadiumName) {
+        const stadium = (stadiumName || '').toLowerCase();
+        if (stadium.includes('mexico') || stadium.includes('guadalajara') || stadium.includes('monterrey')) return 'mexico';
+        if (stadium.includes('bc place') || stadium.includes('toronto')) return 'canada';
+        return 'usa';
     }
 
     updateMatchCard(data) {
@@ -219,6 +275,7 @@ class WorldCupApp {
             
             // Rafraîchir les sections live
             renderLiveMatches(this.data.matches);
+            refreshPremiumFeatures(this);
 
             // Mettre à jour l'élément spécifique dans le calendrier s'il est affiché
             const scoreHomeEl = document.getElementById(`score-home-${data.matchId}`);
@@ -357,8 +414,14 @@ class WorldCupApp {
             navLinks[3].innerHTML = this.t('nav.teams');
             navLinks[4].innerHTML = this.t('nav.morocco');
             navLinks[5].innerHTML = this.t('nav.standings');
-            navLinks[6].innerHTML = this.t('nav.analytics');
-            navLinks[7].innerHTML = this.t('nav.stadiums');
+            if (navLinks.length >= 9) {
+                navLinks[6].innerHTML = this.currentLang === 'en' ? 'Tools' : 'Outils';
+                navLinks[7].innerHTML = this.t('nav.analytics');
+                navLinks[8].innerHTML = this.t('nav.stadiums');
+            } else {
+                navLinks[6].innerHTML = this.t('nav.analytics');
+                navLinks[7].innerHTML = this.t('nav.stadiums');
+            }
         }
 
         // 2. Liens de navigation (Mobile)
@@ -370,8 +433,14 @@ class WorldCupApp {
             mobileLinks[3].innerHTML = this.t('nav.teams');
             mobileLinks[4].innerHTML = this.t('nav.morocco');
             mobileLinks[5].innerHTML = this.t('nav.standings');
-            mobileLinks[6].innerHTML = this.t('nav.analytics');
-            mobileLinks[7].innerHTML = this.t('nav.stadiums');
+            if (mobileLinks.length >= 9) {
+                mobileLinks[6].innerHTML = this.currentLang === 'en' ? 'Tools' : 'Outils';
+                mobileLinks[7].innerHTML = this.t('nav.analytics');
+                mobileLinks[8].innerHTML = this.t('nav.stadiums');
+            } else {
+                mobileLinks[6].innerHTML = this.t('nav.analytics');
+                mobileLinks[7].innerHTML = this.t('nav.stadiums');
+            }
         }
 
         // 3. Hero Section
@@ -431,6 +500,17 @@ class WorldCupApp {
         if (optChrono) optChrono.innerText = this.t('filters.chrono');
         const optMaroc = document.getElementById('opt-sort-maroc');
         if (optMaroc) optMaroc.innerText = this.t('filters.maroc');
+
+        const hostSelect = document.getElementById('filter-host');
+        if (hostSelect && hostSelect.firstElementChild) {
+            hostSelect.firstElementChild.innerText = this.t('filters.allHosts', 'Tous les pays hôtes');
+        }
+
+        const favSelect = document.getElementById('filter-favorites');
+        if (favSelect && favSelect.options.length >= 2) {
+            favSelect.options[0].innerText = this.t('filters.allMatches', 'Tous les matchs');
+            favSelect.options[1].innerText = this.t('filters.myFavorites', 'Mes favoris');
+        }
 
         // 9. Live Badge
         const liveBadge = document.getElementById('live-update-badge');
@@ -505,6 +585,7 @@ class WorldCupApp {
 
                 // Re-rendre
                 this.applyInitialRender();
+                refreshPremiumFeatures(this);
 
                 // Recréer le graphe
                 this.initChart();
@@ -691,6 +772,7 @@ class WorldCupApp {
         console.log("⚽ [App] Enregistrement de l'écouteur de clic unique...");
         document.addEventListener('click', (e) => {
             const card = e.target.closest('.match-card');
+            if (e.target.closest('[data-fav-toggle]')) return;
             if (card) {
                 console.log("⚽ [App] Carte cliquée :", card.id);
                 const matchId = parseInt(card.id.replace('match-', ''), 10);
@@ -705,6 +787,7 @@ class WorldCupApp {
         
         const match = this.data.matches.find(m => m.id === matchId);
         if (!match) return;
+        const prediction = this.predictMatch(match.homeTla, match.awayTla);
 
         // Récupérer l'historique H2H
         const rawH2H = getH2HData(match.homeTeam, match.awayTeam);
@@ -820,6 +903,15 @@ class WorldCupApp {
                         <i class="fa-solid fa-location-dot" style="color: var(--or-premium);"></i> <span>${this.t('modal.stadium', 'Stade')} :</span>
                         <strong>${match.stadium}</strong>
                     </div>
+                    <div class="modal-actions-row">
+                        <button class="control-btn modal-calendar-btn" data-calendar-match="${match.id}"><i class="fa-solid fa-calendar-plus"></i> Ajouter au calendrier</button>
+                        <button class="control-btn modal-favorite-btn" data-modal-favorite="${match.homeTla}"><i class="fa-solid fa-star"></i> Suivre ${translateTeam(match.homeTla, match.homeTeam)}</button>
+                    </div>
+                    <div class="prediction-strip">
+                        <span>Pronostic local</span>
+                        <strong>${prediction.label}</strong>
+                        <small>${prediction.home}% - ${prediction.away}%</small>
+                    </div>
                     
                     <div class="modal-divider"></div>
                     
@@ -883,6 +975,48 @@ class WorldCupApp {
 
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
         if (backdrop) backdrop.addEventListener('click', closeModal);
+        modal.querySelector('[data-modal-favorite]')?.addEventListener('click', (event) => {
+            this.favoriteTeam = event.currentTarget.getAttribute('data-modal-favorite') || 'MAR';
+            localStorage.setItem('favoriteTeam', this.favoriteTeam);
+            this.applyInitialRender();
+            refreshPremiumFeatures(this);
+        });
+        modal.querySelector('[data-calendar-match]')?.addEventListener('click', () => {
+            this.downloadCalendarEvent(match);
+        });
+    }
+
+    predictMatch(homeTla, awayTla) {
+        const ratings = { BRA: 92, MAR: 84, USA: 82, MEX: 80, CAN: 77, SUI: 81, GER: 88, ESP: 89, ENG: 88, CRO: 84, NED: 86, BEL: 84, URU: 83, JPN: 79, KOR: 77, AUS: 74, TUR: 78, RSA: 69, HAI: 64, SCO: 75, CZE: 76, PAR: 75, BIH: 74 };
+        const homeRating = ratings[homeTla] || 70;
+        const awayRating = ratings[awayTla] || 70;
+        const home = Math.round((homeRating / (homeRating + awayRating)) * 100);
+        const away = 100 - home;
+        return {
+            home,
+            away,
+            label: home === away ? 'Match équilibré' : home > away ? `${homeTla} léger avantage` : `${awayTla} léger avantage`
+        };
+    }
+
+    downloadCalendarEvent(match) {
+        const title = `${match.homeTeam} vs ${match.awayTeam}`;
+        const body = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'BEGIN:VEVENT',
+            `SUMMARY:${title}`,
+            `DESCRIPTION:Coupe du Monde FIFA 2026 - ${match.group} - ${match.stadium}`,
+            'END:VEVENT',
+            'END:VCALENDAR'
+        ].join('\n');
+        const blob = new Blob([body], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${match.homeTla}-${match.awayTla}.ics`;
+        link.click();
+        URL.revokeObjectURL(url);
     }
 }
 

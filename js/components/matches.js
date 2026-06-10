@@ -40,6 +40,8 @@ export function renderMatches(matches, containerId = 'calendar-grid') {
     container.innerHTML = matches.map(match => {
         const isLive = match.status === 'LIVE';
         const isFinished = match.status === 'FINISHED';
+        const favoriteTeam = window.App?.favoriteTeam || 'MAR';
+        const isFavorite = match.homeTla === favoriteTeam || match.awayTla === favoriteTeam;
         
         let statusBadge = '';
         if (isLive) {
@@ -60,10 +62,15 @@ export function renderMatches(matches, containerId = 'calendar-grid') {
         }
 
         return `
-            <div class="premium-card match-card" id="match-${match.id}" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;">
+            <div class="premium-card match-card ${isFavorite ? 'favorite-match' : ''}" id="match-${match.id}" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.8rem; opacity: 0.7;">
                     <span>${displayDate}</span>
-                    <span>${translateGroupDisplay(match.group)}</span>
+                    <span style="display:flex; align-items:center; gap:8px;">
+                        ${translateGroupDisplay(match.group)}
+                        <button class="favorite-toggle ${isFavorite ? 'active' : ''}" data-fav-toggle data-team="${isFavorite ? favoriteTeam : match.homeTla}" aria-label="Suivre cette équipe">
+                            <i class="fa-${isFavorite ? 'solid' : 'regular'} fa-star"></i>
+                        </button>
+                    </span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 10px;">
