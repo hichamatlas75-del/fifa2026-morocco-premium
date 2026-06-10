@@ -79,7 +79,12 @@ export async function initApi() {
         time: isLive ? "Direct" : timeStr,
         date: dateStr,
         group: translateGroup(m.group),
-        stadium: getStadiumForMatch(m.homeTeam.name || m.homeTeam.shortName, m.id),
+        stadium: getStadiumForMatch(
+          m.homeTeam.name || m.homeTeam.shortName,
+          m.awayTeam.name || m.awayTeam.shortName,
+          m.group,
+          m.id
+        ),
         events: []
       };
     });
@@ -448,7 +453,7 @@ export function getH2HData(home, away) {
   ];
 }
 
-function getStadiumForMatch(homeTeam, matchId) {
+function getStadiumForMatch(homeTeam, awayTeam, groupName, matchId) {
   const stadiums = {
     usa: [
       "MetLife Stadium (New York / NJ)",
@@ -474,21 +479,70 @@ function getStadiumForMatch(homeTeam, matchId) {
     ]
   };
 
-  const homeLower = (homeTeam || '').toLowerCase();
-  
-  if (homeLower.includes("mexic") || homeLower === "mexico" || homeLower === "mex") {
-    return stadiums.mexico[matchId % stadiums.mexico.length];
-  }
-  
-  if (homeLower.includes("canad") || homeLower === "can") {
-    return stadiums.canada[matchId % stadiums.canada.length];
-  }
-  
-  if (homeLower.includes("usa") || homeLower.includes("états-unis") || homeLower.includes("united states") || homeLower === "us" || homeLower.includes("america")) {
-    return stadiums.usa[matchId % stadiums.usa.length];
+  const home = (homeTeam || "").toLowerCase();
+  const away = (awayTeam || "").toLowerCase();
+  const group = (groupName || "").toLowerCase();
+
+  // 1. Groupe A : Matches au Mexique
+  if (group.includes("groupe a") || group.includes("group a")) {
+    if (home.includes("mexic") || away.includes("mexic")) {
+      return "Estadio Azteca (Mexico City)";
+    }
+    return matchId % 2 === 0 ? "Estadio Akron (Guadalajara)" : "Estadio BBVA (Monterrey)";
   }
 
-  // Fallback réparti sur tous les stades du tournoi
-  const allStadiums = [...stadiums.usa, ...stadiums.mexico, ...stadiums.canada];
+  // 2. Groupe B : Matches au Canada et à Boston
+  if (group.includes("groupe b") || group.includes("group b")) {
+    if (home.includes("canad") || away.includes("canad")) {
+      return "BC Place (Vancouver)";
+    }
+    return matchId % 2 === 0 ? "BMO Field (Toronto)" : "Gillette Stadium (Boston)";
+  }
+
+  // 3. Groupe C : Matches du Maroc, du Brésil, etc.
+  if (group.includes("groupe c") || group.includes("group c")) {
+    if (home.includes("brés") || home.includes("brazil") || away.includes("brés") || away.includes("brazil")) {
+      return "MetLife Stadium (New York / NJ)";
+    }
+    if (home.includes("maroc") || home.includes("moroc") || away.includes("maroc") || away.includes("moroc")) {
+      return "Gillette Stadium (Boston)";
+    }
+    return "Mercedes-Benz Stadium (Atlanta)";
+  }
+
+  // 4. Groupe D : Matches aux USA
+  if (group.includes("groupe d") || group.includes("group d")) {
+    if (home.includes("usa") || home.includes("états") || home.includes("united states") || away.includes("usa") || away.includes("états")) {
+      return "SoFi Stadium (Los Angeles)";
+    }
+    return matchId % 2 === 0 ? "Lumen Field (Seattle)" : "Levi's Stadium (San Francisco)";
+  }
+
+  // 5. Groupe E
+  if (group.includes("groupe e") || group.includes("group e")) {
+    return matchId % 2 === 0 ? "Hard Rock Stadium (Miami)" : "Mercedes-Benz Stadium (Atlanta)";
+  }
+
+  // 6. Groupe F
+  if (group.includes("groupe f") || group.includes("group f")) {
+    return matchId % 2 === 0 ? "NRG Stadium (Houston)" : "Arrowhead Stadium (Kansas City)";
+  }
+
+  // 7. Groupe G
+  if (group.includes("groupe g") || group.includes("group g")) {
+    return matchId % 2 === 0 ? "AT&T Stadium (Dallas)" : "Lincoln Financial Field (Philadelphia)";
+  }
+
+  // 8. Groupe H
+  if (group.includes("groupe h") || group.includes("group h")) {
+    return matchId % 2 === 0 ? "Levi's Stadium (San Francisco)" : "Gillette Stadium (Boston)";
+  }
+
+  // Par défaut, répartir équitablement sur tous les stades du tournoi
+  const allStadiums = [
+    ...stadiums.usa,
+    ...stadiums.mexico,
+    ...stadiums.canada
+  ];
   return allStadiums[matchId % allStadiums.length];
 }
