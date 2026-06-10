@@ -1,6 +1,6 @@
 // js/api.js
 
-function getFlag(tla) {
+export function getFlag(tla) {
   if (!tla) return `<img src="https://flagcdn.com/w80/un.png" class="flag-icon" alt="UN">`;
   const codeMap = {
     // Groupe A
@@ -71,6 +71,8 @@ export async function initApi() {
         id: m.id,
         homeTeam: m.homeTeam.shortName || m.homeTeam.name,
         awayTeam: m.awayTeam.shortName || m.awayTeam.name,
+        homeTla: m.homeTeam.tla || "UN",
+        awayTla: m.awayTeam.tla || "UN",
         homeFlag: m.homeTeam.crest ? `<img src="${m.homeTeam.crest}" class="flag-icon" alt="${m.homeTeam.tla}">` : getFlag(m.homeTeam.tla),
         awayFlag: m.awayTeam.crest ? `<img src="${m.awayTeam.crest}" class="flag-icon" alt="${m.awayTeam.tla}">` : getFlag(m.awayTeam.tla),
         homeScore: m.score.fullTime.home ?? 0,
@@ -91,6 +93,7 @@ export async function initApi() {
 
     // Mettre à jour dynamiquement les classements du Groupe C si les données sont là
     const groupCStandings = computeGroupStandings(matches, "Groupe C");
+    const groupAStandings = computeGroupStandings(matches, "Groupe A");
 
     return {
       matches: matches,
@@ -99,7 +102,7 @@ export async function initApi() {
       standings: {
         groups: {
           "Groupe C": groupCStandings,
-          "Groupe A": computeGroupStandings(matches, "Groupe A")
+          "Groupe A": groupAStandings
         },
         scorers: getStaticScorers(),
         assists: getStaticAssists()
@@ -112,23 +115,28 @@ export async function initApi() {
   }
 }
 
-// Fonction de calcul des classements en fonction des scores réels
+// Fonction de calcul des classements en fonction des scores réels (basée sur les TLA uniques et robustes)
 function computeGroupStandings(matches, groupName) {
-  const groupMatches = matches.filter(m => m.group === groupName);
+  // Traduire le nom du groupe en français pour la comparaison si nécessaire
+  const groupMatches = matches.filter(m => m.group === groupName || m.group === groupName.replace("Groupe", "Group"));
   const teamsMap = new Map();
 
-  // Initialiser les équipes du groupe
-  if (groupName === "Groupe C") {
-    ["Brésil", "Maroc", "Haïti", "Écosse"].forEach(t => teamsMap.set(t, { name: t, flag: getFlag(t === "Brésil" ? "BRA" : t === "Maroc" ? "MAR" : t === "Haïti" ? "HAI" : "SCO"), p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 }));
+  // Initialiser les équipes du groupe à l'aide de leur TLA unique
+  if (groupName.includes("C")) {
+    ["BRA", "MAR", "HAI", "SCO"].forEach(tla => {
+      teamsMap.set(tla, { tla: tla, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
+    });
   } else {
-    ["Mexique", "Afrique du Sud", "Corée du Sud", "République Tchèque"].forEach(t => teamsMap.set(t, { name: t, flag: getFlag(t === "Mexique" ? "MEX" : t === "Afrique du Sud" ? "RSA" : t === "Corée du Sud" ? "KOR" : "CZE"), p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 }));
+    ["MEX", "RSA", "KOR", "CZE"].forEach(tla => {
+      teamsMap.set(tla, { tla: tla, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
+    });
   }
 
   // Calculer à partir des matchs terminés ou en cours
   groupMatches.forEach(m => {
     if (m.status === 'FINISHED' || m.status === 'LIVE') {
-      const home = teamsMap.get(m.homeTeam);
-      const away = teamsMap.get(m.awayTeam);
+      const home = teamsMap.get(m.homeTla);
+      const away = teamsMap.get(m.awayTla);
       if (home && away) {
         home.p++;
         away.p++;
@@ -156,11 +164,10 @@ function computeGroupStandings(matches, groupName) {
   });
 
   return Array.from(teamsMap.values())
-    .sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf || a.name.localeCompare(b.name))
+    .sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf || a.tla.localeCompare(b.tla))
     .map((t, idx) => ({
       rank: idx + 1,
-      team: t.name,
-      flag: t.flag,
+      tla: t.tla,
       p: t.p,
       w: t.w,
       d: t.d,
@@ -171,17 +178,30 @@ function computeGroupStandings(matches, groupName) {
     }));
 }
 
-function getStaticStadiums() {
+// Les 16 stades officiels du tournoi FIFA 2026 (sans sponsor commercial, avec coordonnées exactes)
+export function getStaticStadiums() {
   return [
-    { name: "Estadio Azteca", city: "Mexico City", capacity: "87 523", coords: [19.3029, -99.1505], matchesCount: 10 },
-    { name: "MetLife Stadium", city: "New York / New Jersey", capacity: "82 500", coords: [40.8135, -74.0743], matchesCount: 8 },
-    { name: "SoFi Stadium", city: "Los Angeles", capacity: "70 240", coords: [33.9534, -118.3390], matchesCount: 8 },
-    { name: "BMO Field", city: "Toronto", capacity: "45 000", coords: [43.6328, -79.4186], matchesCount: 6 },
+    // Canada (2)
     { name: "BC Place", city: "Vancouver", capacity: "54 500", coords: [49.2767, -123.1120], matchesCount: 7 },
-    { name: "Estadio Akron", city: "Guadalajara", capacity: "48 071", coords: [20.6817, -103.4627], matchesCount: 4 },
-    { name: "Gillette Stadium", city: "Boston", capacity: "65 878", coords: [42.0909, -71.2643], matchesCount: 6 },
-    { name: "Mercedes-Benz Stadium", city: "Atlanta", capacity: "71 000", coords: [33.7573, -84.4010], matchesCount: 8 },
-    { name: "Hard Rock Stadium", city: "Miami", capacity: "65 326", coords: [25.9580, -80.2389], matchesCount: 7 }
+    { name: "Toronto Stadium", city: "Toronto", capacity: "45 000", coords: [43.6328, -79.4186], matchesCount: 6 },
+    
+    // Mexique (3)
+    { name: "Mexico City Stadium", city: "Mexico City", capacity: "87 523", coords: [19.3029, -99.1505], matchesCount: 10 },
+    { name: "Guadalajara Stadium", city: "Guadalajara", capacity: "48 071", coords: [20.6817, -103.4627], matchesCount: 4 },
+    { name: "Monterrey Stadium", city: "Monterrey", capacity: "53 500", coords: [25.6701, -100.2447], matchesCount: 4 },
+    
+    // États-Unis (11)
+    { name: "Atlanta Stadium", city: "Atlanta", capacity: "71 000", coords: [33.7573, -84.4010], matchesCount: 8 },
+    { name: "Boston Stadium", city: "Boston", capacity: "65 878", coords: [42.0909, -71.2643], matchesCount: 6 },
+    { name: "Dallas Stadium", city: "Dallas", capacity: "94 000", coords: [32.7473, -97.0945], matchesCount: 9 },
+    { name: "Houston Stadium", city: "Houston", capacity: "72 220", coords: [29.6847, -95.4081], matchesCount: 7 },
+    { name: "Kansas City Stadium", city: "Kansas City", capacity: "76 416", coords: [39.0489, -94.4839], matchesCount: 6 },
+    { name: "Los Angeles Stadium", city: "Los Angeles", capacity: "70 240", coords: [33.9534, -118.3390], matchesCount: 8 },
+    { name: "Miami Stadium", city: "Miami", capacity: "64 767", coords: [25.9580, -80.2389], matchesCount: 7 },
+    { name: "New York New Jersey Stadium", city: "New York / New Jersey", capacity: "82 500", coords: [40.8135, -74.0743], matchesCount: 8 },
+    { name: "Philadelphia Stadium", city: "Philadelphia", capacity: "69 796", coords: [39.9012, -75.1675], matchesCount: 6 },
+    { name: "San Francisco Bay Area Stadium", city: "San Francisco", capacity: "68 500", coords: [37.4032, -121.9698], matchesCount: 6 },
+    { name: "Seattle Stadium", city: "Seattle", capacity: "69 000", coords: [47.5952, -122.3316], matchesCount: 6 }
   ];
 }
 
@@ -246,160 +266,176 @@ function getStaticNews() {
 }
 
 function getFallbackData() {
+  const matches = [
+    {
+      id: 1,
+      homeTeam: "Mexique",
+      awayTeam: "Afrique du Sud",
+      homeTla: "MEX",
+      awayTla: "RSA",
+      homeFlag: getFlag("MEX"),
+      awayFlag: getFlag("RSA"),
+      homeScore: 0,
+      awayScore: 0,
+      status: "LIVE",
+      time: "5'",
+      date: "11 Juin 2026",
+      group: "Groupe A",
+      stadium: "Mexico City Stadium",
+      events: []
+    },
+    {
+      id: 2,
+      homeTeam: "Corée du Sud",
+      awayTeam: "République Tchèque",
+      homeTla: "KOR",
+      awayTla: "CZE",
+      homeFlag: getFlag("KOR"),
+      awayFlag: getFlag("CZE"),
+      homeScore: 0,
+      awayScore: 0,
+      status: "SCHEDULED",
+      time: "03:00",
+      date: "12 Juin 2026",
+      group: "Groupe A",
+      stadium: "Guadalajara Stadium",
+      events: []
+    },
+    {
+      id: 3,
+      homeTeam: "Canada",
+      awayTeam: "Bosnie-Herzégovine",
+      homeTla: "CAN",
+      awayTla: "BIH",
+      homeFlag: getFlag("CAN"),
+      awayFlag: getFlag("BIH"),
+      homeScore: 0,
+      awayScore: 0,
+      status: "SCHEDULED",
+      time: "20:00",
+      date: "12 Juin 2026",
+      group: "Groupe B",
+      stadium: "Toronto Stadium",
+      events: []
+    },
+    {
+      id: 4,
+      homeTeam: "États-Unis",
+      awayTeam: "Paraguay",
+      homeTla: "USA",
+      awayTla: "PAR",
+      homeFlag: getFlag("USA"),
+      awayFlag: getFlag("PAR"),
+      homeScore: 0,
+      awayScore: 0,
+      status: "SCHEDULED",
+      time: "02:00",
+      date: "13 Juin 2026",
+      group: "Groupe D",
+      stadium: "Los Angeles Stadium",
+      events: []
+    },
+    {
+      id: 5,
+      homeTeam: "Brésil",
+      awayTeam: "Maroc",
+      homeTla: "BRA",
+      awayTla: "MAR",
+      homeFlag: getFlag("BRA"),
+      awayFlag: getFlag("MAR"),
+      homeScore: 0,
+      awayScore: 0,
+      status: "SCHEDULED",
+      time: "23:00",
+      date: "13 Juin 2026",
+      group: "Groupe C",
+      stadium: "New York New Jersey Stadium",
+      events: []
+    },
+    {
+      id: 6,
+      homeTeam: "Haïti",
+      awayTeam: "Écosse",
+      homeTla: "HAI",
+      awayTla: "SCO",
+      homeFlag: getFlag("HAI"),
+      awayFlag: getFlag("SCO"),
+      homeScore: 0,
+      awayScore: 0,
+      status: "SCHEDULED",
+      time: "02:00",
+      date: "14 Juin 2026",
+      group: "Groupe C",
+      stadium: "Boston Stadium",
+      events: []
+    },
+    {
+      id: 7,
+      homeTeam: "Australie",
+      awayTeam: "Turquie",
+      homeTla: "AUS",
+      awayTla: "TUR",
+      homeFlag: getFlag("AUS"),
+      awayFlag: getFlag("TUR"),
+      homeScore: 0,
+      awayScore: 0,
+      status: "SCHEDULED",
+      time: "05:00",
+      date: "14 Juin 2026",
+      group: "Groupe D",
+      stadium: "BC Place",
+      events: []
+    },
+    {
+      id: 8,
+      homeTeam: "Écosse",
+      awayTeam: "Maroc",
+      homeTla: "SCO",
+      awayTla: "MAR",
+      homeFlag: getFlag("SCO"),
+      awayFlag: getFlag("MAR"),
+      homeScore: 0,
+      awayScore: 0,
+      status: "SCHEDULED",
+      time: "23:00",
+      date: "19 Juin 2026",
+      group: "Groupe C",
+      stadium: "Boston Stadium",
+      events: []
+    },
+    {
+      id: 9,
+      homeTeam: "Maroc",
+      awayTeam: "Haïti",
+      homeTla: "MAR",
+      awayTla: "HAI",
+      homeFlag: getFlag("MAR"),
+      awayFlag: getFlag("HAI"),
+      homeScore: 0,
+      awayScore: 0,
+      status: "SCHEDULED",
+      time: "23:00",
+      date: "24 Juin 2026",
+      group: "Groupe C",
+      stadium: "Atlanta Stadium",
+      events: []
+    }
+  ];
+
   return {
-    matches: [
-      {
-        id: 1,
-        homeTeam: "Mexique",
-        awayTeam: "Afrique du Sud",
-        homeFlag: getFlag("MEX"),
-        awayFlag: getFlag("RSA"),
-        homeScore: 0,
-        awayScore: 0,
-        status: "LIVE",
-        time: "5'",
-        date: "11 Juin 2026",
-        group: "Groupe A",
-        stadium: "Estadio Azteca, Mexico City",
-        events: []
-      },
-      {
-        id: 2,
-        homeTeam: "Corée du Sud",
-        awayTeam: "République Tchèque",
-        homeFlag: getFlag("KOR"),
-        awayFlag: getFlag("CZE"),
-        homeScore: 0,
-        awayScore: 0,
-        status: "SCHEDULED",
-        time: "03:00",
-        date: "12 Juin 2026",
-        group: "Groupe A",
-        stadium: "Estadio Akron, Guadalajara",
-        events: []
-      },
-      {
-        id: 3,
-        homeTeam: "Canada",
-        awayTeam: "Bosnie-Herzégovine",
-        homeFlag: getFlag("CAN"),
-        awayFlag: getFlag("BIH"),
-        homeScore: 0,
-        awayScore: 0,
-        status: "SCHEDULED",
-        time: "20:00",
-        date: "12 Juin 2026",
-        group: "Groupe B",
-        stadium: "BMO Field, Toronto",
-        events: []
-      },
-      {
-        id: 4,
-        homeTeam: "États-Unis",
-        awayTeam: "Paraguay",
-        homeFlag: getFlag("USA"),
-        awayFlag: getFlag("PAR"),
-        homeScore: 0,
-        awayScore: 0,
-        status: "SCHEDULED",
-        time: "02:00",
-        date: "13 Juin 2026",
-        group: "Groupe D",
-        stadium: "SoFi Stadium, Los Angeles",
-        events: []
-      },
-      {
-        id: 5,
-        homeTeam: "Brésil",
-        awayTeam: "Maroc",
-        homeFlag: getFlag("BRA"),
-        awayFlag: getFlag("MAR"),
-        homeScore: 0,
-        awayScore: 0,
-        status: "SCHEDULED",
-        time: "23:00",
-        date: "13 Juin 2026",
-        group: "Groupe C",
-        stadium: "MetLife Stadium, New York / New Jersey",
-        events: []
-      },
-      {
-        id: 6,
-        homeTeam: "Haïti",
-        awayTeam: "Écosse",
-        homeFlag: getFlag("HAI"),
-        awayFlag: getFlag("SCO"),
-        homeScore: 0,
-        awayScore: 0,
-        status: "SCHEDULED",
-        time: "02:00",
-        date: "14 Juin 2026",
-        group: "Groupe C",
-        stadium: "Gillette Stadium, Boston",
-        events: []
-      },
-      {
-        id: 7,
-        homeTeam: "Australie",
-        awayTeam: "Turquie",
-        homeFlag: getFlag("AUS"),
-        awayFlag: getFlag("TUR"),
-        homeScore: 0,
-        awayScore: 0,
-        status: "SCHEDULED",
-        time: "05:00",
-        date: "14 Juin 2026",
-        group: "Groupe D",
-        stadium: "BC Place, Vancouver",
-        events: []
-      },
-      {
-        id: 8,
-        homeTeam: "Écosse",
-        awayTeam: "Maroc",
-        homeFlag: getFlag("SCO"),
-        awayFlag: getFlag("MAR"),
-        homeScore: 0,
-        awayScore: 0,
-        status: "SCHEDULED",
-        time: "23:00",
-        date: "19 Juin 2026",
-        group: "Groupe C",
-        stadium: "Gillette Stadium, Boston",
-        events: []
-      },
-      {
-        id: 9,
-        homeTeam: "Maroc",
-        awayTeam: "Haïti",
-        homeFlag: getFlag("MAR"),
-        awayFlag: getFlag("HAI"),
-        homeScore: 0,
-        awayScore: 0,
-        status: "SCHEDULED",
-        time: "23:00",
-        date: "24 Juin 2026",
-        group: "Groupe C",
-        stadium: "Mercedes-Benz Stadium, Atlanta",
-        events: []
-      }
-    ],
+    matches: matches,
     stadiums: getStaticStadiums(),
     moroccoSquad: getStaticSquad(),
     standings: {
       groups: {
-        "Groupe C": computeGroupStandings(getStaticMatches(), "Groupe C"),
-        "Groupe A": computeGroupStandings(getStaticMatches(), "Groupe A")
+        "Groupe C": computeGroupStandings(matches, "Groupe C"),
+        "Groupe A": computeGroupStandings(matches, "Groupe A")
       },
       scorers: getStaticScorers(),
       assists: getStaticAssists()
     },
     news: getStaticNews()
   };
-}
-
-function getStaticMatches() {
-  return getFallbackData().matches;
 }
 
 export function getH2HData(home, away) {
@@ -454,95 +490,53 @@ export function getH2HData(home, away) {
 }
 
 function getStadiumForMatch(homeTeam, awayTeam, groupName, matchId) {
-  const stadiums = {
-    usa: [
-      "MetLife Stadium (New York / NJ)",
-      "SoFi Stadium (Los Angeles)",
-      "AT&T Stadium (Dallas)",
-      "Mercedes-Benz Stadium (Atlanta)",
-      "Hard Rock Stadium (Miami)",
-      "Gillette Stadium (Boston)",
-      "NRG Stadium (Houston)",
-      "Arrowhead Stadium (Kansas City)",
-      "Lincoln Financial Field (Philadelphia)",
-      "Levi's Stadium (San Francisco)",
-      "Lumen Field (Seattle)"
-    ],
-    mexico: [
-      "Estadio Azteca (Mexico City)",
-      "Estadio Akron (Guadalajara)",
-      "Estadio BBVA (Monterrey)"
-    ],
-    canada: [
-      "BMO Field (Toronto)",
-      "BC Place (Vancouver)"
-    ]
-  };
-
   const home = (homeTeam || "").toLowerCase();
   const away = (awayTeam || "").toLowerCase();
   const group = (groupName || "").toLowerCase();
 
   // 1. Groupe A : Matches au Mexique
   if (group.includes("groupe a") || group.includes("group a")) {
-    if (home.includes("mexic") || away.includes("mexic")) {
-      return "Estadio Azteca (Mexico City)";
+    if (home.includes("mexic") || away.includes("mexic") || home.includes("mexico") || away.includes("mexico")) {
+      return "Mexico City Stadium";
     }
-    return matchId % 2 === 0 ? "Estadio Akron (Guadalajara)" : "Estadio BBVA (Monterrey)";
+    return matchId % 2 === 0 ? "Guadalajara Stadium" : "Monterrey Stadium";
   }
 
-  // 2. Groupe B : Matches au Canada et à Boston
+  // 2. Groupe B : Matches au Canada and Boston
   if (group.includes("groupe b") || group.includes("group b")) {
     if (home.includes("canad") || away.includes("canad")) {
-      return "BC Place (Vancouver)";
+      return "BC Place";
     }
-    return matchId % 2 === 0 ? "BMO Field (Toronto)" : "Gillette Stadium (Boston)";
+    return matchId % 2 === 0 ? "Toronto Stadium" : "Boston Stadium";
   }
 
   // 3. Groupe C : Matches du Maroc, du Brésil, etc.
   if (group.includes("groupe c") || group.includes("group c")) {
     if (home.includes("brés") || home.includes("brazil") || away.includes("brés") || away.includes("brazil")) {
-      return "MetLife Stadium (New York / NJ)";
+      return "New York New Jersey Stadium";
     }
     if (home.includes("maroc") || home.includes("moroc") || away.includes("maroc") || away.includes("moroc")) {
-      return "Gillette Stadium (Boston)";
+      return "Boston Stadium";
     }
-    return "Mercedes-Benz Stadium (Atlanta)";
+    return "Atlanta Stadium";
   }
 
   // 4. Groupe D : Matches aux USA
   if (group.includes("groupe d") || group.includes("group d")) {
     if (home.includes("usa") || home.includes("états") || home.includes("united states") || away.includes("usa") || away.includes("états")) {
-      return "SoFi Stadium (Los Angeles)";
+      return "Los Angeles Stadium";
     }
-    return matchId % 2 === 0 ? "Lumen Field (Seattle)" : "Levi's Stadium (San Francisco)";
+    return matchId % 2 === 0 ? "Seattle Stadium" : "San Francisco Bay Area Stadium";
   }
 
-  // 5. Groupe E
-  if (group.includes("groupe e") || group.includes("group e")) {
-    return matchId % 2 === 0 ? "Hard Rock Stadium (Miami)" : "Mercedes-Benz Stadium (Atlanta)";
-  }
-
-  // 6. Groupe F
-  if (group.includes("groupe f") || group.includes("group f")) {
-    return matchId % 2 === 0 ? "NRG Stadium (Houston)" : "Arrowhead Stadium (Kansas City)";
-  }
-
-  // 7. Groupe G
-  if (group.includes("groupe g") || group.includes("group g")) {
-    return matchId % 2 === 0 ? "AT&T Stadium (Dallas)" : "Lincoln Financial Field (Philadelphia)";
-  }
-
-  // 8. Groupe H
-  if (group.includes("groupe h") || group.includes("group h")) {
-    return matchId % 2 === 0 ? "Levi's Stadium (San Francisco)" : "Gillette Stadium (Boston)";
-  }
-
-  // Par défaut, répartir équitablement sur tous les stades du tournoi
-  const allStadiums = [
-    ...stadiums.usa,
-    ...stadiums.mexico,
-    ...stadiums.canada
+  // Stades restants aux USA pour les autres groupes
+  const otherStadiums = [
+    "Dallas Stadium",
+    "Houston Stadium",
+    "Kansas City Stadium",
+    "Miami Stadium",
+    "Philadelphia Stadium",
+    "San Francisco Bay Area Stadium"
   ];
-  return allStadiums[matchId % allStadiums.length];
+  return otherStadiums[matchId % otherStadiums.length];
 }

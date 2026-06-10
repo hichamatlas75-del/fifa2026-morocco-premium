@@ -19,5 +19,109 @@
       "minutes": "Min",
       "seconds": "Sec"
     }
+  },
+  "sections": {
+    "calendar": "Calendrier des Matchs",
+    "live": "Scores en Direct",
+    "teams": "Nations Qualifiées",
+    "morocco": "Espace Lions de l'Atlas",
+    "standings": "Classements & Stats",
+    "news": "Actualités & Analyses Tactiques",
+    "stadiums": "Stades du Tournoi"
+  },
+  "filters": {
+    "search": "🔍 Rechercher une équipe...",
+    "allGroups": "Tous les Groupes",
+    "allStadiums": "Tous les Stades",
+    "chrono": "Chronologique",
+    "maroc": "Matchs du Maroc"
+  },
+  "moroccoZone": {
+    "squad": "Composition Probable",
+    "history": "Parcours Historique",
+    "historyText": "Retour complet sur l'épopée mémorable de 2022 et le plan de marche stratégique mis en place pour l'échéance 2026.",
+    "media": "Médias & Interviews"
+  },
+  "standingsTable": {
+    "groups": "Groupes",
+    "scorers": "Buteurs",
+    "assists": "Passeurs",
+    "pos": "Pos",
+    "team": "Équipe",
+    "played": "MJ",
+    "pts": "Pts",
+    "goals": "Buts",
+    "assistsAbbr": "Ass."
+  },
+  "analyticsZone": {
+    "title": "Visualisations de Données Avancées (xG, Possession, Pressing)",
+    "radar": {
+      "possession": "Possession (%)",
+      "xg": "xG (Buts attendus)",
+      "shotsOnTarget": "Tirs cadrés",
+      "passAccuracy": "Précision Passes (%)",
+      "duelsWon": "Duels Gagnés",
+      "pressing": "Efficacité Pressing",
+      "maroc": "🇲🇦 Maroc (Lions de l'Atlas)",
+      "brazil": "🇧🇷 Brésil"
+    }
+  },
+  "stadiumDetails": {
+    "city": "Ville",
+    "capacity": "Capacité",
+    "matches": "Matchs"
+  },
+  "modal": {
+    "scheduled": "Programmé",
+    "live": "En Direct",
+    "finished": "Terminé",
+    "stadium": "Stade",
+    "h2h": "Confrontations Précédentes",
+    "stats": "Statistiques Attendues",
+    "possession": "Possession",
+    "xg": "xG (Expected Goals)",
+    "shots": "Tirs Totaux"
+  },
+  "teams": {
+    "MEX": "Mexique",
+    "RSA": "Afrique du Sud",
+    "KOR": "Corée du Sud",
+    "CZE": "République Tchèque",
+    "CAN": "Canada",
+    "BIH": "Bosnie-Herzégovine",
+    "BOS": "Bosnie-Herzégovine",
+    "QAT": "Qatar",
+    "SUI": "Suisse",
+    "BRA": "Brésil",
+    "MAR": "Maroc",
+    "MOR": "Maroc",
+    "HAI": "Haïti",
+    "HTI": "Haïti",
+    "SCO": "Écosse",
+    "USA": "États-Unis",
+    "PAR": "Paraguay",
+    "AUS": "Australie",
+    "TUR": "Turquie",
+    "GER": "Allemagne",
+    "CUW": "Curaçao",
+    "CIV": "Côte d'Ivoire",
+    "ECU": "Équateur",
+    "NED": "Pays-Bas",
+    "JPN": "Japon",
+    "SWE": "Suède",
+    "TUN": "Tunisie",
+    "BEL": "Belgique",
+    "EGY": "Égypte",
+    "IRN": "Iran",
+    "NZL": "Nouvelle-Zélande",
+    "ESP": "Espagne",
+    "CPV": "Cap-Vert",
+    "KSA": "Arabie Saoudite",
+    "SAU": "Arabie Saoudite",
+    "URU": "Uruguay",
+    "ENG": "Angleterre",
+    "CRO": "Croatie",
+    "GHA": "Ghana",
+    "PAN": "Panama"
   }
 }

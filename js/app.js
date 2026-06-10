@@ -1,6 +1,6 @@
 // js/app.js
 import '../style.css';
-import { initApi, getH2HData } from './api.js';
+import { initApi, getH2HData, getFlag } from './api.js';
 import { setupWebSockets } from './socket.js';
 import { 
     renderMatches, 
@@ -14,16 +14,13 @@ import {
 class WorldCupApp {
     constructor() {
         this.socketUrl = 'wss://api.football-data-premium.com/live';
-        this.currentLang = 'fr';
+        // Langue configurée à partir du localStorage ou français par défaut
+        this.currentLang = localStorage.getItem('lang') || 'fr';
         this.data = null;
         this.map = null;
         this.chart = null;
+        this.i18n = null;
         
-        // Exposer la méthode globalement pour l'attribut onclick
-        window.openMatchDetails = (matchId) => {
-            this.openMatchDetails(matchId);
-        };
-
         this.init();
     }
 
@@ -33,12 +30,16 @@ class WorldCupApp {
             AOS.init({ once: true, offset: 80 });
         }
 
-        // Configuration PWA
+        // Configuration PWA (désenregistrement propre par défaut)
         this.registerServiceWorker();
 
         // Gestion du thème
         this.setupThemeToggle();
+        
+        // Gestion du menu mobile
         this.setupMobileMenu();
+
+        // Charger les traductions initiales
         await this.loadTranslations();
 
         // Initialisation des API & WebSockets
@@ -54,13 +55,16 @@ class WorldCupApp {
             // Attacher les écouteurs sur les filtres
             this.setupFilterListeners();
 
-            // Attacher l'écouteur pour les détails de match
+            // Attacher l'écouteur pour les détails de match (délégation d'événements unique)
             this.setupMatchDetailsListener();
 
-            // Initialiser les sockets (avec fallback simulateur intégré)
+            // Configurer le switcher de langue
+            this.setupLanguageSwitcher();
+
+            // Initialiser les sockets (avec simulation si en local)
             setupWebSockets(this);
 
-            // Initialiser Leaflet
+            // Initialiser la carte Leaflet
             this.initMap(this.data.stadiums);
 
             // Initialiser le graphique tactique
@@ -72,6 +76,7 @@ class WorldCupApp {
     }
 
     applyInitialRender() {
+        if (!this.data) return;
         renderMatches(this.data.matches);
         renderLiveMatches(this.data.matches);
         renderTeams(this.data.matches);
@@ -86,13 +91,27 @@ class WorldCupApp {
         
         if (!this.data) return;
 
+        // Vider sauf le premier élément option
+        if (groupSelect) {
+            const firstOpt = groupSelect.firstElementChild;
+            groupSelect.innerHTML = '';
+            if (firstOpt) groupSelect.appendChild(firstOpt);
+        }
+        if (stadiumSelect) {
+            const firstOpt = stadiumSelect.firstElementChild;
+            stadiumSelect.innerHTML = '';
+            if (firstOpt) stadiumSelect.appendChild(firstOpt);
+        }
+
         // Groupes uniques
         const groups = [...new Set(this.data.matches.map(m => m.group))].sort();
         if (groupSelect) {
             groups.forEach(g => {
                 const opt = document.createElement('option');
                 opt.value = g;
-                opt.innerText = g;
+                // Traduire dynamiquement le groupe dans le sélecteur
+                const cleanGroup = g.replace("Groupe ", "").replace("Group ", "");
+                opt.innerText = this.currentLang === 'en' ? `Group ${cleanGroup}` : `Groupe ${cleanGroup}`;
                 groupSelect.appendChild(opt);
             });
         }
@@ -133,12 +152,14 @@ class WorldCupApp {
 
         // 1. Filtrer par recherche
         if (query) {
-            filtered = filtered.filter(m => 
-                m.homeTeam.toLowerCase().includes(query) || 
-                m.awayTeam.toLowerCase().includes(query) || 
-                m.group.toLowerCase().includes(query) || 
-                m.stadium.toLowerCase().includes(query)
-            );
+            filtered = filtered.filter(m => {
+                const homeNameTrans = this.t(`teams.${m.homeTla}`, m.homeTeam).toLowerCase();
+                const awayNameTrans = this.t(`teams.${m.awayTla}`, m.awayTeam).toLowerCase();
+                return homeNameTrans.includes(query) || 
+                       awayNameTrans.includes(query) || 
+                       m.group.toLowerCase().includes(query) || 
+                       m.stadium.toLowerCase().includes(query);
+            });
         }
 
         // 2. Filtrer par groupe
@@ -155,11 +176,11 @@ class WorldCupApp {
         if (sortOrder === 'maroc') {
             // Matchs du Maroc en premier, puis le reste
             filtered.sort((a, b) => {
-                const aIsMaroc = a.homeTeam === 'Maroc' || a.awayTeam === 'Maroc';
-                const bIsMaroc = b.homeTeam === 'Maroc' || b.awayTeam === 'Maroc';
+                const aIsMaroc = a.homeTla === 'MAR' || a.awayTla === 'MAR';
+                const bIsMaroc = b.homeTla === 'MAR' || b.awayTla === 'MAR';
                 if (aIsMaroc && !bIsMaroc) return -1;
                 if (!aIsMaroc && bIsMaroc) return 1;
-                return a.id - b.id; // Garde l'ordre chrono secondaire
+                return a.id - b.id;
             });
         } else {
             // Tri Chronologique simple (par id)
@@ -197,9 +218,9 @@ class WorldCupApp {
             
             if (statusEl) {
                 if (data.status === 'LIVE') {
-                    statusEl.innerHTML = `<span class="live-badge" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;"><span class="live-pulse"></span> Direct ${data.time}</span>`;
+                    statusEl.innerHTML = `<span class="live-badge" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;"><span class="live-pulse"></span> ${this.t('modal.live', 'Direct')} ${data.time}</span>`;
                 } else if (data.status === 'FINISHED') {
-                    statusEl.innerHTML = `<span style="font-size: 0.8rem; opacity: 0.6; font-weight: bold;">Terminé</span>`;
+                    statusEl.innerHTML = `<span style="font-size: 0.8rem; opacity: 0.6; font-weight: bold;">${this.t('modal.finished', 'Terminé')}</span>`;
                 } else {
                     statusEl.innerHTML = `<span style="font-size: 0.8rem; opacity: 0.8; font-weight: bold; color: var(--or-premium);"><i class="fa-regular fa-clock"></i> ${data.time}</span>`;
                 }
@@ -222,19 +243,16 @@ class WorldCupApp {
             setTimeout(() => liveCard.classList.remove('goal-scored'), 1800);
         }
 
-        // Synthétiser un coup de sifflet d'arbitre (Audio local sans dépendance fichier externe)
+        // Synthétiser un sifflet d'arbitre (Audio Context)
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (AudioContext) {
                 const ctx = new AudioContext();
-                
-                // Premier bip court
                 this.playWhistleBeep(ctx, 0, 0.15, 1200);
-                // Deuxième bip plus long et modulé
                 this.playWhistleBeep(ctx, 0.2, 0.5, 1400);
             }
         } catch (e) {
-            console.warn('Le son du sifflet a été bloqué par la politique de sécurité audio:', e);
+            console.warn('Sifflet audio bloqué par la politique de sécurité:', e);
         }
     }
 
@@ -244,7 +262,6 @@ class WorldCupApp {
         
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
-        // Effet vibrato sifflet
         osc.frequency.linearRampToValueAtTime(freq + 100, ctx.currentTime + startTime + (duration * 0.2));
         osc.frequency.linearRampToValueAtTime(freq - 50, ctx.currentTime + startTime + (duration * 0.8));
         
@@ -264,18 +281,6 @@ class WorldCupApp {
                 body: body,
                 icon: 'https://cdn-icons-png.flaticon.com/512/5323/5323977.png'
             });
-        } else if (Notification.permission !== 'denied') {
-            try {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    new Notification('Coupe du Monde 2026', {
-                        body: body,
-                        icon: 'https://cdn-icons-png.flaticon.com/512/5323/5323977.png'
-                    });
-                }
-            } catch (e) {
-                console.log('Push notification request blocked');
-            }
         }
     }
 
@@ -303,8 +308,6 @@ class WorldCupApp {
         });
     }
 
-    // Langue configurée uniquement en Français (FR)
-
     async loadTranslations() {
         try {
             const response = await fetch(`./data/locales/${this.currentLang}.json`);
@@ -315,97 +318,211 @@ class WorldCupApp {
         }
     }
 
+    t(path, defaultValue = '') {
+        if (!this.i18n) return defaultValue;
+        const parts = path.split('.');
+        let current = this.i18n;
+        for (const part of parts) {
+            if (current[part] === undefined) return defaultValue;
+            current = current[part];
+        }
+        return current;
+    }
+
     hydrateTranslations() {
         if (!this.i18n) return;
 
-        // Mettre à jour les liens de navigation
+        // 1. Liens de navigation (Desktop)
         const navLinks = document.querySelectorAll('.nav-links a');
         if (navLinks.length >= 8) {
-            navLinks[0].innerHTML = this.i18n.nav.home;
-            navLinks[1].innerHTML = this.i18n.nav.calendar;
-            navLinks[2].innerHTML = this.i18n.nav.live;
-            navLinks[3].innerHTML = this.i18n.nav.teams;
-            navLinks[4].innerHTML = this.i18n.nav.morocco;
-            navLinks[5].innerHTML = this.i18n.nav.standings;
-            navLinks[6].innerHTML = this.i18n.nav.analytics;
-            navLinks[7].innerHTML = this.i18n.nav.stadiums;
+            navLinks[0].innerHTML = this.t('nav.home');
+            navLinks[1].innerHTML = this.t('nav.calendar');
+            navLinks[2].innerHTML = this.t('nav.live');
+            navLinks[3].innerHTML = this.t('nav.teams');
+            navLinks[4].innerHTML = this.t('nav.morocco');
+            navLinks[5].innerHTML = this.t('nav.standings');
+            navLinks[6].innerHTML = this.t('nav.analytics');
+            navLinks[7].innerHTML = this.t('nav.stadiums');
         }
 
-        // Tagline et Titre du Hero
-        const tagline = document.querySelector('.hero-tagline');
-        if (tagline) tagline.innerText = this.i18n.hero.tagline;
-
-        const heroTitle = document.querySelector('.hero-title');
-        if (heroTitle && this.i18n.hero.title) {
-            heroTitle.innerHTML = `${this.i18n.hero.title}<br><span style="color:var(--or-premium)">${this.i18n.hero.subtitle}</span>`;
-        }
-
-        // Labels du compte à rebours
-        const countdownBoxes = document.querySelectorAll('.countdown-box');
-        if (countdownBoxes.length === 4) {
-            countdownBoxes[0].querySelector('.countdown-label').innerText = this.i18n.hero.countdown.days;
-            countdownBoxes[1].querySelector('.countdown-label').innerText = this.i18n.hero.countdown.hours;
-            countdownBoxes[2].querySelector('.countdown-label').innerText = this.i18n.hero.countdown.minutes;
-            countdownBoxes[3].querySelector('.countdown-label').innerText = this.i18n.hero.countdown.seconds;
-        }
-
-        // Traduction des liens mobiles
+        // 2. Liens de navigation (Mobile)
         const mobileLinks = document.querySelectorAll('.mobile-nav-links a');
         if (mobileLinks.length >= 8) {
-            mobileLinks[0].innerHTML = this.i18n.nav.home;
-            mobileLinks[1].innerHTML = this.i18n.nav.calendar;
-            mobileLinks[2].innerHTML = this.i18n.nav.live;
-            mobileLinks[3].innerHTML = this.i18n.nav.teams;
-            mobileLinks[4].innerHTML = this.i18n.nav.morocco;
-            mobileLinks[5].innerHTML = this.i18n.nav.standings;
-            mobileLinks[6].innerHTML = this.i18n.nav.analytics;
-            mobileLinks[7].innerHTML = this.i18n.nav.stadiums;
+            mobileLinks[0].innerHTML = this.t('nav.home');
+            mobileLinks[1].innerHTML = this.t('nav.calendar');
+            mobileLinks[2].innerHTML = this.t('nav.live');
+            mobileLinks[3].innerHTML = this.t('nav.teams');
+            mobileLinks[4].innerHTML = this.t('nav.morocco');
+            mobileLinks[5].innerHTML = this.t('nav.standings');
+            mobileLinks[6].innerHTML = this.t('nav.analytics');
+            mobileLinks[7].innerHTML = this.t('nav.stadiums');
+        }
+
+        // 3. Hero Section
+        const tagline = document.querySelector('.hero-tagline');
+        if (tagline) tagline.innerText = this.t('hero.tagline');
+
+        const heroTitle = document.querySelector('.hero-title');
+        if (heroTitle) {
+            heroTitle.innerHTML = `${this.t('hero.title')}<br><span style="color:var(--or-premium)">${this.t('hero.subtitle')}</span>`;
+        }
+
+        // 4. Hero Stats
+        const statNations = document.getElementById('stat-nations');
+        if (statNations) statNations.innerText = this.t('sections.teams');
+        const statMatches = document.getElementById('stat-matches');
+        if (statMatches) statMatches.innerText = this.currentLang === 'en' ? 'Total Matches' : 'Matchs Totaux';
+        const statStadiums = document.getElementById('stat-stadiums');
+        if (statStadiums) statStadiums.innerText = this.currentLang === 'en' ? 'Official Stadiums' : 'Stades Officiels';
+        const statHosts = document.getElementById('stat-hosts');
+        if (statHosts) statHosts.innerText = this.currentLang === 'en' ? 'Host Countries' : 'Pays Hôtes';
+
+        // 5. Countdown labels
+        const countdownBoxes = document.querySelectorAll('.countdown-box');
+        if (countdownBoxes.length === 4) {
+            countdownBoxes[0].querySelector('.countdown-label').innerText = this.t('hero.countdown.days');
+            countdownBoxes[1].querySelector('.countdown-label').innerText = this.t('hero.countdown.hours');
+            countdownBoxes[2].querySelector('.countdown-label').innerText = this.t('hero.countdown.minutes');
+            countdownBoxes[3].querySelector('.countdown-label').innerText = this.t('hero.countdown.seconds');
+        }
+
+        // 6. Section Titles
+        const secCalendar = document.getElementById('sec-title-calendar');
+        if (secCalendar) secCalendar.innerText = this.t('sections.calendar');
+        const secLive = document.getElementById('sec-title-live');
+        if (secLive) secLive.innerText = this.t('sections.live');
+        const secTeams = document.getElementById('sec-title-teams');
+        if (secTeams) secTeams.innerText = this.t('sections.teams');
+        const secMorocco = document.getElementById('sec-title-morocco');
+        if (secMorocco) secMorocco.innerText = this.t('sections.morocco');
+        const secStandings = document.getElementById('sec-title-standings');
+        if (secStandings) secStandings.innerText = this.t('sections.standings');
+        const secNews = document.getElementById('sec-title-news');
+        if (secNews) secNews.innerText = this.t('sections.news');
+        const secStadiums = document.getElementById('sec-title-stadiums');
+        if (secStadiums) secStadiums.innerText = this.t('sections.stadiums');
+
+        // 7. Search Input Placeholder
+        const searchInput = document.getElementById('search-match');
+        if (searchInput) searchInput.placeholder = this.t('filters.search');
+
+        // 8. Filters Options
+        const optGroups = document.getElementById('opt-all-groups');
+        if (optGroups) optGroups.innerText = this.t('filters.allGroups');
+        const optStadiums = document.getElementById('opt-all-stadiums');
+        if (optStadiums) optStadiums.innerText = this.t('filters.allStadiums');
+        const optChrono = document.getElementById('opt-sort-chrono');
+        if (optChrono) optChrono.innerText = this.t('filters.chrono');
+        const optMaroc = document.getElementById('opt-sort-maroc');
+        if (optMaroc) optMaroc.innerText = this.t('filters.maroc');
+
+        // 9. Live Badge
+        const liveBadge = document.getElementById('live-update-badge');
+        if (liveBadge) {
+            liveBadge.innerHTML = `<span class="live-pulse"></span> ${this.currentLang === 'en' ? 'Live Update Active' : 'Live Update Actif'}`;
+        }
+
+        // 10. Espace Lions de l'Atlas
+        const squadTitle = document.getElementById('morocco-squad-title');
+        if (squadTitle) squadTitle.innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${this.t('moroccoZone.squad')}`;
+        const histTitle = document.getElementById('morocco-history-title');
+        if (histTitle) histTitle.innerHTML = `<i class="fa-solid fa-history"></i> ${this.t('moroccoZone.history')}`;
+        const histDesc = document.getElementById('morocco-history-desc');
+        if (histDesc) histDesc.innerText = this.t('moroccoZone.historyText');
+        const mediaTitle = document.getElementById('morocco-media-title');
+        if (mediaTitle) mediaTitle.innerHTML = `<i class="fa-solid fa-photo-film"></i> ${this.t('moroccoZone.media')}`;
+
+        // 11. Standings Cards Headers
+        const titleGroups = document.getElementById('title-groups');
+        if (titleGroups) titleGroups.innerText = this.t('standingsTable.groups');
+        const titleScorers = document.getElementById('title-scorers');
+        if (titleScorers) titleScorers.innerText = this.t('standingsTable.scorers');
+        const titleAssists = document.getElementById('title-assists');
+        if (titleAssists) titleAssists.innerText = this.t('standingsTable.assists');
+
+        // 12. Analytics title
+        const titleAnalytics = document.getElementById('title-analytics');
+        if (titleAnalytics) {
+            titleAnalytics.innerHTML = `<i class="fa-solid fa-chart-line" style="color:var(--or-premium)"></i> ${this.t('analyticsZone.title')}`;
         }
     }
 
+    setupLanguageSwitcher() {
+        const desktopBtns = document.querySelectorAll('.lang-switcher .lang-btn');
+        const mobileBtns = document.querySelectorAll('.mobile-lang-switcher .lang-btn');
+
+        const updateActiveLangButton = (lang) => {
+            // Desktop
+            desktopBtns.forEach(btn => {
+                if (btn.getAttribute('data-lang') === lang) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            // Mobile
+            mobileBtns.forEach(btn => {
+                if (btn.getAttribute('data-lang') === lang) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        };
+
+        const switchHandler = async (e) => {
+            const newLang = e.target.getAttribute('data-lang');
+            if (newLang && newLang !== this.currentLang) {
+                console.log(`🌐 [App] Changement de langue vers: ${newLang}`);
+                this.currentLang = newLang;
+                localStorage.setItem('lang', newLang);
+                
+                updateActiveLangButton(newLang);
+                
+                // Charger les traductions
+                await this.loadTranslations();
+                
+                // Mettre à jour le sélecteur
+                this.populateFilterDropdowns();
+
+                // Re-rendre
+                this.applyInitialRender();
+
+                // Recréer le graphe
+                this.initChart();
+            }
+        };
+
+        desktopBtns.forEach(btn => btn.addEventListener('click', switchHandler));
+        mobileBtns.forEach(btn => btn.addEventListener('click', switchHandler));
+
+        updateActiveLangButton(this.currentLang);
+    }
+
     registerServiceWorker() {
-        // Désenregistrer activement tous les Service Workers existants
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(registrations => {
                 for (let registration of registrations) {
-                    registration.unregister().then(success => {
-                        if (success) {
-                            console.log('SW: Désenregistré avec succès.');
-                        }
-                    });
+                    registration.unregister();
                 }
-            }).catch(err => console.warn('SW: Erreur lors du désenregistrement:', err));
-        }
-
-        // Vider tous les caches stockés dans le navigateur (Cache Storage API)
-        if ('caches' in window) {
-            caches.keys().then(keys => {
-                return Promise.all(keys.map(key => {
-                    console.log('SW: Suppression du cache:', key);
-                    return caches.delete(key);
-                }));
-            }).then(() => {
-                console.log('SW: Tous les caches ont été nettoyés avec succès.');
-            }).catch(err => console.warn('SW: Erreur lors du nettoyage du cache:', err));
+            }).catch(err => console.warn('SW error:', err));
         }
     }
 
     initMap(stadiums) {
         if (typeof L === 'undefined' || !document.getElementById('map')) return;
 
-        // Centrer la carte sur l'Amérique du Nord (USA, Canada, Mexique)
+        // Centrer sur l'Amérique du Nord (USA, Canada, Mexique)
         this.map = L.map('map', {
             scrollWheelZoom: false
         }).setView([38.5, -98.0], 4);
 
-        // Fond de carte sombre personnalisé (CartoDB Dark Matter) pour préserver l'esthétique premium
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
             subdomains: 'abcd',
             maxZoom: 20
         }).addTo(this.map);
 
-        // Icône personnalisée rouge-vert-or premium
         const customIcon = L.divIcon({
             className: 'custom-map-marker',
             html: `<div style="background: var(--red-maroc); border: 2px solid var(--gold-premium); width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 10px var(--red-maroc);"></div>`,
@@ -413,19 +530,29 @@ class WorldCupApp {
             iconAnchor: [7, 7]
         });
 
-        // Ajouter les marqueurs des stades
         stadiums.forEach(stad => {
-            const popupContent = `
-                <div style="font-family: 'Inter', sans-serif; padding: 5px;">
-                    <h4 class="font-sport" style="color: var(--or-premium); margin: 0 0 8px 0; font-size: 1rem; border-bottom: 1px solid rgba(255,215,0,0.2); padding-bottom: 3px;">${stad.name}</h4>
-                    <p style="margin: 3px 0; font-size: 0.85rem;"><i class="fa-solid fa-city" style="color: var(--white); width: 15px;"></i> Ville : <strong>${stad.city}</strong></p>
-                    <p style="margin: 3px 0; font-size: 0.85rem;"><i class="fa-solid fa-users" style="color: var(--white); width: 15px;"></i> Capacité : <strong>${stad.capacity} places</strong></p>
-                    <p style="margin: 3px 0; font-size: 0.85rem;"><i class="fa-solid fa-futbol" style="color: var(--white); width: 15px;"></i> Matchs : <strong>${stad.matchesCount} programmés</strong></p>
-                </div>
-            `;
-            L.marker(stad.coords, { icon: customIcon })
-                .addTo(this.map)
-                .bindPopup(popupContent);
+            // Mettre à jour dynamiquement le contenu du popup selon la langue
+            const renderPopup = () => {
+                const labelCity = this.t('stadiumDetails.city', 'Ville');
+                const labelCapacity = this.t('stadiumDetails.capacity', 'Capacité');
+                const labelMatches = this.t('stadiumDetails.matches', 'Matchs');
+                return `
+                    <div style="font-family: 'Inter', sans-serif; padding: 5px;">
+                        <h4 class="font-sport" style="color: var(--or-premium); margin: 0 0 8px 0; font-size: 1rem; border-bottom: 1px solid rgba(255,215,0,0.2); padding-bottom: 3px;">${stad.name}</h4>
+                        <p style="margin: 3px 0; font-size: 0.85rem;"><i class="fa-solid fa-city" style="color: var(--text-main); width: 15px; opacity:0.8;"></i> ${labelCity} : <strong>${stad.city}</strong></p>
+                        <p style="margin: 3px 0; font-size: 0.85rem;"><i class="fa-solid fa-users" style="color: var(--text-main); width: 15px; opacity:0.8;"></i> ${labelCapacity} : <strong>${stad.capacity} places</strong></p>
+                        <p style="margin: 3px 0; font-size: 0.85rem;"><i class="fa-solid fa-futbol" style="color: var(--text-main); width: 15px; opacity:0.8;"></i> ${labelMatches} : <strong>${stad.matchesCount} programmés</strong></p>
+                    </div>
+                `;
+            };
+
+            const marker = L.marker(stad.coords, { icon: customIcon }).addTo(this.map);
+            marker.bindPopup(renderPopup);
+
+            // Re-render popup content when opened to catch active language
+            marker.on('click', () => {
+                marker.setPopupContent(renderPopup());
+            });
         });
     }
 
@@ -435,14 +562,28 @@ class WorldCupApp {
 
         const ctx = canvas.getContext('2d');
         
-        // Configuration du radar comparatif Maroc (Lions de l'Atlas) vs Brésil
+        // Détruire l'ancien graphique pour éviter les superpositions d'éléments
+        if (this.chart) {
+            this.chart.destroy();
+        }
+
+        // Récupérer les labels traduits du Radar
+        const radarLabels = [
+            this.t('analyticsZone.radar.possession', 'Possession (%)'),
+            this.t('analyticsZone.radar.xg', 'xG (Expected Goals)'),
+            this.t('analyticsZone.radar.shotsOnTarget', 'Tirs cadrés'),
+            this.t('analyticsZone.radar.passAccuracy', 'Précision Passes (%)'),
+            this.t('analyticsZone.radar.duelsWon', 'Duels Gagnés'),
+            this.t('analyticsZone.radar.pressing', 'Efficacité Pressing')
+        ];
+
         this.chart = new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: ['Possession (%)', 'xG (Buts attendus)', 'Tirs cadrés', 'Précision Passes (%)', 'Duels Gagnés', 'Efficacité Pressing'],
+                labels: radarLabels,
                 datasets: [
                     {
-                        label: '🇲🇦 Maroc (Lions de l\'Atlas)',
+                        label: this.t('analyticsZone.radar.maroc', '🇲🇦 Maroc (Lions de l\'Atlas)'),
                         data: [52, 1.8, 7, 86, 58, 78],
                         backgroundColor: 'rgba(0, 98, 51, 0.25)',
                         borderColor: '#006233',
@@ -451,7 +592,7 @@ class WorldCupApp {
                         borderWidth: 2
                     },
                     {
-                        label: '🇧🇷 Brésil',
+                        label: this.t('analyticsZone.radar.brazil', '🇧🇷 Brésil'),
                         data: [48, 2.1, 9, 89, 52, 72],
                         backgroundColor: 'rgba(255, 223, 0, 0.15)',
                         borderColor: '#009c3b',
@@ -467,7 +608,7 @@ class WorldCupApp {
                 plugins: {
                     legend: {
                         labels: {
-                            color: '#FFFFFF',
+                            color: 'var(--text-main)',
                             font: {
                                 family: 'Inter',
                                 size: 12
@@ -484,7 +625,7 @@ class WorldCupApp {
                             color: 'rgba(255, 255, 255, 0.08)'
                         },
                         pointLabels: {
-                            color: '#FFFFFF',
+                            color: 'var(--text-main)',
                             font: {
                                 family: 'Inter',
                                 size: 11
@@ -524,8 +665,7 @@ class WorldCupApp {
     }
 
     setupMatchDetailsListener() {
-        console.log("⚽ [App] Enregistrement de l'écouteur de clic sur les cartes de match...");
-        // Écouter les clics sur les cartes de match via délégation d'événements
+        console.log("⚽ [App] Enregistrement de l'écouteur de clic unique...");
         document.addEventListener('click', (e) => {
             const card = e.target.closest('.match-card');
             if (card) {
@@ -538,75 +678,129 @@ class WorldCupApp {
 
     openMatchDetails(matchId) {
         console.log("⚽ [App] Ouverture des détails du match ID :", matchId);
-        if (!this.data) {
-            console.error("⚽ [App] Données de match non disponibles");
-            return;
-        }
+        if (!this.data) return;
+        
         const match = this.data.matches.find(m => m.id === matchId);
-        if (!match) {
-            console.error("⚽ [App] Match non trouvé dans la liste pour l'ID :", matchId);
-            return;
-        }
+        if (!match) return;
 
         // Récupérer l'historique H2H
-        const h2h = getH2HData(match.homeTeam, match.awayTeam);
-        console.log("⚽ [App] Confrontations H2H récupérées :", h2h);
+        const rawH2H = getH2HData(match.homeTeam, match.awayTeam);
+        
+        // Traduction dynamique à la volée du H2H pour l'anglais
+        const h2h = rawH2H.map(game => {
+            let details = game.details;
+            let comp = game.comp;
+            let date = game.date;
+            
+            if (this.currentLang === 'en') {
+                comp = comp
+                    .replace("Match Amical", "Friendly Match")
+                    .replace("Coupe du Monde", "World Cup")
+                    .replace("Gold Cup", "Gold Cup")
+                    .replace("Copa América Centenario", "Copa América Centenario");
+                
+                date = date
+                    .replace("Mars", "March")
+                    .replace("Juin", "June")
+                    .replace("Juillet", "July")
+                    .replace("Décembre", "December")
+                    .replace("Avril", "April")
+                    .replace("Août", "August");
 
-        // Créer l'élément de modal s'il n'existe pas
+                details = details
+                    .replace("Victoire historique des Lions de l'Atlas à Tanger (Boufal 29', Sabiri 79' / Casemiro 67')", "Historic victory for the Atlas Lions in Tangier (Boufal 29', Sabiri 79' / Casemiro 67')")
+                    .replace("Phase de groupes à Nantes (Ronaldo 9', Rivaldo 45', Bebeto 50')", "Group stage in Nantes (Ronaldo 9', Rivaldo 45', Bebeto 50')")
+                    .replace("Match d'ouverture historique à Johannesburg (Tshabalala 55' / Márquez 79')", "Historic opening match in Johannesburg (Tshabalala 55' / Márquez 79')")
+                    .replace("Phase de groupes (Rodriguez 40' / Evans 28', Sibaya 41' pen)", "Group stage (Rodriguez 40' / Evans 28', Sibaya 41' pen)")
+                    .replace("Phase de groupes à Saint-Étienne. Doublé légendaire de Salaheddine Bassir (22', 85') et but d'Abdeljalil Hadda (46')", "Group stage in Saint-Étienne. Legendary brace by Salaheddine Bassir (22', 85') and goal by Hadda (46')")
+                    .replace("Match de préparation à Casablanca", "Friendly match in Casablanca")
+                    .replace("But décisif de Clint Dempsey à Philadelphie", "Decisive goal by Clint Dempsey in Philadelphia")
+                    .replace("Match amical disputé à Nashville", "Friendly match played in Nashville")
+                    .replace("Victoire coréenne à Prague", "Korean victory in Prague")
+                    .replace("Match amical à Drnovice", "Friendly match in Drnovice")
+                    .replace("Rencontre amicale disputée à Rabat", "Friendly match played in Rabat");
+            }
+            
+            return { ...game, comp, date, details };
+        });
+
+        // Récupérer le modal ou le créer s'il n'existe pas
         let modal = document.getElementById('match-details-modal');
         if (!modal) {
             modal = document.createElement('div');
             modal.id = 'match-details-modal';
-            modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 3000; display: none; align-items: center; justify-content: center; padding: 1rem;";
             document.body.appendChild(modal);
         }
 
-        // Remplir le contenu du modal avec une structure premium et responsive
+        // S'assurer que le modal a la bonne classe de style
+        modal.className = 'match-details-modal';
+
+        // Déterminer les statuts traduits
+        let statusLabel = this.t('modal.scheduled', 'Programmé');
+        let statusClass = 'status-scheduled';
+        
+        if (match.status === 'LIVE') {
+            statusLabel = this.t('modal.live', 'En Direct');
+            statusClass = 'status-live';
+        } else if (match.status === 'FINISHED') {
+            statusLabel = this.t('modal.finished', 'Terminé');
+            statusClass = 'status-finished';
+        }
+
+        const translateGroupDisplay = (groupName) => {
+            if (!groupName) return '';
+            const cleanGroup = groupName.replace("Groupe ", "").replace("Group ", "");
+            return this.currentLang === 'en' ? `Group ${cleanGroup}` : `Groupe ${cleanGroup}`;
+        };
+
+        const translateTeam = (tla, defaultName) => {
+            return this.t(`teams.${tla}`, defaultName);
+        };
+
+        // Injecter le contenu (sans styles de couleurs en dur)
         modal.innerHTML = `
-            <div class="modal-backdrop" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);"></div>
-            <div class="modal-content premium-card" style="position: relative; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; background: rgba(15, 15, 15, 0.95); border: 1px solid rgba(255, 215, 0, 0.2); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.05); z-index: 3010; padding: 2.5rem; border-radius: 16px;">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content premium-card">
                 <button class="modal-close-btn" id="close-match-modal" aria-label="Fermer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
                 
                 <div class="modal-header">
-                    <span class="group-label">${match.group}</span>
-                    <span class="date-label"><i class="fa-regular fa-calendar-days"></i> ${match.date}</span>
+                    <span class="group-label">${translateGroupDisplay(match.group)}</span>
+                    <span class="date-label"><i class="fa-regular fa-calendar-days"></i> ${match.date.replace("Juin", this.currentLang === 'en' ? "June" : "Juin")}</span>
                 </div>
                 
                 <div class="match-score-section">
                     <div class="team-side">
-                        <div class="modal-flag-wrapper">${match.homeFlag}</div>
-                        <span class="modal-team-name">${match.homeTeam}</span>
+                        <div class="modal-flag-wrapper">${getFlag(match.homeTla)}</div>
+                        <span class="modal-team-name">${translateTeam(match.homeTla, match.homeTeam)}</span>
                     </div>
                     
                     <div class="score-display">
                         ${match.status === 'SCHEDULED' ? `
                             <span class="kickoff-time">${match.time}</span>
-                            <span class="status-badge status-scheduled">Programmé</span>
+                            <span class="status-badge ${statusClass}">${statusLabel}</span>
                         ` : `
                             <span class="live-score" id="modal-score-${match.id}">${match.homeScore} - ${match.awayScore}</span>
-                            <span class="status-badge ${match.status === 'LIVE' ? 'status-live' : 'status-finished'}">
-                                ${match.status === 'LIVE' ? 'En Direct' : 'Terminé'}
-                            </span>
+                            <span class="status-badge ${statusClass}">${statusLabel}</span>
                         `}
                     </div>
                     
                     <div class="team-side">
-                        <div class="modal-flag-wrapper">${match.awayFlag}</div>
-                        <span class="modal-team-name">${match.awayTeam}</span>
+                        <div class="modal-flag-wrapper">${getFlag(match.awayTla)}</div>
+                        <span class="modal-team-name">${translateTeam(match.awayTla, match.awayTeam)}</span>
                     </div>
                 </div>
 
                 <div class="modal-body">
-                    <div class="info-row" style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; margin-bottom: 1.5rem; opacity: 0.9;">
-                        <i class="fa-solid fa-location-dot" style="color: var(--or-premium);"></i> <span>Stade :</span>
+                    <div class="info-row" style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; margin-bottom: 1.5rem;">
+                        <i class="fa-solid fa-location-dot" style="color: var(--or-premium);"></i> <span>${this.t('modal.stadium', 'Stade')} :</span>
                         <strong>${match.stadium}</strong>
                     </div>
                     
                     <div class="modal-divider"></div>
                     
-                    <h3 class="modal-section-title"><i class="fa-solid fa-clock-rotate-left"></i> Confrontations Précédentes</h3>
+                    <h3 class="modal-section-title"><i class="fa-solid fa-clock-rotate-left"></i> ${this.t('modal.h2h', 'Confrontations Précédentes')}</h3>
                     <div class="h2h-list">
                         ${h2h.map(game => `
                             <div class="h2h-item">
@@ -615,7 +809,7 @@ class WorldCupApp {
                                     <span class="h2h-comp" style="color: var(--or-premium); font-weight: 500;">${game.comp}</span>
                                 </div>
                                 <div class="h2h-result">
-                                    <span class="h2h-score" style="font-weight: 700; color: var(--white);">${game.score}</span>
+                                    <span class="h2h-score" style="font-weight: 700;">${game.score.replace("Maroc", translateTeam("MAR", "Maroc")).replace("Brésil", translateTeam("BRA", "Brésil")).replace("Écosse", translateTeam("SCO", "Écosse")).replace("Afrique du Sud", translateTeam("RSA", "Afrique du Sud")).replace("Mexique", translateTeam("MEX", "Mexique")).replace("États-Unis", translateTeam("USA", "États-Unis")).replace("Paraguay", translateTeam("PAR", "Paraguay")).replace("République Tchèque", translateTeam("CZE", "République Tchèque")).replace("Corée du Sud", translateTeam("KOR", "Corée du Sud")).replace("Haïti", translateTeam("HAI", "Haïti"))}</span>
                                     <p class="h2h-details" style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px; line-height: 1.5;">${game.details}</p>
                                 </div>
                             </div>
@@ -624,27 +818,27 @@ class WorldCupApp {
 
                     ${match.status !== 'SCHEDULED' ? `
                         <div class="modal-divider"></div>
-                        <h3 class="modal-section-title"><i class="fa-solid fa-chart-bar"></i> Statistiques Attendues</h3>
+                        <h3 class="modal-section-title"><i class="fa-solid fa-chart-bar"></i> ${this.t('modal.stats', 'Statistiques Attendues')}</h3>
                         <div class="mock-stats-grid">
                             <div class="stat-row">
-                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.status === 'LIVE' ? Math.floor(Math.random() * 20) + 40 : 54}%</span>
-                                <span class="stat-name">Possession</span>
-                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.status === 'LIVE' ? 100 - (Math.floor(Math.random() * 20) + 40) : 46}%</span>
+                                <span class="stat-val" style="font-weight: bold;">${match.status === 'LIVE' ? Math.floor(Math.random() * 20) + 40 : 54}%</span>
+                                <span class="stat-name">${this.t('modal.possession', 'Possession')}</span>
+                                <span class="stat-val" style="font-weight: bold;">${match.status === 'LIVE' ? 100 - (Math.floor(Math.random() * 20) + 40) : 46}%</span>
                             </div>
                             <div class="stat-bar-container">
                                 <div class="stat-bar-fill" style="width: ${match.status === 'LIVE' ? Math.floor(Math.random() * 20) + 40 : 54}%;"></div>
                             </div>
                             
                             <div class="stat-row" style="margin-top: 15px;">
-                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.status === 'LIVE' ? (Math.random() * 1.5 + 0.2).toFixed(2) : '1.45'}</span>
-                                <span class="stat-name">xG (Expected Goals)</span>
-                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.status === 'LIVE' ? (Math.random() * 1.5 + 0.2).toFixed(2) : '1.12'}</span>
+                                <span class="stat-val" style="font-weight: bold;">${match.status === 'LIVE' ? (Math.random() * 1.5 + 0.2).toFixed(2) : '1.45'}</span>
+                                <span class="stat-name">${this.t('modal.xg', 'xG (Expected Goals)')}</span>
+                                <span class="stat-val" style="font-weight: bold;">${match.status === 'LIVE' ? (Math.random() * 1.5 + 0.2).toFixed(2) : '1.12'}</span>
                             </div>
                             
                             <div class="stat-row" style="margin-top: 15px;">
-                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.homeScore + (match.status === 'LIVE' ? Math.floor(Math.random() * 5) : 8)}</span>
-                                <span class="stat-name">Tirs Totaux</span>
-                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.awayScore + (match.status === 'LIVE' ? Math.floor(Math.random() * 5) : 6)}</span>
+                                <span class="stat-val" style="font-weight: bold;">${match.homeScore + (match.status === 'LIVE' ? Math.floor(Math.random() * 5) : 8)}</span>
+                                <span class="stat-name">${this.t('modal.shots', 'Tirs Totaux')}</span>
+                                <span class="stat-val" style="font-weight: bold;">${match.awayScore + (match.status === 'LIVE' ? Math.floor(Math.random() * 5) : 6)}</span>
                             </div>
                         </div>
                     ` : ''}

@@ -19,5 +19,109 @@
       "minutes": "Mins",
       "seconds": "Secs"
     }
+  },
+  "sections": {
+    "calendar": "Match Calendar",
+    "live": "Live Scores",
+    "teams": "Qualified Nations",
+    "morocco": "Atlas Lions Zone",
+    "standings": "Standings & Stats",
+    "news": "News & Tactical Analyses",
+    "stadiums": "Tournament Stadiums"
+  },
+  "filters": {
+    "search": "🔍 Search team...",
+    "allGroups": "All Groups",
+    "allStadiums": "All Stadiums",
+    "chrono": "Chronological",
+    "maroc": "Morocco Matches"
+  },
+  "moroccoZone": {
+    "squad": "Probable Squad",
+    "history": "Historical Journey",
+    "historyText": "A complete look back at the memorable 2022 epic and the strategic roadmap established for the 2026 tournament.",
+    "media": "Media & Interviews"
+  },
+  "standingsTable": {
+    "groups": "Groups",
+    "scorers": "Top Scorers",
+    "assists": "Top Assists",
+    "pos": "Pos",
+    "team": "Team",
+    "played": "MP",
+    "pts": "Pts",
+    "goals": "Goals",
+    "assistsAbbr": "Ast."
+  },
+  "analyticsZone": {
+    "title": "Advanced Data Visualization (xG, Possession, Pressing)",
+    "radar": {
+      "possession": "Possession (%)",
+      "xg": "xG (Expected Goals)",
+      "shotsOnTarget": "Shots on Target",
+      "passAccuracy": "Pass Accuracy (%)",
+      "duelsWon": "Duels Won",
+      "pressing": "Pressing Efficiency",
+      "maroc": "🇲🇦 Morocco (Atlas Lions)",
+      "brazil": "🇧🇷 Brazil"
+    }
+  },
+  "stadiumDetails": {
+    "city": "City",
+    "capacity": "Capacity",
+    "matches": "Matches"
+  },
+  "modal": {
+    "scheduled": "Scheduled",
+    "live": "Live",
+    "finished": "Finished",
+    "stadium": "Stadium",
+    "h2h": "Head to Head",
+    "stats": "Expected Statistics",
+    "possession": "Possession",
+    "xg": "xG (Expected Goals)",
+    "shots": "Total Shots"
+  },
+  "teams": {
+    "MEX": "Mexico",
+    "RSA": "South Africa",
+    "KOR": "South Korea",
+    "CZE": "Czech Republic",
+    "CAN": "Canada",
+    "BIH": "Bosnia and Herzegovina",
+    "BOS": "Bosnia and Herzegovina",
+    "QAT": "Qatar",
+    "SUI": "Switzerland",
+    "BRA": "Brazil",
+    "MAR": "Morocco",
+    "MOR": "Morocco",
+    "HAI": "Haiti",
+    "HTI": "Haiti",
+    "SCO": "Scotland",
+    "USA": "United States",
+    "PAR": "Paraguay",
+    "AUS": "Australia",
+    "TUR": "Turkey",
+    "GER": "Germany",
+    "CUW": "Curaçao",
+    "CIV": "Ivory Coast",
+    "ECU": "Ecuador",
+    "NED": "Netherlands",
+    "JPN": "Japan",
+    "SWE": "Sweden",
+    "TUN": "Tunisie",
+    "BEL": "Belgium",
+    "EGY": "Egypt",
+    "IRN": "Iran",
+    "NZL": "New Zealand",
+    "ESP": "Spain",
+    "CPV": "Cape Verde",
+    "KSA": "Saudi Arabia",
+    "SAU": "Saudi Arabia",
+    "URU": "Uruguay",
+    "ENG": "England",
+    "CRO": "Croatia",
+    "GHA": "Ghana",
+    "PAN": "Panama"
   }
 }

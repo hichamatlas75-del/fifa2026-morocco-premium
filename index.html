@@ -41,6 +41,10 @@
             <li><a href="#analytics">Analyses</a></li>
             <li><a href="#stadiums">Stades</a></li>
         </ul>
+        <div class="mobile-lang-switcher" style="margin-top: 1.5rem; display: flex; gap: 10px; padding: 0 0.5rem;">
+            <button class="lang-btn mobile-lang-btn active" data-lang="fr" style="flex: 1; padding: 0.6rem; border-radius: 12px; text-align: center;">Français</button>
+            <button class="lang-btn mobile-lang-btn" data-lang="en" style="flex: 1; padding: 0.6rem; border-radius: 12px; text-align: center;">English</button>
+        </div>
     </div>
 
     <nav class="glass-navbar">
@@ -58,6 +62,12 @@
             <li><a href="#stadiums">Stades</a></li>
         </ul>
         <div class="nav-actions">
+            <!-- Language Switcher Selector -->
+            <div class="lang-switcher">
+                <button class="lang-btn active" data-lang="fr">FR</button>
+                <button class="lang-btn" data-lang="en">EN</button>
+            </div>
+
             <button id="theme-toggle" class="control-btn" aria-label="Changer de thème">
                 <i class="fa-solid fa-moon"></i>
             </button>
@@ -89,10 +99,10 @@
             </div>
 
             <div class="grid-4" style="margin-top: 2rem;">
-                <div class="premium-card" style="padding: 1rem;"><h3 class="font-sport" style="color:var(--rouge-maroc); font-size: 1.8rem;">48</h3><p style="font-size:0.85rem; opacity:0.7;">Nations Qualifiées</p></div>
-                <div class="premium-card" style="padding: 1rem;"><h3 class="font-sport" style="color:var(--vert-maroc); font-size: 1.8rem;">104</h3><p style="font-size:0.85rem; opacity:0.7;">Matchs Totaux</p></div>
-                <div class="premium-card" style="padding: 1rem;"><h3 class="font-sport" style="color:var(--or-premium); font-size: 1.8rem;">16</h3><p style="font-size:0.85rem; opacity:0.7;">Stades Officiels</p></div>
-                <div class="premium-card" style="padding: 1rem;"><h3 class="font-sport" style="font-size: 1.8rem;">3</h3><p style="font-size:0.85rem; opacity:0.7;">Pays Hôtes</p></div>
+                <div class="premium-card" style="padding: 1rem;"><h3 class="font-sport" style="color:var(--rouge-maroc); font-size: 1.8rem;">48</h3><p id="stat-nations" style="font-size:0.85rem; opacity:0.7;">Nations Qualifiées</p></div>
+                <div class="premium-card" style="padding: 1rem;"><h3 class="font-sport" style="color:var(--vert-maroc); font-size: 1.8rem;">104</h3><p id="stat-matches" style="font-size:0.85rem; opacity:0.7;">Matchs Totaux</p></div>
+                <div class="premium-card" style="padding: 1rem;"><h3 class="font-sport" style="color:var(--or-premium); font-size: 1.8rem;">16</h3><p id="stat-stadiums" style="font-size:0.85rem; opacity:0.7;">Stades Officiels</p></div>
+                <div class="premium-card" style="padding: 1rem;"><h3 class="font-sport" style="font-size: 1.8rem;">3</h3><p id="stat-hosts" style="font-size:0.85rem; opacity:0.7;">Pays Hôtes</p></div>
             </div>
         </div>
     </header>
@@ -100,15 +110,15 @@
     <main>
         <section id="calendar" class="section-padding">
             <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title">Calendrier des Matchs</h2>
+                <h2 class="section-title" id="sec-title-calendar">Calendrier des Matchs</h2>
             </div>
             
             <div class="premium-card" style="margin-bottom: 2rem; padding: 1.5rem;">
                 <div class="grid-4" style="gap: 1rem;">
                     <input type="text" id="search-match" class="control-btn" style="text-align:left; border-radius:8px;" placeholder="🔍 Rechercher une équipe...">
-                    <select id="filter-group" class="control-btn" style="border-radius:8px;"><option value="">Tous les Groupes</option></select>
-                    <select id="filter-stadium" class="control-btn" style="border-radius:8px;"><option value="">Tous les Stades</option></select>
-                    <select id="sort-order" class="control-btn" style="border-radius:8px;"><option value="chrono">Chronologique</option><option value="maroc">Matchs du Maroc</option></select>
+                    <select id="filter-group" class="control-btn" style="border-radius:8px;"><option value="" id="opt-all-groups">Tous les Groupes</option></select>
+                    <select id="filter-stadium" class="control-btn" style="border-radius:8px;"><option value="" id="opt-all-stadiums">Tous les Stades</option></select>
+                    <select id="sort-order" class="control-btn" style="border-radius:8px;"><option value="chrono" id="opt-sort-chrono">Chronologique</option><option value="maroc" id="opt-sort-maroc">Matchs du Maroc</option></select>
                 </div>
             </div>
 
@@ -118,8 +128,8 @@
 
         <section id="live" class="section-padding" style="background: rgba(193, 39, 45, 0.02);">
             <div class="section-header" data-aos="fade-up">
-                <span class="live-badge"><span class="live-pulse"></span> Live Update Actif</span>
-                <h2 class="section-title" style="margin-top:10px;">Scores en Direct</h2>
+                <span class="live-badge" id="live-update-badge"><span class="live-pulse"></span> Live Update Actif</span>
+                <h2 class="section-title" id="sec-title-live" style="margin-top:10px;">Scores en Direct</h2>
             </div>
             <div id="live-matches-grid" class="grid-3">
                 </div>
@@ -127,7 +137,7 @@
 
         <section id="teams" class="section-padding">
             <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title">Nations Qualifiées</h2>
+                <h2 class="section-title" id="sec-title-teams">Nations Qualifiées</h2>
             </div>
             <div id="teams-grid" class="grid-4">
                 </div>
@@ -135,20 +145,20 @@
 
         <section id="morocco" class="section-padding" style="border-top: 1px solid rgba(0, 98, 51, 0.2); background: radial-gradient(circle at top, rgba(0, 98, 51, 0.05) 0%, transparent 70%);">
             <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title" style="color: var(--vert-maroc);">Espace Lions de l'Atlas</h2>
+                <h2 class="section-title" id="sec-title-morocco" style="color: var(--vert-maroc);">Espace Lions de l'Atlas</h2>
             </div>
             <div class="grid-3">
                 <div class="premium-card">
-                    <h3 style="color:var(--or-premium); margin-bottom:1rem;"><i class="fa-solid fa-shield-halved"></i> Composition Probable</h3>
+                    <h3 style="color:var(--or-premium); margin-bottom:1rem;" id="morocco-squad-title"><i class="fa-solid fa-shield-halved"></i> Composition Probable</h3>
                     <div id="maroc-squad" style="min-height: 250px;">
                         </div>
                 </div>
                 <div class="premium-card">
-                    <h3 style="color:var(--rouge-maroc); margin-bottom:1rem;"><i class="fa-solid fa-history"></i> Parcours Historique</h3>
-                    <p style="font-size:0.95rem; line-height:1.6; opacity:0.8;">Retour complet sur l'épopée mémorable de 2022 et le plan de marche stratégique mis en place pour l'échéance 2026.</p>
+                    <h3 style="color:var(--rouge-maroc); margin-bottom:1rem;" id="morocco-history-title"><i class="fa-solid fa-history"></i> Parcours Historique</h3>
+                    <p id="morocco-history-desc" style="font-size:0.95rem; line-height:1.6; opacity:0.8;">Retour complet sur l'épopée mémorable de 2022 et le plan de marche stratégique mis en place pour l'échéance 2026.</p>
                 </div>
                 <div class="premium-card">
-                    <h3 style="margin-bottom:1rem;"><i class="fa-solid fa-photo-film"></i> Médias & Interviews</h3>
+                    <h3 style="margin-bottom:1rem;" id="morocco-media-title"><i class="fa-solid fa-photo-film"></i> Médias & Interviews</h3>
                     <div id="maroc-media-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                         </div>
                 </div>
@@ -157,15 +167,15 @@
 
         <section id="standings" class="section-padding">
             <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title">Classements & Stats</h2>
+                <h2 class="section-title" id="sec-title-standings">Classements & Stats</h2>
             </div>
             <div class="grid-3" style="margin-bottom: 3rem;">
-                <div class="premium-card"><h3>Groupes</h3><div id="groups-container"></div></div>
-                <div class="premium-card"><h3>Buteurs</h3><div id="top-scorers"></div></div>
-                <div class="premium-card"><h3>Passeurs</h3><div id="top-assists"></div></div>
+                <div class="premium-card"><h3 id="title-groups">Groupes</h3><div id="groups-container"></div></div>
+                <div class="premium-card"><h3 id="title-scorers">Buteurs</h3><div id="top-scorers"></div></div>
+                <div class="premium-card"><h3 id="title-assists">Passeurs</h3><div id="top-assists"></div></div>
             </div>
             <div id="analytics" class="premium-card" style="padding: 2.5rem;">
-                <h3 style="margin-bottom: 2rem;"><i class="fa-solid fa-chart-line" style="color:var(--or-premium)"></i> Visualisations de Données Avancées (xG, Possession, Pressing)</h3>
+                <h3 id="title-analytics" style="margin-bottom: 2rem;"><i class="fa-solid fa-chart-line" style="color:var(--or-premium)"></i> Visualisations de Données Avancées (xG, Possession, Pressing)</h3>
                 <div style="position: relative; height:400px; width:100%;">
                     <canvas id="advancedStatsChart"></canvas>
                 </div>
@@ -174,7 +184,7 @@
 
         <section id="news" class="section-padding" style="background: rgba(255,255,255,0.01);">
             <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title">Actualités & Analyses Tactiques</h2>
+                <h2 class="section-title" id="sec-title-news">Actualités & Analyses Tactiques</h2>
             </div>
             <div id="news-grid" class="grid-3">
                 </div>
@@ -182,7 +192,7 @@
 
         <section id="stadiums" class="section-padding">
             <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title">Stades du Tournoi</h2>
+                <h2 class="section-title" id="sec-title-stadiums">Stades du Tournoi</h2>
             </div>
             <div id="map"></div>
         </section>
