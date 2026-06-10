@@ -79,7 +79,7 @@ export async function initApi() {
         time: isLive ? "Direct" : timeStr,
         date: dateStr,
         group: translateGroup(m.group),
-        stadium: m.venue || "Stade Officiel",
+        stadium: getStadiumForMatch(m.homeTeam.name || m.homeTeam.shortName, m.id),
         events: []
       };
     });
@@ -428,4 +428,49 @@ export function getH2HData(home, away) {
   return h2hDatabase[key] || [
     { date: "Rencontre Inédite", comp: "Coupe du Monde 2026", score: `${home} vs ${away}`, details: "Ces deux équipes ne se sont jamais affrontées dans l'histoire officielle du football." }
   ];
+}
+
+function getStadiumForMatch(homeTeam, matchId) {
+  const stadiums = {
+    usa: [
+      "MetLife Stadium (New York / NJ)",
+      "SoFi Stadium (Los Angeles)",
+      "AT&T Stadium (Dallas)",
+      "Mercedes-Benz Stadium (Atlanta)",
+      "Hard Rock Stadium (Miami)",
+      "Gillette Stadium (Boston)",
+      "NRG Stadium (Houston)",
+      "Arrowhead Stadium (Kansas City)",
+      "Lincoln Financial Field (Philadelphia)",
+      "Levi's Stadium (San Francisco)",
+      "Lumen Field (Seattle)"
+    ],
+    mexico: [
+      "Estadio Azteca (Mexico City)",
+      "Estadio Akron (Guadalajara)",
+      "Estadio BBVA (Monterrey)"
+    ],
+    canada: [
+      "BMO Field (Toronto)",
+      "BC Place (Vancouver)"
+    ]
+  };
+
+  const homeLower = (homeTeam || '').toLowerCase();
+  
+  if (homeLower.includes("mexic") || homeLower === "mexico" || homeLower === "mex") {
+    return stadiums.mexico[matchId % stadiums.mexico.length];
+  }
+  
+  if (homeLower.includes("canad") || homeLower === "can") {
+    return stadiums.canada[matchId % stadiums.canada.length];
+  }
+  
+  if (homeLower.includes("usa") || homeLower.includes("états-unis") || homeLower.includes("united states") || homeLower === "us" || homeLower.includes("america")) {
+    return stadiums.usa[matchId % stadiums.usa.length];
+  }
+
+  // Fallback réparti sur tous les stades du tournoi
+  const allStadiums = [...stadiums.usa, ...stadiums.mexico, ...stadiums.canada];
+  return allStadiums[matchId % allStadiums.length];
 }

@@ -18,6 +18,12 @@ class WorldCupApp {
         this.data = null;
         this.map = null;
         this.chart = null;
+        
+        // Exposer la méthode globalement pour l'attribut onclick
+        window.openMatchDetails = (matchId) => {
+            this.openMatchDetails(matchId);
+        };
+
         this.init();
     }
 

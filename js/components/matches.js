@@ -28,7 +28,7 @@ export function renderMatches(matches, containerId = 'calendar-grid') {
         }
 
         return `
-            <div class="premium-card match-card" id="match-${match.id}" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;">
+            <div class="premium-card match-card" id="match-${match.id}" onclick="openMatchDetails(${match.id})" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.8rem; opacity: 0.7;">
                     <span>${match.date}</span>
                     <span>${match.group}</span>
