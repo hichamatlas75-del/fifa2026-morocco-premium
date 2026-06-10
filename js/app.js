@@ -351,40 +351,29 @@ class WorldCupApp {
     }
 
     registerServiceWorker() {
+        // Désenregistrer activement tous les Service Workers existants
         if ('serviceWorker' in navigator) {
-            // Recharger la page automatiquement dès que le nouveau Service Worker s'active et prend le contrôle
-            let refreshing = false;
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) {
-                    refreshing = true;
-                    console.log("Nouveau Service Worker actif, rechargement de la page...");
-                    window.location.reload();
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let registration of registrations) {
+                    registration.unregister().then(success => {
+                        if (success) {
+                            console.log('SW: Désenregistré avec succès.');
+                        }
+                    });
                 }
-            });
+            }).catch(err => console.warn('SW: Erreur lors du désenregistrement:', err));
+        }
 
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(reg => {
-                        console.log('PWA Service Worker enregistré avec succès scope:', reg.scope);
-                        
-                        // Force une vérification de mise à jour au chargement
-                        reg.update();
-
-                        reg.onupdatefound = () => {
-                            const installingWorker = reg.installing;
-                            if (installingWorker) {
-                                installingWorker.onstatechange = () => {
-                                    if (installingWorker.state === 'installed') {
-                                        if (navigator.serviceWorker.controller) {
-                                            console.log('Nouvelle version détectée. Le nouveau Service Worker va s\'installer.');
-                                        }
-                                    }
-                                };
-                            }
-                        };
-                    })
-                    .catch(err => console.error('PWA SW Erreur d\'enregistrement:', err));
-            });
+        // Vider tous les caches stockés dans le navigateur (Cache Storage API)
+        if ('caches' in window) {
+            caches.keys().then(keys => {
+                return Promise.all(keys.map(key => {
+                    console.log('SW: Suppression du cache:', key);
+                    return caches.delete(key);
+                }));
+            }).then(() => {
+                console.log('SW: Tous les caches ont été nettoyés avec succès.');
+            }).catch(err => console.warn('SW: Erreur lors du nettoyage du cache:', err));
         }
     }
 
