@@ -1,5 +1,21 @@
 // js/app.js
-import '../style.css';
+
+// Global Error Handler for visual debugging in client environment
+window.addEventListener('error', (event) => {
+    let errorBox = document.getElementById('debug-error-box');
+    if (!errorBox) {
+        errorBox = document.createElement('div');
+        errorBox.id = 'debug-error-box';
+        errorBox.style.cssText = "position: fixed; bottom: 20px; right: 20px; background: rgba(193, 39, 45, 0.95); border: 2px solid #FFD700; color: white; padding: 1.5rem; border-radius: 12px; z-index: 9999; max-width: 400px; font-family: monospace; font-size: 0.8rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);";
+        document.body.appendChild(errorBox);
+    }
+    errorBox.innerHTML = `
+        <h4 style="color: #FFD700; margin-bottom: 0.5rem; text-transform: uppercase;">⚠️ Client-side Error</h4>
+        <p style="margin-bottom: 0.5rem; word-break: break-all;"><strong>${event.message}</strong></p>
+        <p style="opacity: 0.7; font-size: 0.75rem; word-break: break-all;">at ${event.filename}:${event.lineno}:${event.colno}</p>
+    `;
+});
+
 import { initApi, getH2HData, getFlag } from './api.js';
 import { setupWebSockets } from './socket.js';
 import { 
@@ -471,7 +487,9 @@ class WorldCupApp {
         };
 
         const switchHandler = async (e) => {
-            const newLang = e.target.getAttribute('data-lang');
+            const btn = e.target.closest('.lang-btn');
+            if (!btn) return;
+            const newLang = btn.getAttribute('data-lang');
             if (newLang && newLang !== this.currentLang) {
                 console.log(`🌐 [App] Changement de langue vers: ${newLang}`);
                 this.currentLang = newLang;
@@ -878,6 +896,15 @@ class WorldCupApp {
 }
 
 // Lancement de l'application
-document.addEventListener('DOMContentLoaded', () => {
-    window.App = new WorldCupApp();
-});
+function initApp() {
+    if (!window.App) {
+        console.log("🚀 [App] Initialisation de l'application WorldCupApp...");
+        window.App = new WorldCupApp();
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
