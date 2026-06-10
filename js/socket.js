@@ -5,6 +5,8 @@ let lastMatchesState = [];
 export function setupWebSockets(app) {
     console.log("🔌 Initialisation de la connexion temps réel...");
 
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
     // Tenter de faire une première requête pour tester la présence du proxy Cloudflare
     fetch('/api-proxy')
         .then(res => {
@@ -16,8 +18,14 @@ export function setupWebSockets(app) {
             startPolling(app);
         })
         .catch(err => {
-            console.warn("⚠️ Proxy inaccessible (normal en développement local). Activation du mode Simulation.");
-            startSimulation(app);
+            if (isLocal) {
+                console.warn("⚠️ Proxy inaccessible en local. Activation du mode Simulation.");
+                startSimulation(app);
+            } else {
+                console.error("❌ Erreur de connexion au proxy d'API en production. Pas de simulation active.");
+                // En production, on lance quand même startPolling pour retenter la connexion en arrière-plan régulièrement
+                startPolling(app);
+            }
         });
 }
 
