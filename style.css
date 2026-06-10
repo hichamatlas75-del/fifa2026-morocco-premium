@@ -518,3 +518,40 @@ body.theme-light .mobile-drawer {
         padding: 1.5rem !important;
     }
 }
+
+/* Styles pour les drapeaux des pays (FlagCDN) */
+.flag-icon {
+    display: inline-block;
+    height: 1.1em;
+    width: auto;
+    border-radius: 3px;
+    vertical-align: middle;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    object-fit: cover;
+}
+
+/* Redimensionnements selon les contextes d'affichage */
+.match-card .flag-icon {
+    height: 32px;
+    border-radius: 4px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+#teams-grid .flag-icon {
+    height: 48px;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    margin-bottom: 0.8rem;
+}
+
+#groups-container .flag-icon {
+    height: 16px;
+    border-radius: 2px;
+}
+
+#top-scorers .flag-icon, 
+#top-assists .flag-icon {
+    height: 14px;
+    border-radius: 2px;
+}

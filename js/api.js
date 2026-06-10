@@ -1,28 +1,32 @@
 // js/api.js
 
 function getFlag(tla) {
-  if (!tla) return "🏳️";
-  const flags = {
+  if (!tla) return `<img src="https://flagcdn.com/w80/un.png" class="flag-icon" alt="UN">`;
+  const codeMap = {
     // Groupe A
-    MEX: "🇲🇽", RSA: "🇿🇦", KOR: "🇰🇷", CZE: "🇨🇿",
+    MEX: "mx", RSA: "za", KOR: "kr", CZE: "cz",
     // Groupe B
-    CAN: "🇨🇦", BIH: "🇧🇦", BOS: "🇧🇦", QAT: "🇶🇦", SUI: "🇨🇭",
+    CAN: "ca", BIH: "ba", BOS: "ba", QAT: "qa", SUI: "ch",
     // Groupe C
-    BRA: "🇧🇷", MAR: "🇲🇦", MOR: "🇲🇦", HAI: "🇭🇹", HTI: "🇭🇹", SCO: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+    BRA: "br", MAR: "ma", MOR: "ma", HAI: "ht", HTI: "ht", SCO: "gb-sct",
     // Groupe D
-    USA: "🇺🇸", PAR: "🇵🇾", AUS: "🇦🇺", TUR: "🇹🇷",
+    USA: "us", PAR: "py", AUS: "au", TUR: "tr",
     // Groupe E
-    GER: "🇩🇪", CUW: "🇨🇼", CIV: "🇨🇮", ECU: "🇪🇨",
+    GER: "de", CUW: "cw", CIV: "ci", ECU: "ec",
     // Groupe F
-    NED: "🇳🇱", JPN: "🇯🇵", SWE: "🇸🇪", TUN: "🇹🇳",
+    NED: "nl", JPN: "jp", SWE: "se", TUN: "tn",
     // Groupe G
-    BEL: "🇧🇪", EGY: "🇪🇬", IRN: "🇮🇷", NZL: "🇳🇿",
+    BEL: "be", EGY: "eg", IRN: "ir", NZL: "nz",
     // Groupe H
-    ESP: "🇪🇸", CPV: "🇨🇻", KSA: "🇸🇦", SAU: "🇸🇦", URU: "🇺🇾",
+    ESP: "es", CPV: "cv", KSA: "sa", SAU: "sa", URU: "uy",
     // Groupe L
-    ENG: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", CRO: "🇭🇷", GHA: "🇬🇭", PAN: "🇵🇦"
+    ENG: "gb-eng", CRO: "hr", GHA: "gh", PAN: "pa"
   };
-  return flags[tla.toUpperCase()] || "🏳️";
+  const code = codeMap[tla.toUpperCase()];
+  if (!code) {
+    return `<img src="https://flagcdn.com/w80/un.png" class="flag-icon" alt="${tla}">`;
+  }
+  return `<img src="https://flagcdn.com/w80/${code}.png" class="flag-icon" alt="${tla}">`;
 }
 
 function translateGroup(groupStr) {
@@ -194,19 +198,19 @@ function getStaticSquad() {
 
 function getStaticScorers() {
   return [
-    { rank: 1, player: "Vinícius Júnior", team: "Brésil", flag: "🇧🇷", goals: 0 },
-    { rank: 2, player: "Brahim Díaz", team: "Maroc", flag: "🇲🇦", goals: 0 },
-    { rank: 3, player: "Santiago Giménez", team: "Mexique", flag: "🇲🇽", goals: 0 },
-    { rank: 4, player: "Christian Pulisic", team: "États-Unis", flag: "🇺🇸", goals: 0 }
+    { rank: 1, player: "Vinícius Júnior", team: "Brésil", flag: getFlag("BRA"), goals: 0 },
+    { rank: 2, player: "Brahim Díaz", team: "Maroc", flag: getFlag("MAR"), goals: 0 },
+    { rank: 3, player: "Santiago Giménez", team: "Mexique", flag: getFlag("MEX"), goals: 0 },
+    { rank: 4, player: "Christian Pulisic", team: "États-Unis", flag: getFlag("USA"), goals: 0 }
   ];
 }
 
 function getStaticAssists() {
   return [
-    { rank: 1, player: "Rodrygo", team: "Brésil", flag: "🇧🇷", assists: 0 },
-    { rank: 2, player: "Achraf Hakimi", team: "Maroc", flag: "🇲🇦", assists: 0 },
-    { rank: 3, player: "Hirving Lozano", team: "Mexique", flag: "🇲🇽", assists: 0 },
-    { rank: 4, player: "Weston McKennie", team: "États-Unis", flag: "🇺🇸", assists: 0 }
+    { rank: 1, player: "Rodrygo", team: "Brésil", flag: getFlag("BRA"), assists: 0 },
+    { rank: 2, player: "Achraf Hakimi", team: "Maroc", flag: getFlag("MAR"), assists: 0 },
+    { rank: 3, player: "Hirving Lozano", team: "Mexique", flag: getFlag("MEX"), assists: 0 },
+    { rank: 4, player: "Weston McKennie", team: "États-Unis", flag: getFlag("USA"), assists: 0 }
   ];
 }
 
@@ -243,8 +247,8 @@ function getFallbackData() {
         id: 1,
         homeTeam: "Mexique",
         awayTeam: "Afrique du Sud",
-        homeFlag: "🇲🇽",
-        awayFlag: "🇿🇦",
+        homeFlag: getFlag("MEX"),
+        awayFlag: getFlag("RSA"),
         homeScore: 0,
         awayScore: 0,
         status: "LIVE",
@@ -258,8 +262,8 @@ function getFallbackData() {
         id: 2,
         homeTeam: "Corée du Sud",
         awayTeam: "République Tchèque",
-        homeFlag: "🇰🇷",
-        awayFlag: "🇨🇿",
+        homeFlag: getFlag("KOR"),
+        awayFlag: getFlag("CZE"),
         homeScore: 0,
         awayScore: 0,
         status: "SCHEDULED",
@@ -273,8 +277,8 @@ function getFallbackData() {
         id: 3,
         homeTeam: "Canada",
         awayTeam: "Bosnie-Herzégovine",
-        homeFlag: "🇨🇦",
-        awayFlag: "🇧🇦",
+        homeFlag: getFlag("CAN"),
+        awayFlag: getFlag("BIH"),
         homeScore: 0,
         awayScore: 0,
         status: "SCHEDULED",
@@ -288,8 +292,8 @@ function getFallbackData() {
         id: 4,
         homeTeam: "États-Unis",
         awayTeam: "Paraguay",
-        homeFlag: "🇺🇸",
-        awayFlag: "🇵🇾",
+        homeFlag: getFlag("USA"),
+        awayFlag: getFlag("PAR"),
         homeScore: 0,
         awayScore: 0,
         status: "SCHEDULED",
@@ -303,8 +307,8 @@ function getFallbackData() {
         id: 5,
         homeTeam: "Brésil",
         awayTeam: "Maroc",
-        homeFlag: "🇧🇷",
-        awayFlag: "🇲🇦",
+        homeFlag: getFlag("BRA"),
+        awayFlag: getFlag("MAR"),
         homeScore: 0,
         awayScore: 0,
         status: "SCHEDULED",
@@ -318,8 +322,8 @@ function getFallbackData() {
         id: 6,
         homeTeam: "Haïti",
         awayTeam: "Écosse",
-        homeFlag: "🇭🇹",
-        awayFlag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+        homeFlag: getFlag("HAI"),
+        awayFlag: getFlag("SCO"),
         homeScore: 0,
         awayScore: 0,
         status: "SCHEDULED",
@@ -333,8 +337,8 @@ function getFallbackData() {
         id: 7,
         homeTeam: "Australie",
         awayTeam: "Turquie",
-        homeFlag: "🇦🇺",
-        awayFlag: "🇹🇷",
+        homeFlag: getFlag("AUS"),
+        awayFlag: getFlag("TUR"),
         homeScore: 0,
         awayScore: 0,
         status: "SCHEDULED",
@@ -348,8 +352,8 @@ function getFallbackData() {
         id: 8,
         homeTeam: "Écosse",
         awayTeam: "Maroc",
-        homeFlag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
-        awayFlag: "🇲🇦",
+        homeFlag: getFlag("SCO"),
+        awayFlag: getFlag("MAR"),
         homeScore: 0,
         awayScore: 0,
         status: "SCHEDULED",
@@ -363,8 +367,8 @@ function getFallbackData() {
         id: 9,
         homeTeam: "Maroc",
         awayTeam: "Haïti",
-        homeFlag: "🇲🇦",
-        awayFlag: "🇭🇹",
+        homeFlag: getFlag("MAR"),
+        awayFlag: getFlag("HAI"),
         homeScore: 0,
         awayScore: 0,
         status: "SCHEDULED",
