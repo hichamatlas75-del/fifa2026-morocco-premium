@@ -20,7 +20,15 @@ export function getFlag(tla) {
     // Groupe H
     ESP: "es", CPV: "cv", KSA: "sa", SAU: "sa", URU: "uy",
     // Groupe L
-    ENG: "gb-eng", CRO: "hr", GHA: "gh", PAN: "pa"
+    ENG: "gb-eng", CRO: "hr", GHA: "gh", PAN: "pa",
+    // Groupe I
+    ITA: "it", SEN: "sn", HON: "hn", IRQ: "iq",
+    // Groupe J
+    FRA: "fr", CMR: "cm", CRC: "cr", UAE: "ae",
+    // Groupe K
+    ARG: "ar", NGA: "ng", JAM: "jm", OMA: "om",
+    // TBD
+    TBD: "un"
   };
   const code = codeMap[tla.toUpperCase()];
   if (!code) {
@@ -91,9 +99,11 @@ export async function initApi() {
       };
     });
 
-    // Mettre à jour dynamiquement les classements du Groupe C si les données sont là
-    const groupCStandings = computeGroupStandings(matches, "Groupe C");
-    const groupAStandings = computeGroupStandings(matches, "Groupe A");
+    const groupsList = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
+    const groupsStandings = {};
+    groupsList.forEach(g => {
+      groupsStandings[g] = computeGroupStandings(matches, g);
+    });
 
     return {
       dataSource: "api",
@@ -101,10 +111,7 @@ export async function initApi() {
       stadiums: getStaticStadiums(),
       moroccoSquad: getStaticSquad(),
       standings: {
-        groups: {
-          "Groupe C": groupCStandings,
-          "Groupe A": groupAStandings
-        },
+        groups: groupsStandings,
         scorers: getStaticScorers(),
         assists: getStaticAssists()
       },
@@ -122,16 +129,19 @@ function computeGroupStandings(matches, groupName) {
   const groupMatches = matches.filter(m => m.group === groupName || m.group === groupName.replace("Groupe", "Group"));
   const teamsMap = new Map();
 
-  // Initialiser les équipes du groupe à l'aide de leur TLA unique
-  if (groupName.includes("C")) {
-    ["BRA", "MAR", "HAI", "SCO"].forEach(tla => {
-      teamsMap.set(tla, { tla: tla, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
-    });
-  } else {
-    ["MEX", "RSA", "KOR", "CZE"].forEach(tla => {
-      teamsMap.set(tla, { tla: tla, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
-    });
-  }
+  // Détecter dynamiquement les équipes du groupe à partir de la liste des matchs
+  groupMatches.forEach(m => {
+    if (m.homeTla && m.homeTla !== 'TBD') {
+      if (!teamsMap.has(m.homeTla)) {
+        teamsMap.set(m.homeTla, { tla: m.homeTla, name: m.homeTeam, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
+      }
+    }
+    if (m.awayTla && m.awayTla !== 'TBD') {
+      if (!teamsMap.has(m.awayTla)) {
+        teamsMap.set(m.awayTla, { tla: m.awayTla, name: m.awayTeam, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
+      }
+    }
+  });
 
   // Calculer à partir des matchs terminés ou en cours
   groupMatches.forEach(m => {
@@ -266,162 +276,193 @@ function getStaticNews() {
   ];
 }
 
-function getFallbackData() {
-  const matches = [
-    {
-      id: 1,
-      homeTeam: "Mexique",
-      awayTeam: "Afrique du Sud",
-      homeTla: "MEX",
-      awayTla: "RSA",
-      homeFlag: getFlag("MEX"),
-      awayFlag: getFlag("RSA"),
-      homeScore: 0,
-      awayScore: 0,
-      status: "SCHEDULED",
-      time: "20:00",
-      date: "11 Juin 2026",
-      group: "Groupe A",
-      stadium: "Mexico City Stadium",
-      events: []
-    },
-    {
-      id: 2,
-      homeTeam: "Corée du Sud",
-      awayTeam: "République Tchèque",
-      homeTla: "KOR",
-      awayTla: "CZE",
-      homeFlag: getFlag("KOR"),
-      awayFlag: getFlag("CZE"),
-      homeScore: 0,
-      awayScore: 0,
-      status: "SCHEDULED",
-      time: "03:00",
-      date: "12 Juin 2026",
-      group: "Groupe A",
-      stadium: "Guadalajara Stadium",
-      events: []
-    },
-    {
-      id: 3,
-      homeTeam: "Canada",
-      awayTeam: "Bosnie-Herzégovine",
-      homeTla: "CAN",
-      awayTla: "BIH",
-      homeFlag: getFlag("CAN"),
-      awayFlag: getFlag("BIH"),
-      homeScore: 0,
-      awayScore: 0,
-      status: "SCHEDULED",
-      time: "20:00",
-      date: "12 Juin 2026",
-      group: "Groupe B",
-      stadium: "Toronto Stadium",
-      events: []
-    },
-    {
-      id: 4,
-      homeTeam: "États-Unis",
-      awayTeam: "Paraguay",
-      homeTla: "USA",
-      awayTla: "PAR",
-      homeFlag: getFlag("USA"),
-      awayFlag: getFlag("PAR"),
-      homeScore: 0,
-      awayScore: 0,
-      status: "SCHEDULED",
-      time: "02:00",
-      date: "13 Juin 2026",
-      group: "Groupe D",
-      stadium: "Los Angeles Stadium",
-      events: []
-    },
-    {
-      id: 5,
-      homeTeam: "Brésil",
-      awayTeam: "Maroc",
-      homeTla: "BRA",
-      awayTla: "MAR",
-      homeFlag: getFlag("BRA"),
-      awayFlag: getFlag("MAR"),
-      homeScore: 0,
-      awayScore: 0,
-      status: "SCHEDULED",
-      time: "23:00",
-      date: "13 Juin 2026",
-      group: "Groupe C",
-      stadium: "New York New Jersey Stadium",
-      events: []
-    },
-    {
-      id: 6,
-      homeTeam: "Haïti",
-      awayTeam: "Écosse",
-      homeTla: "HAI",
-      awayTla: "SCO",
-      homeFlag: getFlag("HAI"),
-      awayFlag: getFlag("SCO"),
-      homeScore: 0,
-      awayScore: 0,
-      status: "SCHEDULED",
-      time: "02:00",
-      date: "14 Juin 2026",
-      group: "Groupe C",
-      stadium: "Boston Stadium",
-      events: []
-    },
-    {
-      id: 7,
-      homeTeam: "Australie",
-      awayTeam: "Turquie",
-      homeTla: "AUS",
-      awayTla: "TUR",
-      homeFlag: getFlag("AUS"),
-      awayFlag: getFlag("TUR"),
-      homeScore: 0,
-      awayScore: 0,
-      status: "SCHEDULED",
-      time: "05:00",
-      date: "14 Juin 2026",
-      group: "Groupe D",
-      stadium: "BC Place",
-      events: []
-    },
-    {
-      id: 8,
-      homeTeam: "Écosse",
-      awayTeam: "Maroc",
-      homeTla: "SCO",
-      awayTla: "MAR",
-      homeFlag: getFlag("SCO"),
-      awayFlag: getFlag("MAR"),
-      homeScore: 0,
-      awayScore: 0,
-      status: "SCHEDULED",
-      time: "23:00",
-      date: "19 Juin 2026",
-      group: "Groupe C",
-      stadium: "Boston Stadium",
-      events: []
-    },
-    {
-      id: 9,
-      homeTeam: "Maroc",
-      awayTeam: "Haïti",
-      homeTla: "MAR",
-      awayTla: "HAI",
-      homeFlag: getFlag("MAR"),
-      awayFlag: getFlag("HAI"),
-      homeScore: 0,
-      awayScore: 0,
-      status: "SCHEDULED",
-      time: "23:00",
-      date: "24 Juin 2026",
-      group: "Groupe C",
-      stadium: "Atlanta Stadium",
-      events: []
-    }
+const groupsData = {
+  "Groupe A": [
+    { tla: "MEX", name: "Mexique" },
+    { tla: "RSA", name: "Afrique du Sud" },
+    { tla: "KOR", name: "Corée du Sud" },
+    { tla: "CZE", name: "République Tchèque" }
+  ],
+  "Groupe B": [
+    { tla: "CAN", name: "Canada" },
+    { tla: "BIH", name: "Bosnie-Herzégovine" },
+    { tla: "QAT", name: "Qatar" },
+    { tla: "SUI", name: "Suisse" }
+  ],
+  "Groupe C": [
+    { tla: "BRA", name: "Brésil" },
+    { tla: "MAR", name: "Maroc" },
+    { tla: "HAI", name: "Haïti" },
+    { tla: "SCO", name: "Écosse" }
+  ],
+  "Groupe D": [
+    { tla: "USA", name: "États-Unis" },
+    { tla: "PAR", name: "Paraguay" },
+    { tla: "AUS", name: "Australie" },
+    { tla: "TUR", name: "Turquie" }
+  ],
+  "Groupe E": [
+    { tla: "GER", name: "Allemagne" },
+    { tla: "CUW", name: "Curaçao" },
+    { tla: "CIV", name: "Côte d'Ivoire" },
+    { tla: "ECU", name: "Équateur" }
+  ],
+  "Groupe F": [
+    { tla: "NED", name: "Pays-Bas" },
+    { tla: "JPN", name: "Japon" },
+    { tla: "SWE", name: "Suède" },
+    { tla: "TUN", name: "Tunisie" }
+  ],
+  "Groupe G": [
+    { tla: "BEL", name: "Belgique" },
+    { tla: "EGY", name: "Égypte" },
+    { tla: "IRN", name: "Iran" },
+    { tla: "NZL", name: "Nouvelle-Zélande" }
+  ],
+  "Groupe H": [
+    { tla: "ESP", name: "Espagne" },
+    { tla: "CPV", name: "Cap-Vert" },
+    { tla: "KSA", name: "Arabie Saoudite" },
+    { tla: "URU", name: "Uruguay" }
+  ],
+  "Groupe I": [
+    { tla: "ITA", name: "Italie" },
+    { tla: "SEN", name: "Sénégal" },
+    { tla: "HON", name: "Honduras" },
+    { tla: "IRQ", name: "Irak" }
+  ],
+  "Groupe J": [
+    { tla: "FRA", name: "France" },
+    { tla: "CMR", name: "Cameroun" },
+    { tla: "CRC", name: "Costa Rica" },
+    { tla: "UAE", name: "Émirats Arabes Unis" }
+  ],
+  "Groupe K": [
+    { tla: "ARG", name: "Argentine" },
+    { tla: "NGA", name: "Nigéria" },
+    { tla: "JAM", name: "Jamaïque" },
+    { tla: "OMA", name: "Oman" }
+  ],
+  "Groupe L": [
+    { tla: "ENG", name: "Angleterre" },
+    { tla: "CRO", name: "Croatie" },
+    { tla: "GHA", name: "Ghana" },
+    { tla: "PAN", name: "Panama" }
+  ]
+};
+
+function generateAllGroupMatches() {
+  const groupsList = Object.keys(groupsData);
+  const matches = [];
+  let matchId = 1;
+  const times = ["13:00", "16:00", "19:00", "22:00", "01:00", "04:00"];
+  
+  groupsList.forEach((groupName, groupIdx) => {
+    const teams = groupsData[groupName];
+    const matchPairs = [
+      { h: 0, a: 1, round: 1 },
+      { h: 2, a: 3, round: 1 },
+      { h: 0, a: 2, round: 2 },
+      { h: 1, a: 3, round: 2 },
+      { h: 3, a: 0, round: 3 },
+      { h: 1, a: 2, round: 3 }
+    ];
+    
+    matchPairs.forEach((pair, pairIdx) => {
+      const home = teams[pair.h];
+      const away = teams[pair.a];
+      const roundOffset = pair.round - 1;
+      const groupDayOffset = Math.floor(groupIdx / 3);
+      const dayIndex = (roundOffset * 4) + groupDayOffset;
+      
+      const matchDateObj = new Date("2026-06-11T12:00:00Z");
+      matchDateObj.setUTCDate(matchDateObj.getUTCDate() + dayIndex);
+      
+      const dateStr = matchDateObj.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Africa/Casablanca'
+      });
+      
+      const timeIdx = ((groupIdx % 3) * 2 + (pairIdx % 2)) % times.length;
+      const timeStr = times[timeIdx];
+      const stadium = getStadiumForMatch(home.name, away.name, groupName, matchId);
+      
+      matches.push({
+        id: matchId++,
+        homeTeam: home.name,
+        awayTeam: away.name,
+        homeTla: home.tla,
+        awayTla: away.tla,
+        homeFlag: getFlag(home.tla),
+        awayFlag: getFlag(away.tla),
+        homeScore: 0,
+        awayScore: 0,
+        status: "SCHEDULED",
+        time: timeStr,
+        date: dateStr,
+        group: groupName,
+        stadium: stadium,
+        events: []
+      });
+    });
+  });
+  
+  const knockoutStages = [
+    { name: "Seizièmes de finale", count: 16, startDay: 13, gap: 4 },
+    { name: "Huitièmes de finale", count: 8, startDay: 18, gap: 4 },
+    { name: "Quarts de finale", count: 4, startDay: 23, gap: 3 },
+    { name: "Demi-finales", count: 2, startDay: 28, gap: 2 },
+    { name: "Match 3e place", count: 1, startDay: 37, gap: 1 },
+    { name: "Finale", count: 1, startDay: 38, gap: 1 }
   ];
+  
+  knockoutStages.forEach(stage => {
+    for (let i = 0; i < stage.count; i++) {
+      const dayOffset = stage.startDay + Math.floor((i * stage.gap) / stage.count);
+      const matchDateObj = new Date("2026-06-11T12:00:00Z");
+      matchDateObj.setUTCDate(matchDateObj.getUTCDate() + dayOffset);
+      
+      const dateStr = matchDateObj.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Africa/Casablanca'
+      });
+      
+      const timeStr = i % 2 === 0 ? "20:00" : "23:00";
+      
+      matches.push({
+        id: matchId++,
+        homeTeam: "À déterminer",
+        awayTeam: "À déterminer",
+        homeTla: "TBD",
+        awayTla: "TBD",
+        homeFlag: getFlag("TBD"),
+        awayFlag: getFlag("TBD"),
+        homeScore: 0,
+        awayScore: 0,
+        status: "SCHEDULED",
+        time: timeStr,
+        date: dateStr,
+        group: stage.name,
+        stadium: getStadiumForMatch("TBD", "TBD", stage.name, matchId),
+        events: []
+      });
+    }
+  });
+  
+  return matches;
+}
+
+function getFallbackData() {
+  const matches = generateAllGroupMatches();
+  const groupsList = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
+  const groupsStandings = {};
+  groupsList.forEach(g => {
+    groupsStandings[g] = computeGroupStandings(matches, g);
+  });
 
   return {
     dataSource: "fallback",
@@ -429,10 +470,7 @@ function getFallbackData() {
     stadiums: getStaticStadiums(),
     moroccoSquad: getStaticSquad(),
     standings: {
-      groups: {
-        "Groupe C": computeGroupStandings(matches, "Groupe C"),
-        "Groupe A": computeGroupStandings(matches, "Groupe A")
-      },
+      groups: groupsStandings,
       scorers: getStaticScorers(),
       assists: getStaticAssists()
     },
