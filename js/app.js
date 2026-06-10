@@ -1,6 +1,6 @@
 // js/app.js
 import '../style.css';
-import { initApi } from './api.js';
+import { initApi, getH2HData } from './api.js';
 import { setupWebSockets } from './socket.js';
 import { 
     renderMatches, 
@@ -47,6 +47,9 @@ class WorldCupApp {
 
             // Attacher les écouteurs sur les filtres
             this.setupFilterListeners();
+
+            // Attacher l'écouteur pour les détails de match
+            this.setupMatchDetailsListener();
 
             // Initialiser les sockets (avec fallback simulateur intégré)
             setupWebSockets(this);
@@ -181,6 +184,10 @@ class WorldCupApp {
             
             if (scoreHomeEl) scoreHomeEl.innerText = data.homeScore;
             if (scoreAwayEl) scoreAwayEl.innerText = data.awayScore;
+
+            // Mettre à jour le score du modal s'il est ouvert
+            const modalScoreEl = document.getElementById(`modal-score-${data.matchId}`);
+            if (modalScoreEl) modalScoreEl.innerText = `${data.homeScore} - ${data.awayScore}`;
             
             if (statusEl) {
                 if (data.status === 'LIVE') {
@@ -508,6 +515,140 @@ class WorldCupApp {
         if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
 
         links.forEach(l => l.addEventListener('click', closeDrawer));
+    }
+
+    setupMatchDetailsListener() {
+        // Écouter les clics sur les cartes de match via délégation d'événements
+        document.addEventListener('click', (e) => {
+            const card = e.target.closest('.match-card');
+            if (card) {
+                const matchId = parseInt(card.id.replace('match-', ''), 10);
+                this.openMatchDetails(matchId);
+            }
+        });
+    }
+
+    openMatchDetails(matchId) {
+        if (!this.data) return;
+        const match = this.data.matches.find(m => m.id === matchId);
+        if (!match) return;
+
+        // Récupérer l'historique H2H
+        const h2h = getH2HData(match.homeTeam, match.awayTeam);
+
+        // Créer l'élément de modal s'il n'existe pas
+        let modal = document.getElementById('match-details-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'match-details-modal';
+            modal.className = 'match-details-modal';
+            document.body.appendChild(modal);
+        }
+
+        // Remplir le contenu du modal avec une structure premium et responsive
+        modal.innerHTML = `
+            <div class="modal-backdrop"></div>
+            <div class="modal-content premium-card">
+                <button class="modal-close-btn" id="close-match-modal" aria-label="Fermer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                
+                <div class="modal-header">
+                    <span class="group-label">${match.group}</span>
+                    <span class="date-label"><i class="fa-regular fa-calendar-days"></i> ${match.date}</span>
+                </div>
+                
+                <div class="match-score-section">
+                    <div class="team-side">
+                        <div class="modal-flag-wrapper">${match.homeFlag}</div>
+                        <span class="modal-team-name">${match.homeTeam}</span>
+                    </div>
+                    
+                    <div class="score-display">
+                        ${match.status === 'SCHEDULED' ? `
+                            <span class="kickoff-time">${match.time}</span>
+                            <span class="status-badge status-scheduled">Programmé</span>
+                        ` : `
+                            <span class="live-score" id="modal-score-${match.id}">${match.homeScore} - ${match.awayScore}</span>
+                            <span class="status-badge ${match.status === 'LIVE' ? 'status-live' : 'status-finished'}">
+                                ${match.status === 'LIVE' ? 'En Direct' : 'Terminé'}
+                            </span>
+                        `}
+                    </div>
+                    
+                    <div class="team-side">
+                        <div class="modal-flag-wrapper">${match.awayFlag}</div>
+                        <span class="modal-team-name">${match.awayTeam}</span>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <div class="info-row" style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; margin-bottom: 1.5rem; opacity: 0.9;">
+                        <i class="fa-solid fa-location-dot" style="color: var(--or-premium);"></i> <span>Stade :</span>
+                        <strong>${match.stadium}</strong>
+                    </div>
+                    
+                    <div class="modal-divider"></div>
+                    
+                    <h3 class="modal-section-title"><i class="fa-solid fa-clock-rotate-left"></i> Confrontations Précédentes</h3>
+                    <div class="h2h-list">
+                        ${h2h.map(game => `
+                            <div class="h2h-item">
+                                <div class="h2h-meta">
+                                    <span class="h2h-date">${game.date}</span>
+                                    <span class="h2h-comp" style="color: var(--or-premium); font-weight: 500;">${game.comp}</span>
+                                </div>
+                                <div class="h2h-result">
+                                    <span class="h2h-score" style="font-weight: 700; color: var(--white);">${game.score}</span>
+                                    <p class="h2h-details" style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px; line-height: 1.5;">${game.details}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    ${match.status !== 'SCHEDULED' ? `
+                        <div class="modal-divider"></div>
+                        <h3 class="modal-section-title"><i class="fa-solid fa-chart-bar"></i> Statistiques Attendues</h3>
+                        <div class="mock-stats-grid">
+                            <div class="stat-row">
+                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.status === 'LIVE' ? Math.floor(Math.random() * 20) + 40 : 54}%</span>
+                                <span class="stat-name">Possession</span>
+                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.status === 'LIVE' ? 100 - (Math.floor(Math.random() * 20) + 40) : 46}%</span>
+                            </div>
+                            <div class="stat-bar-container">
+                                <div class="stat-bar-fill" style="width: ${match.status === 'LIVE' ? Math.floor(Math.random() * 20) + 40 : 54}%;"></div>
+                            </div>
+                            
+                            <div class="stat-row" style="margin-top: 15px;">
+                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.status === 'LIVE' ? (Math.random() * 1.5 + 0.2).toFixed(2) : '1.45'}</span>
+                                <span class="stat-name">xG (Expected Goals)</span>
+                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.status === 'LIVE' ? (Math.random() * 1.5 + 0.2).toFixed(2) : '1.12'}</span>
+                            </div>
+                            
+                            <div class="stat-row" style="margin-top: 15px;">
+                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.homeScore + (match.status === 'LIVE' ? Math.floor(Math.random() * 5) : 8)}</span>
+                                <span class="stat-name">Tirs Totaux</span>
+                                <span class="stat-val" style="font-weight: bold; color: var(--white);">${match.awayScore + (match.status === 'LIVE' ? Math.floor(Math.random() * 5) : 6)}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        const closeBtn = modal.querySelector('#close-match-modal');
+        const backdrop = modal.querySelector('.modal-backdrop');
+        
+        const closeModal = () => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        };
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (backdrop) backdrop.addEventListener('click', closeModal);
     }
 }
 

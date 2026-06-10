@@ -71,8 +71,8 @@ export async function initApi() {
         id: m.id,
         homeTeam: m.homeTeam.shortName || m.homeTeam.name,
         awayTeam: m.awayTeam.shortName || m.awayTeam.name,
-        homeFlag: getFlag(m.homeTeam.tla),
-        awayFlag: getFlag(m.awayTeam.tla),
+        homeFlag: m.homeTeam.crest ? `<img src="${m.homeTeam.crest}" class="flag-icon" alt="${m.homeTeam.tla}">` : getFlag(m.homeTeam.tla),
+        awayFlag: m.awayTeam.crest ? `<img src="${m.awayTeam.crest}" class="flag-icon" alt="${m.awayTeam.tla}">` : getFlag(m.awayTeam.tla),
         homeScore: m.score.fullTime.home ?? 0,
         awayScore: m.score.fullTime.away ?? 0,
         status: isLive ? 'LIVE' : isFinished ? 'FINISHED' : 'SCHEDULED',
@@ -395,4 +395,37 @@ function getFallbackData() {
 
 function getStaticMatches() {
   return getFallbackData().matches;
+}
+
+export function getH2HData(home, away) {
+  const key = [home, away].sort().join(" vs ");
+  const h2hDatabase = {
+    "Brésil vs Maroc": [
+      { date: "25 Mars 2023", comp: "Match Amical", score: "Maroc 2 - 1 Brésil", details: "Victoire historique des Lions de l'Atlas à Tanger (Boufal 29', Sabiri 79' / Casemiro 67')" },
+      { date: "16 Juin 1998", comp: "Coupe du Monde 1998", score: "Brésil 3 - 0 Maroc", details: "Phase de groupes à Nantes (Ronaldo 9', Rivaldo 45', Bebeto 50')" }
+    ],
+    "Afrique du Sud vs Mexique": [
+      { date: "11 Juin 2010", comp: "Coupe du Monde 2010", score: "Afrique du Sud 1 - 1 Mexique", details: "Match d'ouverture historique à Johannesburg (Tshabalala 55' / Márquez 79')" },
+      { date: "08 Juillet 2005", comp: "Gold Cup 2005", score: "Mexique 1 - 2 Afrique du Sud", details: "Phase de groupes (Rodriguez 40' / Evans 28', Sibaya 41' pen)" }
+    ],
+    "Écosse vs Maroc": [
+      { date: "23 Juin 1998", comp: "Coupe du Monde 1998", score: "Écosse 0 - 3 Maroc", details: "Phase de groupes à Saint-Étienne. Doublé légendaire de Salaheddine Bassir (22', 85') et but d'Abdeljalil Hadda (46')" },
+      { date: "18 Décembre 1996", comp: "Match Amical", score: "Maroc 1 - 1 Écosse", details: "Match de préparation à Casablanca" }
+    ],
+    "Paraguay vs États-Unis": [
+      { date: "11 Juin 2016", comp: "Copa América Centenario", score: "États-Unis 1 - 0 Paraguay", details: "But décisif de Clint Dempsey à Philadelphie" },
+      { date: "29 Mars 2011", comp: "Match Amical", score: "États-Unis 0 - 1 Paraguay", details: "Match amical disputé à Nashville" }
+    ],
+    "Corée du Sud vs République Tchèque": [
+      { date: "05 Juin 2016", comp: "Match Amical", score: "République Tchèque 1 - 2 Corée du Sud", details: "Victoire coréenne à Prague" },
+      { date: "15 Août 2001", comp: "Match Amical", score: "République Tchèque 5 - 0 Corée du Sud", details: "Match amical à Drnovice" }
+    ],
+    "Haïti vs Maroc": [
+      { date: "17 Avril 2002", comp: "Match Amical", score: "Maroc 0 - 0 Haïti", details: "Rencontre amicale disputée à Rabat" }
+    ]
+  };
+
+  return h2hDatabase[key] || [
+    { date: "Rencontre Inédite", comp: "Coupe du Monde 2026", score: `${home} vs ${away}`, details: "Ces deux équipes ne se sont jamais affrontées dans l'histoire officielle du football." }
+  ];
 }
