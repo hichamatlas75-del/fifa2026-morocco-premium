@@ -66,7 +66,7 @@ class WorldCupApp {
             this.data = await initApi();
             
             // Initialisation des rendus de base
-            this.applyInitialRender();
+            this.applyInitialRender(true);
             initPremiumFeatures(this);
 
             // Remplissage dynamique des filtres de recherche
@@ -120,9 +120,9 @@ class WorldCupApp {
         });
     }
 
-    applyInitialRender() {
+    applyInitialRender(shouldScroll = false) {
         if (!this.data) return;
-        renderMatches(this.data.matches);
+        renderMatches(this.data.matches, 'calendar-grid', shouldScroll);
         renderLiveMatches(this.data.matches);
         renderTeams(this.data.matches);
         renderMoroccoSquad(this.data.moroccoSquad);
@@ -441,7 +441,18 @@ class WorldCupApp {
 
         // 1. Liens de navigation (Desktop)
         const navLinks = document.querySelectorAll('.nav-links a');
-        if (navLinks.length >= 8) {
+        if (navLinks.length >= 10) {
+            navLinks[0].innerHTML = this.t('nav.home');
+            navLinks[1].innerHTML = this.t('nav.calendar');
+            navLinks[2].innerHTML = this.t('nav.live');
+            navLinks[3].innerHTML = this.t('nav.teams');
+            navLinks[4].innerHTML = this.t('nav.morocco');
+            navLinks[5].innerHTML = this.t('nav.standings');
+            navLinks[6].innerHTML = this.currentLang === 'en' ? 'Tools' : 'Outils';
+            navLinks[7].innerHTML = this.t('nav.analytics');
+            navLinks[8].innerHTML = this.t('nav.stadiums');
+            navLinks[9].innerHTML = this.t('nav.news');
+        } else if (navLinks.length >= 8) {
             navLinks[0].innerHTML = this.t('nav.home');
             navLinks[1].innerHTML = this.t('nav.calendar');
             navLinks[2].innerHTML = this.t('nav.live');
@@ -460,7 +471,18 @@ class WorldCupApp {
 
         // 2. Liens de navigation (Mobile)
         const mobileLinks = document.querySelectorAll('.mobile-nav-links a');
-        if (mobileLinks.length >= 8) {
+        if (mobileLinks.length >= 10) {
+            mobileLinks[0].innerHTML = this.t('nav.home');
+            mobileLinks[1].innerHTML = this.t('nav.calendar');
+            mobileLinks[2].innerHTML = this.t('nav.live');
+            mobileLinks[3].innerHTML = this.t('nav.teams');
+            mobileLinks[4].innerHTML = this.t('nav.morocco');
+            mobileLinks[5].innerHTML = this.t('nav.standings');
+            mobileLinks[6].innerHTML = this.currentLang === 'en' ? 'Tools' : 'Outils';
+            mobileLinks[7].innerHTML = this.t('nav.analytics');
+            mobileLinks[8].innerHTML = this.t('nav.stadiums');
+            mobileLinks[9].innerHTML = this.t('nav.news');
+        } else if (mobileLinks.length >= 8) {
             mobileLinks[0].innerHTML = this.t('nav.home');
             mobileLinks[1].innerHTML = this.t('nav.calendar');
             mobileLinks[2].innerHTML = this.t('nav.live');

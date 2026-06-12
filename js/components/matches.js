@@ -23,7 +23,7 @@ function translateGroupDisplay(groupName) {
     return activeLang === 'en' ? `Group ${cleanGroup}` : `Groupe ${cleanGroup}`;
 }
 
-export function renderMatches(matches, containerId = 'calendar-grid') {
+export function renderMatches(matches, containerId = 'calendar-grid', shouldScroll = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -37,11 +37,15 @@ export function renderMatches(matches, containerId = 'calendar-grid') {
         return;
     }
 
+    // Find the next upcoming (scheduled or live) match in the list
+    const nextMatch = matches.find(m => m.status === 'SCHEDULED' || m.status === 'LIVE') || matches[matches.length - 1];
+
     container.innerHTML = matches.map(match => {
         const isLive = match.status === 'LIVE';
         const isFinished = match.status === 'FINISHED';
         const favoriteTeam = window.App?.favoriteTeam || 'MAR';
         const isFavorite = match.homeTla === favoriteTeam || match.awayTla === favoriteTeam;
+        const isNextMatch = containerId === 'calendar-grid' && nextMatch && match.id === nextMatch.id;
         
         let statusBadge = '';
         if (isLive) {
@@ -62,7 +66,7 @@ export function renderMatches(matches, containerId = 'calendar-grid') {
         }
 
         return `
-            <div class="premium-card match-card ${isFavorite ? 'favorite-match' : ''}" id="match-${match.id}" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;">
+            <div class="premium-card match-card ${isFavorite ? 'favorite-match' : ''} ${isNextMatch ? 'next-match-highlight' : ''}" id="match-${match.id}" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.8rem; opacity: 0.7;">
                     <span>${displayDate}</span>
                     <span style="display:flex; align-items:center; gap:8px;">
@@ -98,6 +102,16 @@ export function renderMatches(matches, containerId = 'calendar-grid') {
             </div>
         `;
     }).join('');
+
+    if (containerId === 'calendar-grid' && nextMatch && shouldScroll) {
+        setTimeout(() => {
+            const nextMatchEl = document.getElementById(`match-${nextMatch.id}`);
+            if (nextMatchEl) {
+                console.log("⚽ [Matches] Auto-scroll to next match card:", nextMatch.id);
+                nextMatchEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 600);
+    }
 }
 
 export function renderLiveMatches(matches) {

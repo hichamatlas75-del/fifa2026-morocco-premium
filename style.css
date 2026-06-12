@@ -1439,3 +1439,28 @@ body.theme-light .team-card-clickable:hover {
         padding: 8px 10px !important;
     }
 }
+
+/* Prochain Match Highlight */
+.next-match-highlight {
+    border: 2px solid var(--or-premium) !important;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.3), inset 0 0 15px rgba(255, 215, 0, 0.05) !important;
+    position: relative;
+    transform: scale(1.02);
+}
+
+.next-match-highlight::before {
+    content: "PROCHAIN MATCH";
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--red-maroc), var(--or-premium));
+    color: #FFFFFF;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    z-index: 5;
+}
