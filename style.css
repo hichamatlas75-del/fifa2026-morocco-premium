@@ -1338,3 +1338,104 @@ body.theme-light .team-card-clickable:hover {
     font-size: 0.75rem;
     font-weight: bold;
 }
+
+/* Mobile Optimization for Match Details Modal & Team Squad Modal */
+@media (max-width: 768px) {
+    .match-details-modal .modal-content {
+        padding: 1.5rem 1rem;
+        max-height: 85vh;
+        width: 92%;
+    }
+    
+    .modal-close-btn {
+        top: 0.8rem;
+        right: 0.8rem;
+        width: 28px;
+        height: 28px;
+        font-size: 1.2rem;
+    }
+
+    .modal-header {
+        margin-bottom: 1.2rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .match-score-section {
+        margin-bottom: 1.5rem;
+        gap: 8px;
+    }
+
+    .modal-flag-wrapper .flag-icon {
+        height: 40px !important;
+        margin-bottom: 0.4rem;
+    }
+
+    .modal-team-name {
+        font-size: 0.95rem;
+        line-height: 1.2;
+    }
+
+    .score-display {
+        min-width: 90px;
+    }
+
+    .live-score {
+        font-size: 2.2rem;
+    }
+
+    .kickoff-time {
+        font-size: 1.6rem;
+    }
+
+    .modal-actions-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .modal-calendar-btn, 
+    .modal-favorite-btn {
+        width: 100%;
+        padding: 0.7rem;
+        font-size: 0.8rem;
+    }
+
+    .prediction-strip {
+        padding: 0.6rem 0.8rem;
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+    }
+
+    .h2h-item {
+        padding: 0.9rem;
+    }
+
+    .h2h-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    /* Override inline paddings for timeline and stats in app.js */
+    .match-details-modal .match-events-timeline,
+    .match-details-modal .stats-table {
+        padding: 0.9rem !important;
+    }
+
+    .match-events-timeline > div > div {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 2px;
+    }
+
+    .stats-table .stat-item div:first-child {
+        font-size: 0.75rem !important;
+    }
+
+    #team-squad-modal .modal-body > div > div {
+        font-size: 0.85rem !important;
+        padding: 8px 10px !important;
+    }
+}
