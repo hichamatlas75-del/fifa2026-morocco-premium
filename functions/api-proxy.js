@@ -1,13 +1,5 @@
 export async function onRequest(context) {
-  const API_TOKEN = context.env?.FOOTBALL_DATA_API_TOKEN;
-  const url = "https://api.football-data.org/v4/competitions/WC/matches";
-
-  if (!API_TOKEN) {
-    return new Response(JSON.stringify({ error: "Missing FOOTBALL_DATA_API_TOKEN" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json; charset=utf-8" }
-    });
-  }
+  const url = "https://api.openligadb.de/getmatchdata/wm26/2026";
 
   // Cache API de Cloudflare pour ne pas saturer la clé (max 12 req/min)
   const cacheKey = new Request(context.request.url, context.request);
@@ -18,7 +10,6 @@ export async function onRequest(context) {
     try {
       const apiResponse = await fetch(url, {
         headers: { 
-          "X-Auth-Token": API_TOKEN,
           "Accept": "application/json"
         }
       });

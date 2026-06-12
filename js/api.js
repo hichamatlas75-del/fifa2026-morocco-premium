@@ -6,27 +6,27 @@ export function getFlag(tla) {
     // Groupe A
     MEX: "mx", RSA: "za", KOR: "kr", CZE: "cz",
     // Groupe B
-    CAN: "ca", BIH: "ba", BOS: "ba", QAT: "qa", SUI: "ch",
+    CAN: "ca", BIH: "ba", BOS: "ba", QAT: "qa", SUI: "ch", CHE: "ch",
     // Groupe C
-    BRA: "br", MAR: "ma", MOR: "ma", HAI: "ht", HTI: "ht", SCO: "gb-sct",
+    BRA: "br", MAR: "ma", MOR: "ma", HAI: "ht", HTI: "ht", SCO: "gb-sct", SCT: "gb-sct",
     // Groupe D
     USA: "us", PAR: "py", AUS: "au", TUR: "tr",
     // Groupe E
-    GER: "de", CUW: "cw", CIV: "ci", ECU: "ec",
+    GER: "de", DEU: "de", CUW: "cw", CIV: "ci", ECU: "ec",
     // Groupe F
-    NED: "nl", JPN: "jp", SWE: "se", TUN: "tn",
+    NED: "nl", NLD: "nl", JPN: "jp", SWE: "se", TUN: "tn",
     // Groupe G
     BEL: "be", EGY: "eg", IRN: "ir", NZL: "nz",
     // Groupe H
-    ESP: "es", CPV: "cv", KSA: "sa", SAU: "sa", URU: "uy",
-    // Groupe L
-    ENG: "gb-eng", CRO: "hr", GHA: "gh", PAN: "pa",
+    ESP: "es", CPV: "cv", KSA: "sa", SAU: "sa", URU: "uy", URY: "uy",
     // Groupe I
-    ITA: "it", SEN: "sn", HON: "hn", IRQ: "iq",
+    NOR: "no",
     // Groupe J
-    FRA: "fr", CMR: "cm", CRC: "cr", UAE: "ae",
+    PRT: "pt", COD: "cd", UZB: "uz", COL: "co",
     // Groupe K
-    ARG: "ar", NGA: "ng", JAM: "jm", OMA: "om",
+    DZA: "dz", AUT: "at", JOR: "jo",
+    // Groupe L
+    ENG: "gb-eng", CRO: "hr", HRV: "hr", GHA: "gh", PAN: "pa",
     // TBD
     TBD: "un"
   };
@@ -37,10 +37,25 @@ export function getFlag(tla) {
   return `<img src="https://flagcdn.com/w80/${code}.png" class="flag-icon" alt="${tla}">`;
 }
 
-function translateGroup(groupStr) {
-  if (!groupStr) return "";
-  // Ex: "GROUP_A" -> "Groupe A"
-  return groupStr.replace("GROUP_", "Groupe ");
+function getGroupForTeam(tla) {
+  for (const [groupName, teams] of Object.entries(groupsData)) {
+    if (teams.some(t => t.tla === tla)) return groupName;
+  }
+  return "";
+}
+
+function translateOpenLigaGroup(groupName, homeTla) {
+  const name = (groupName || "").toLowerCase();
+  if (name.includes("gruppenphase") || name.includes("runde") || name.includes("spieltag")) {
+    return getGroupForTeam(homeTla) || "Groupe A";
+  }
+  if (name.includes("sechzehntel") || name.includes("1/16")) return "Seizièmes de finale";
+  if (name.includes("achtel") || name.includes("1/8")) return "Huitièmes de finale";
+  if (name.includes("viertel") || name.includes("1/4")) return "Quarts de finale";
+  if (name.includes("halb") || name.includes("1/2")) return "Demi-finales";
+  if (name.includes("platz 3") || name.includes("dritter")) return "Match 3e place";
+  if (name.includes("finale") || name.includes("endspiel")) return "Finale";
+  return groupName;
 }
 
 export async function initApi() {
@@ -55,17 +70,51 @@ export async function initApi() {
     }
     const rawData = await response.json();
     
-    // Si l'API renvoie une erreur JSON
     if (rawData.error) {
       throw new Error(rawData.error);
     }
 
-    // Mapper les matchs de la Coupe du Monde 2026 de l'API
-    const matches = (rawData.matches || []).map(m => {
-      const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
-      const isFinished = m.status === 'FINISHED';
+    const rawMatches = Array.isArray(rawData) ? rawData : (rawData.matches || []);
+
+    const tlaMap = {
+      CHE: "SUI",
+      HTI: "HAI",
+      SCT: "SCO",
+      DEU: "GER",
+      NLD: "NED",
+      SAU: "KSA",
+      URY: "URU",
+      HRV: "CRO"
+    };
+
+    const teamNamesFr = {
+      MEX: "Mexique", RSA: "Afrique du Sud", KOR: "Corée du Sud", CZE: "République Tchèque",
+      CAN: "Canada", BIH: "Bosnie-Herzégovine", QAT: "Qatar", SUI: "Suisse",
+      BRA: "Brésil", MAR: "Maroc", HAI: "Haïti", SCO: "Écosse",
+      USA: "États-Unis", PAR: "Paraguay", AUS: "Australie", TUR: "Turquie",
+      GER: "Allemagne", CUW: "Curaçao", CIV: "Côte d'Ivoire", ECU: "Équateur",
+      NED: "Pays-Bas", JPN: "Japon", SWE: "Suède", TUN: "Tunisie",
+      BEL: "Belgique", EGY: "Égypte", IRN: "Iran", NZL: "Nouvelle-Zélande",
+      ESP: "Espagne", CPV: "Cap-Vert", KSA: "Arabie Saoudite", URU: "Uruguay",
+      ITA: "Italie", SEN: "Sénégal", HON: "Honduras", IRQ: "Irak",
+      FRA: "France", CMR: "Cameroun", CRC: "Costa Rica", UAE: "Émirats Arabes Unis",
+      ARG: "Argentine", NGA: "Nigéria", JAM: "Jamaïque", OMA: "Oman",
+      ENG: "Angleterre", CRO: "Croatie", GHA: "Ghana", PAN: "Panama",
+      NOR: "Norvège", DZA: "Algérie", AUT: "Autriche", JOR: "Jordanie",
+      PRT: "Portugal", COD: "RD Congo", UZB: "Ouzbékistan", COL: "Colombie"
+    };
+
+    const matches = rawMatches.map(m => {
+      const homeTla = (m.team1.shortName || 'TBD').toUpperCase();
+      const awayTla = (m.team2.shortName || 'TBD').toUpperCase();
       
-      const matchDate = new Date(m.utcDate);
+      const normHomeTla = tlaMap[homeTla] || homeTla;
+      const normAwayTla = tlaMap[awayTla] || awayTla;
+
+      const homeTeamName = teamNamesFr[normHomeTla] || m.team1.teamName;
+      const awayTeamName = teamNamesFr[normAwayTla] || m.team2.teamName;
+
+      const matchDate = new Date(m.matchDateTimeUTC || m.matchDateTime);
       // Heure locale marocaine (Casablanca = UTC+1)
       const timeStr = matchDate.toLocaleTimeString('fr-FR', { 
         hour: '2-digit', 
@@ -79,28 +128,109 @@ export async function initApi() {
         timeZone: 'Africa/Casablanca'
       });
 
+      let homeScore = 0;
+      let awayScore = 0;
+      
+      if (m.matchResults && m.matchResults.length > 0) {
+        const endResult = m.matchResults.find(r => r.resultOrderID === 2 || r.resultName === 'Endergebnis');
+        if (endResult) {
+          homeScore = endResult.pointsTeam1;
+          awayScore = endResult.pointsTeam2;
+        } else {
+          const sortedResults = [...m.matchResults].sort((a, b) => b.resultOrderID - a.resultOrderID);
+          homeScore = sortedResults[0].pointsTeam1;
+          awayScore = sortedResults[0].pointsTeam2;
+        }
+      } else if (m.goals && m.goals.length > 0) {
+        const lastGoal = m.goals[m.goals.length - 1];
+        homeScore = lastGoal.scoreTeam1;
+        awayScore = lastGoal.scoreTeam2;
+      }
+
+      const now = new Date();
+      const timeDiff = now.getTime() - matchDate.getTime();
+      const matchDurationMs = 2 * 60 * 60 * 1000;
+      const isFinished = m.matchIsFinished;
+      const isLive = !isFinished && timeDiff > 0 && timeDiff < matchDurationMs;
+
+      const groupName = getGroupForTeam(normHomeTla) || translateOpenLigaGroup(m.group.groupName, normHomeTla);
+
       return {
-        id: m.id,
-        homeTeam: m.homeTeam.shortName || m.homeTeam.name,
-        awayTeam: m.awayTeam.shortName || m.awayTeam.name,
-        homeTla: m.homeTeam.tla || "UN",
-        awayTla: m.awayTeam.tla || "UN",
-        homeFlag: m.homeTeam.crest ? `<img src="${m.homeTeam.crest}" class="flag-icon" alt="${m.homeTeam.tla}">` : getFlag(m.homeTeam.tla),
-        awayFlag: m.awayTeam.crest ? `<img src="${m.awayTeam.crest}" class="flag-icon" alt="${m.awayTeam.tla}">` : getFlag(m.awayTeam.tla),
-        homeScore: m.score?.fullTime?.home ?? 0,
-        awayScore: m.score?.fullTime?.away ?? 0,
+        id: m.matchID,
+        homeTeam: homeTeamName,
+        awayTeam: awayTeamName,
+        homeTla: normHomeTla,
+        awayTla: normAwayTla,
+        homeFlag: getFlag(normHomeTla),
+        awayFlag: getFlag(normAwayTla),
+        homeScore: homeScore,
+        awayScore: awayScore,
         status: isLive ? 'LIVE' : isFinished ? 'FINISHED' : 'SCHEDULED',
         time: isLive ? "Direct" : timeStr,
         date: dateStr,
-        group: translateGroup(m.group),
+        group: groupName,
         stadium: getStadiumForMatch(
-          m.homeTeam.name || m.homeTeam.shortName,
-          m.awayTeam.name || m.awayTeam.shortName,
-          m.group,
-          m.id
+          homeTeamName,
+          awayTeamName,
+          groupName,
+          m.matchID
         ),
         events: []
       };
+    });
+
+    const knockoutStages = [
+      { name: "Seizièmes de finale", count: 16, startDay: 13, gap: 4 },
+      { name: "Huitièmes de finale", count: 8, startDay: 18, gap: 4 },
+      { name: "Quarts de finale", count: 4, startDay: 23, gap: 3 },
+      { name: "Demi-finales", count: 2, startDay: 28, gap: 2 },
+      { name: "Match 3e place", count: 1, startDay: 37, gap: 1 },
+      { name: "Finale", count: 1, startDay: 38, gap: 1 }
+    ];
+
+    let currentMatchId = 85000;
+    knockoutStages.forEach(stage => {
+      const stageExists = matches.some(m => m.group === stage.name);
+      if (!stageExists) {
+        for (let i = 0; i < stage.count; i++) {
+          const dayOffset = stage.startDay + Math.floor((i * stage.gap) / stage.count);
+          const utcHour = i % 2 === 0 ? 19 : 22; // Correspond à 20:00 ou 23:00 heure marocaine (ou 19:00 / 22:00 UTC)
+          
+          const matchDateObj = new Date(Date.UTC(2026, 5, 11, utcHour - 1, 0, 0));
+          matchDateObj.setUTCDate(matchDateObj.getUTCDate() + dayOffset);
+          
+          const dateStr = matchDateObj.toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'Africa/Casablanca'
+          });
+          
+          const timeStr = matchDateObj.toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Africa/Casablanca'
+          });
+          
+          matches.push({
+            id: currentMatchId++,
+            homeTeam: "À déterminer",
+            awayTeam: "À déterminer",
+            homeTla: "TBD",
+            awayTla: "TBD",
+            homeFlag: getFlag("TBD"),
+            awayFlag: getFlag("TBD"),
+            homeScore: 0,
+            awayScore: 0,
+            status: "SCHEDULED",
+            time: timeStr,
+            date: dateStr,
+            group: stage.name,
+            stadium: getStadiumForMatch("TBD", "TBD", stage.name, currentMatchId),
+            events: []
+          });
+        }
+      }
     });
 
     const groupsList = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
@@ -330,22 +460,22 @@ const groupsData = {
     { tla: "URU", name: "Uruguay" }
   ],
   "Groupe I": [
-    { tla: "ITA", name: "Italie" },
+    { tla: "FRA", name: "France" },
     { tla: "SEN", name: "Sénégal" },
-    { tla: "HON", name: "Honduras" },
-    { tla: "IRQ", name: "Irak" }
+    { tla: "IRQ", name: "Irak" },
+    { tla: "NOR", name: "Norvège" }
   ],
   "Groupe J": [
-    { tla: "FRA", name: "France" },
-    { tla: "CMR", name: "Cameroun" },
-    { tla: "CRC", name: "Costa Rica" },
-    { tla: "UAE", name: "Émirats Arabes Unis" }
+    { tla: "PRT", name: "Portugal" },
+    { tla: "COD", name: "RD Congo" },
+    { tla: "UZB", name: "Ouzbékistan" },
+    { tla: "COL", name: "Colombie" }
   ],
   "Groupe K": [
     { tla: "ARG", name: "Argentine" },
-    { tla: "NGA", name: "Nigéria" },
-    { tla: "JAM", name: "Jamaïque" },
-    { tla: "OMA", name: "Oman" }
+    { tla: "DZA", name: "Algérie" },
+    { tla: "AUT", name: "Autriche" },
+    { tla: "JOR", name: "Jordanie" }
   ],
   "Groupe L": [
     { tla: "ENG", name: "Angleterre" },
