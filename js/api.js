@@ -353,17 +353,39 @@ export function getStaticStadiums() {
 
 function getStaticSquad() {
   return [
+    // Gardiens
     { name: "Yassine Bounou", pos: "Gardiens", num: 1, club: "Al-Hilal" },
+    { name: "Munir El Kajoui", pos: "Gardiens", num: 12, club: "RS Berkane" },
+    { name: "Ahmed Tagnaouti", pos: "Gardiens", num: 22, club: "AS FAR" },
+
+    // Défenseurs
     { name: "Achraf Hakimi", pos: "Défenseurs", num: 2, club: "PSG" },
-    { name: "Nayef Aguerd", pos: "Défenseurs", num: 5, club: "Real Sociedad" },
-    { name: "Chadi Riad", pos: "Défenseurs", num: 6, club: "Crystal Palace" },
     { name: "Noussair Mazraoui", pos: "Défenseurs", num: 3, club: "Manchester United" },
-    { name: "Sofyan Amrabat", pos: "Milieux", num: 4, club: "Fenerbahçe" },
-    { name: "Azzedine Ounahi", pos: "Milieux", num: 8, club: "Panathinaikos" },
+    { name: "Nayef Aguerd", pos: "Défenseurs", num: 5, club: "Olympique de Marseille" },
+    { name: "Chadi Riad", pos: "Défenseurs", num: 6, club: "Crystal Palace" },
+    { name: "Issa Diop", pos: "Défenseurs", num: 4, club: "Fulham" },
+    { name: "Anass Salah-Eddine", pos: "Défenseurs", num: 20, club: "PSV Eindhoven" },
+    { name: "Youssef Belammari", pos: "Défenseurs", num: 13, club: "Al Ahly" },
+    { name: "Redouane Halhal", pos: "Défenseurs", num: 24, club: "KV Mechelen" },
+    { name: "Zakaria El Ouahdi", pos: "Défenseurs", num: 15, club: "KRC Genk" },
+
+    // Milieux
+    { name: "Sofyan Amrabat", pos: "Milieux", num: 4, club: "Real Betis" },
+    { name: "Azzedine Ounahi", pos: "Milieux", num: 8, club: "Girona" },
+    { name: "Bilal El Khannouss", pos: "Milieux", num: 14, club: "VfB Stuttgart" },
+    { name: "Ismael Saibari", pos: "Milieux", num: 11, club: "PSV Eindhoven" },
+    { name: "Ayyoub Bouaddi", pos: "Milieux", num: 18, club: "Lille OSC" },
+    { name: "Neil El Aynaoui", pos: "Milieux", num: 23, club: "AS Roma" },
+    { name: "Samir El Mourabet", pos: "Milieux", num: 16, club: "RC Strasbourg" },
+    { name: "Yassine Gessime", pos: "Milieux", num: 21, club: "RC Strasbourg" },
+
+    // Attaquants
     { name: "Brahim Díaz", pos: "Attaquants", num: 10, club: "Real Madrid" },
-    { name: "Hakim Ziyech", pos: "Attaquants", num: 7, club: "Galatasaray" },
-    { name: "Eliesse Ben Seghir", pos: "Milieux", num: 11, club: "Monaco" },
-    { name: "Soufiane Rahimi", pos: "Attaquants", num: 9, club: "Al-Ain" }
+    { name: "Ayoub El Kaabi", pos: "Attaquants", num: 19, club: "Olympiacos" },
+    { name: "Soufiane Rahimi", pos: "Attaquants", num: 9, club: "Al Ain FC" },
+    { name: "Abde Ezzalzouli", pos: "Attaquants", num: 17, club: "Real Betis" },
+    { name: "Chemsdine Talbi", pos: "Attaquants", num: 25, club: "Sunderland" },
+    { name: "Ayoub Amaimouni", pos: "Attaquants", num: 26, club: "Eintracht Frankfurt" }
   ];
 }
 
