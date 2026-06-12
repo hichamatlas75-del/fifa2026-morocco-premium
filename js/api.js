@@ -20,11 +20,11 @@ export function getFlag(tla) {
     // Groupe H
     ESP: "es", CPV: "cv", KSA: "sa", SAU: "sa", URU: "uy", URY: "uy",
     // Groupe I
-    NOR: "no",
+    FRA: "fr", SEN: "sn", IRQ: "iq", NOR: "no", ITA: "it", HON: "hn",
     // Groupe J
-    PRT: "pt", COD: "cd", UZB: "uz", COL: "co",
+    PRT: "pt", COD: "cd", UZB: "uz", COL: "co", CMR: "cm", CRC: "cr", UAE: "ae",
     // Groupe K
-    DZA: "dz", AUT: "at", JOR: "jo",
+    ARG: "ar", DZA: "dz", AUT: "at", JOR: "jo", NGA: "ng", JAM: "jm", OMA: "om",
     // Groupe L
     ENG: "gb-eng", CRO: "hr", HRV: "hr", GHA: "gh", PAN: "pa",
     // TBD
