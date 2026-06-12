@@ -601,6 +601,28 @@ class WorldCupApp {
     registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
 
+        // Désactiver le Service Worker en local pour éviter les blocages de cache en développement
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isLocal) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let registration of registrations) {
+                    registration.unregister().then(success => {
+                        if (success) console.log('SW: Désenregistré en local avec succès.');
+                    });
+                }
+            }).catch(err => console.warn('SW error:', err));
+
+            if ('caches' in window) {
+                caches.keys().then(keys => {
+                    return Promise.all(keys.map(key => {
+                        console.log('SW: Suppression du cache local:', key);
+                        return caches.delete(key);
+                    }));
+                }).catch(err => console.warn('SW cache clear error:', err));
+            }
+            return;
+        }
+
         window.addEventListener('load', () => {
             navigator.serviceWorker
                 .register('/service-worker.js')

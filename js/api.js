@@ -44,8 +44,12 @@ function translateGroup(groupStr) {
 }
 
 export async function initApi() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
+
   try {
-    const response = await fetch('/api-proxy');
+    const response = await fetch('/api-proxy', { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
