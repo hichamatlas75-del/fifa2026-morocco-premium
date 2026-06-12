@@ -288,28 +288,83 @@ export function renderNews(news) {
     const container = document.getElementById('news-grid');
     if (!container) return;
 
-    container.innerHTML = news.map(item => {
+    // Clear previous interval if any
+    if (window.newsRefreshInterval) {
+        clearInterval(window.newsRefreshInterval);
+    }
+
+    const allNews = news;
+    if (allNews.length === 0) return;
+
+    // Keep track of currently displayed news indices (initially 0, 1, 2)
+    let activeIndices = [0, 1, 2].map(i => i % allNews.length);
+
+    const generateCardHTML = (item) => {
         const title = t(`newsList.item${item.id}.title`, '');
         const summary = t(`newsList.item${item.id}.summary`, '');
         let displayDate = item.date;
         if (window.App && window.App.currentLang === 'en') {
             displayDate = displayDate.replace("Juin", "June");
         }
-
         return `
-            <div class="premium-card news-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; min-height: 380px;">
-                <div style="height: 180px; overflow: hidden; position: relative;">
-                    <img src="${item.image}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth);" class="news-img">
-                    <span style="position: absolute; bottom: 10px; right: 10px; background: rgba(11, 11, 11, 0.85); backdrop-filter: blur(5px); border: 1px solid var(--border-color); font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 500; color: #FFFFFF;">${displayDate}</span>
-                </div>
-                <div style="padding: 1.5rem; display: flex; flex-direction: column; flex: 1;">
-                    <h4 style="margin-bottom: 0.8rem; font-size: 1.1rem; line-height: 1.4; color: var(--text-main); font-weight: 700;">${title}</h4>
-                    <p style="font-size: 0.85rem; opacity: 0.75; line-height: 1.6; margin-bottom: 1.5rem; flex-grow: 1;">${summary}</p>
-                    <a href="#" style="color: var(--or-premium); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; transition: var(--transition-smooth);" class="news-link">
-                        ${t('news.readAnalysis', 'Lire l\'analyse tactique')} <i class="fa-solid fa-arrow-right-long"></i>
-                    </a>
-                </div>
+            <div style="height: 180px; overflow: hidden; position: relative;">
+                <img src="${item.image}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth);" class="news-img">
+                <span style="position: absolute; bottom: 10px; right: 10px; background: rgba(11, 11, 11, 0.85); backdrop-filter: blur(5px); border: 1px solid var(--border-color); font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 500; color: #FFFFFF;">${displayDate}</span>
+            </div>
+            <div style="padding: 1.5rem; display: flex; flex-direction: column; flex: 1;">
+                <h4 style="margin-bottom: 0.8rem; font-size: 1.1rem; line-height: 1.4; color: var(--text-main); font-weight: 700;">${title}</h4>
+                <p style="font-size: 0.85rem; opacity: 0.75; line-height: 1.6; margin-bottom: 1.5rem; flex-grow: 1;">${summary}</p>
+                <a href="#" style="color: var(--or-premium); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; transition: var(--transition-smooth);" class="news-link">
+                    ${t('news.readAnalysis', 'Lire l\'analyse tactique')} <i class="fa-solid fa-arrow-right-long"></i>
+                </a>
+            </div>
+        `;
+    };
+
+    // Render initial grid structure with 3 slots
+    container.innerHTML = activeIndices.map((newsIdx, slotIdx) => {
+        const item = allNews[newsIdx];
+        return `
+            <div class="premium-card news-card" id="news-card-${slotIdx}" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; min-height: 380px; transition: opacity 0.5s ease, transform 0.5s ease;">
+                ${generateCardHTML(item)}
             </div>
         `;
     }).join('');
+
+    // If there are more than 3 news items, set up the auto-refresh cycle
+    if (allNews.length > 3) {
+        let nextSlotToUpdate = 0;
+        window.newsRefreshInterval = setInterval(() => {
+            // Find next news item index not currently displayed
+            let nextNewsIdx = 0;
+            for (let i = 0; i < allNews.length; i++) {
+                const candidate = (activeIndices[nextSlotToUpdate] + i + 1) % allNews.length;
+                if (!activeIndices.includes(candidate)) {
+                    nextNewsIdx = candidate;
+                    break;
+                }
+            }
+
+            const cardEl = document.getElementById(`news-card-${nextSlotToUpdate}`);
+            if (cardEl) {
+                // Step 1: Fade out
+                cardEl.style.opacity = '0';
+                cardEl.style.transform = 'translateY(15px)';
+
+                setTimeout(() => {
+                    // Step 2: Swap content and update active tracker
+                    const item = allNews[nextNewsIdx];
+                    activeIndices[nextSlotToUpdate] = nextNewsIdx;
+                    cardEl.innerHTML = generateCardHTML(item);
+
+                    // Step 3: Fade back in
+                    cardEl.style.opacity = '1';
+                    cardEl.style.transform = 'translateY(0)';
+                }, 500);
+            }
+
+            // Move to next slot
+            nextSlotToUpdate = (nextSlotToUpdate + 1) % 3;
+        }, 12000); // Cycle every 12 seconds
+    }
 }
