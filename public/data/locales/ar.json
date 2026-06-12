@@ -20,5 +20,9 @@
       "minutes": "دقيقة",
       "seconds": "ثانية"
     }
+  },
+  "notification": {
+    "kickoff": "ضربة البداية! بدأت مباراة {home} - {away}.",
+    "goal": "هدف! {team} سجل هدفاً! النتيجة: {score}"
   }
 }

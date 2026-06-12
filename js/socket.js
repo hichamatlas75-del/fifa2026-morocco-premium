@@ -56,6 +56,9 @@ function startPolling(app) {
                     if (homeGoal) scoringTeam = prevMatch.homeTeam;
                     if (awayGoal) scoringTeam = prevMatch.awayTeam;
 
+                    // Détecter le coup d'envoi (passage de SCHEDULED à LIVE)
+                    const isKickoff = prevMatch.status === 'SCHEDULED' && status === 'LIVE';
+
                     // Mettre à jour l'état de référence local
                     prevMatch.homeScore = homeScore;
                     prevMatch.awayScore = awayScore;
@@ -75,10 +78,24 @@ function startPolling(app) {
                     // Mettre à jour l'UI du match
                     app.updateMatchCard(updateData);
 
+                    // Si le coup d'envoi est donné
+                    if (isKickoff) {
+                        const homeTeamTranslated = app.t(`teams.${prevMatch.homeTla.toUpperCase()}`, prevMatch.homeTeam);
+                        const awayTeamTranslated = app.t(`teams.${prevMatch.awayTla.toUpperCase()}`, prevMatch.awayTeam);
+                        const kickoffMsg = app.t('notification.kickoff', "Coup d'envoi ! Le match {home} - {away} a commencé.")
+                            .replace('{home}', homeTeamTranslated)
+                            .replace('{away}', awayTeamTranslated);
+                        app.sendPushNotification(kickoffMsg);
+                    }
+
                     // Si un but est marqué, déclencher les effets premium
                     if (goalScored) {
                         app.triggerGoalAnimation(m.id);
-                        app.sendPushNotification(`BUT ! ${scoringTeam} vient de marquer ! Score : ${homeScore} - ${awayScore}`);
+                        const scoringTeamTranslated = app.t(`teams.${scoringTeam.toUpperCase()}`, scoringTeam);
+                        const goalMsg = app.t('notification.goal', "BUT ! {team} vient de marquer ! Score : {score}")
+                            .replace('{team}', scoringTeamTranslated)
+                            .replace('{score}', `${homeScore} - ${awayScore}`);
+                        app.sendPushNotification(goalMsg);
                     }
                 }
             });

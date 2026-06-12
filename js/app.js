@@ -58,6 +58,13 @@ class WorldCupApp {
         // Gestion du menu mobile
         this.setupMobileMenu();
 
+        // Demander la permission pour les notifications
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                console.log("🔔 [App] Permission de notification :", permission);
+            });
+        }
+
         // Charger les traductions initiales
         await this.loadTranslations();
 

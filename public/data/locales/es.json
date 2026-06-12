@@ -20,5 +20,9 @@
       "minutes": "Min",
       "seconds": "Seg"
     }
+  },
+  "notification": {
+    "kickoff": "¡Comienza el partido! El encuentro {home} - {away} ha comenzado.",
+    "goal": "¡GOL! ¡{team} ha marcado! Marcador: {score}"
   }
 }

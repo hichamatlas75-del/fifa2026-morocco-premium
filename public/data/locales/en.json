@@ -155,5 +155,9 @@
     "SAU": "Saudi Arabia",
     "URY": "Uruguay",
     "HRV": "Croatia"
+  },
+  "notification": {
+    "kickoff": "Kickoff! The match {home} - {away} has started.",
+    "goal": "GOAL! {team} has scored! Score: {score}"
   }
 }
