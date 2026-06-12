@@ -288,37 +288,23 @@ export function renderNews(news) {
     const container = document.getElementById('news-grid');
     if (!container) return;
 
-    const activeLang = window.App ? window.App.currentLang : 'fr';
-
     container.innerHTML = news.map(item => {
-        // Simple traduction à la volée des titres d'actualités si l'anglais est actif
-        let displayTitle = item.title;
-        let displaySummary = item.summary;
+        const title = t(`newsList.item${item.id}.title`, '');
+        const summary = t(`newsList.item${item.id}.summary`, '');
         let displayDate = item.date;
-
-        if (activeLang === 'en') {
+        if (window.App && window.App.currentLang === 'en') {
             displayDate = displayDate.replace("Juin", "June");
-            if (item.id === 1) {
-                displayTitle = "Opening Match Mexico vs South Africa Tomorrow at 20:00 (Moroccan Time)";
-                displaySummary = "The kickoff of the FIFA World Cup 2026 will be given in the historic temple of Mexican football, the Azteca.";
-            } else if (item.id === 2) {
-                displayTitle = "Morocco Faces Brazilian Giants at New York New Jersey Stadium on June 13";
-                displaySummary = "Scheduled at 23:00 Moroccan time, Walid Regragui prepares an ultra-compact tactical plan to confront the Seleção.";
-            } else if (item.id === 3) {
-                displayTitle = "Atlas Lions Train in New York in Front of Thousands of Fans";
-                displaySummary = "A warm atmosphere and unwavering support from the Moroccan community in America.";
-            }
         }
 
         return `
             <div class="premium-card news-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; min-height: 380px;">
                 <div style="height: 180px; overflow: hidden; position: relative;">
-                    <img src="${item.image}" alt="${displayTitle}" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth);" class="news-img">
+                    <img src="${item.image}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth);" class="news-img">
                     <span style="position: absolute; bottom: 10px; right: 10px; background: rgba(11, 11, 11, 0.85); backdrop-filter: blur(5px); border: 1px solid var(--border-color); font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 500; color: #FFFFFF;">${displayDate}</span>
                 </div>
                 <div style="padding: 1.5rem; display: flex; flex-direction: column; flex: 1;">
-                    <h4 style="margin-bottom: 0.8rem; font-size: 1.1rem; line-height: 1.4; color: var(--text-main); font-weight: 700;">${displayTitle}</h4>
-                    <p style="font-size: 0.85rem; opacity: 0.75; line-height: 1.6; margin-bottom: 1.5rem; flex-grow: 1;">${displaySummary}</p>
+                    <h4 style="margin-bottom: 0.8rem; font-size: 1.1rem; line-height: 1.4; color: var(--text-main); font-weight: 700;">${title}</h4>
+                    <p style="font-size: 0.85rem; opacity: 0.75; line-height: 1.6; margin-bottom: 1.5rem; flex-grow: 1;">${summary}</p>
                     <a href="#" style="color: var(--or-premium); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; transition: var(--transition-smooth);" class="news-link">
                         ${t('news.readAnalysis', 'Lire l\'analyse tactique')} <i class="fa-solid fa-arrow-right-long"></i>
                     </a>

@@ -24,5 +24,31 @@
   "notification": {
     "kickoff": "¡Comienza el partido! El encuentro {home} - {away} ha comenzado.",
     "goal": "¡GOL! ¡{team} ha marcado! Marcador: {score}"
+  },
+  "newsList": {
+    "item1": {
+      "title": "Duelo en Nueva Jersey: Los Leones del Atlas ultiman tácticas frente a Brasil",
+      "summary": "En la víspera de su esperado debut en el Grupo C en el MetLife Stadium, la selección marroquí realizó su última sesión de entrenamiento."
+    },
+    "item2": {
+      "title": "Comienzo histórico: Arranca el Mundial 2026 en Ciudad de México con 48 equipos",
+      "summary": "La Copa Mundial más grande de la historia ha comenzado oficialmente en el legendario Estadio Azteca de Ciudad de México."
+    },
+    "item3": {
+      "title": "Venta de última hora: La FIFA activa la reventa oficial exclusivamente móvil",
+      "summary": "FIFA ha lanzado su fase de reventa oficial de última hora de fan a fan, gestionada de forma 100% digital."
+    },
+    "item4": {
+      "title": "Plan táctico: El seleccionador Mohamed Ouahbi define el esquema de Marruecos",
+      "summary": "Tras los partidos de preparación, el seleccionador confía en la dupla Brahim Díaz y Achraf Hakimi para neutralizar el ataque brasileño."
+    },
+    "item5": {
+      "title": "Sedes canadienses listas: Se inauguran los Fan Festivals en Vancouver y Toronto",
+      "summary": "Canadá está lista para albergar sus primeros partidos con césped natural mejorado y zonas de aficionados con gran ambiente."
+    },
+    "item6": {
+      "title": "Fiebre mundialista: Aficionados de todo el mundo inundan Nueva York y Nueva Jersey",
+      "summary": "Times Square y Liberty State Park se llenan de colorido con hinchas de Marruecos, Brasil y Escocia antes del debut de sus selecciones."
+    }
   }
 }

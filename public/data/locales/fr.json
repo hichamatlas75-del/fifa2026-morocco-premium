@@ -159,5 +159,31 @@
   "notification": {
     "kickoff": "Coup d'envoi ! Le match {home} - {away} a commencé.",
     "goal": "BUT ! {team} vient de marquer ! Score : {score}"
+  },
+  "newsList": {
+    "item1": {
+      "title": "Choc dans le New Jersey : Les Lions de l'Atlas peaufinent leur tactique face au Brésil",
+      "summary": "À la veille de leur match d'ouverture très attendu du Groupe C au MetLife Stadium, l'équipe nationale marocaine a tenu sa dernière séance d'entraînement à huis clos."
+    },
+    "item2": {
+      "title": "Un départ historique : Le coup d'envoi de la Coupe du Monde 2026 donné à Mexico",
+      "summary": "La plus grande Coupe du Monde de l'histoire a officiellement débuté au mythique stade Azteca avec la participation inédite de 48 nations."
+    },
+    "item3": {
+      "title": "Ruée sur les billets de dernière minute : La FIFA active la revente mobile officielle",
+      "summary": "La FIFA a ouvert la phase de revente de billets de dernière minute de supporter à supporter sur sa plateforme officielle 100% digitale."
+    },
+    "item4": {
+      "title": "Tactique des Lions : Le sélectionneur Mohamed Ouahbi finalise son plan de jeu",
+      "summary": "Après les matchs de préparation, le sélectionneur national s'appuie sur le duo Brahim Díaz et Achraf Hakimi pour bloquer l'attaque brésilienne."
+    },
+    "item5": {
+      "title": "Le Canada est prêt : Les Fan Festivals officiels ouvrent à Vancouver et Toronto",
+      "summary": "Le Canada s'apprête à accueillir ses premiers matchs avec des pelouses naturelles flambant neuves et une ambiance festive dans les villes hôtes."
+    },
+    "item6": {
+      "title": "Ferveur dans la métropole : Les supporters envahissent New York et le New Jersey",
+      "summary": "Times Square et Liberty State Park se transforment en zones de fête géantes pour accueillir les milliers de fans marocains et brésiliens."
+    }
   }
 }

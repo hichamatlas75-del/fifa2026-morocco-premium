@@ -411,24 +411,33 @@ function getStaticNews() {
   return [
     {
       id: 1,
-      title: "Le match d'ouverture Mexique vs Afrique du Sud demain à 20:00 (heure marocaine)",
-      summary: "Le coup d'envoi de la Coupe du Monde 2026 sera donné dans le temple historique du football mexicain, l'Azteca.",
       image: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=600&auto=format&fit=crop",
-      date: "10 Juin 2026"
+      date: "12 Juin 2026"
     },
     {
       id: 2,
-      title: "Le Maroc face au géant brésilien au MetLife Stadium le 13 juin",
-      summary: "Prévu à 23:00 heure du Maroc, Walid Regragui prépare un plan tactique ultra-compact pour faire face à la Seleção.",
-      image: "https://images.unsplash.com/photo-1518063319789-7217e6706b04?q=80&w=600&auto=format&fit=crop",
-      date: "10 Juin 2026"
+      image: "https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=600&auto=format&fit=crop",
+      date: "11 Juin 2026"
     },
     {
       id: 3,
-      title: "Les Lions de l'Atlas s'entraînent à New York devant des milliers de fans",
-      summary: "Une ambiance surchauffée et un soutien indéfectible de la communauté marocaine d'Amérique.",
+      image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop",
+      date: "12 Juin 2026"
+    },
+    {
+      id: 4,
       image: "https://images.unsplash.com/photo-1459865264687-595d652de67e?q=80&w=600&auto=format&fit=crop",
-      date: "09 Juin 2026"
+      date: "10 Juin 2026"
+    },
+    {
+      id: 5,
+      image: "https://images.unsplash.com/photo-1559511260-66a654ae982a?q=80&w=600&auto=format&fit=crop",
+      date: "11 Juin 2026"
+    },
+    {
+      id: 6,
+      image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=600&auto=format&fit=crop",
+      date: "12 Juin 2026"
     }
   ];
 }

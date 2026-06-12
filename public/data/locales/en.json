@@ -159,5 +159,31 @@
   "notification": {
     "kickoff": "Kickoff! The match {home} - {away} has started.",
     "goal": "GOAL! {team} has scored! Score: {score}"
+  },
+  "newsList": {
+    "item1": {
+      "title": "Showdown in New Jersey: Atlas Lions Finalize Tactics to Face Brazil in Group C Opener",
+      "summary": "On the eve of their highly anticipated Group C opening match at the MetLife Stadium, the Moroccan National Team held its final closed-door training session."
+    },
+    "item2": {
+      "title": "A Historic Start: World Cup 2026 Kicks Off in Mexico City with 48-Team Expansion",
+      "summary": "The largest-ever FIFA World Cup in history has officially begun at the legendary Estadio Azteca in Mexico City with 48 nations competing."
+    },
+    "item3": {
+      "title": "Last-Minute Ticket Rush: FIFA Activates Official Mobile-Only Resale Phase",
+      "summary": "FIFA has launched its official last-minute and fan-to-fan resale ticket phase on FIFA.com, strictly digital and mobile-only."
+    },
+    "item4": {
+      "title": "Rebuilding the Magic: Coach Mohamed Ouahbi Finalizes Morocco's Tactical Blueprint",
+      "summary": "Morocco's head coach has finalized his strategy, relying on the creative pairing of Brahim Díaz and captain Achraf Hakimi to face Brazil."
+    },
+    "item5": {
+      "title": "Canadian Hosts Shine: Fan Festivals Open in Vancouver and Toronto for Group Stage Matches",
+      "summary": "Canada is ready to host its first-ever men's World Cup matches with upgraded natural turf pitches and vibrant fan zones."
+    },
+    "item6": {
+      "title": "MetLife Magic: Global Football Fans Gather in New York/New Jersey Ahead of Group Openers",
+      "summary": "Times Square and Liberty State Park have turned into colorful hubs of fans from Morocco, Brazil, and Scotland ahead of group stage openers."
+    }
   }
 }
