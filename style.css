@@ -495,25 +495,25 @@ select.control-btn:focus, input.control-btn:focus {
 .mobile-drawer {
     position: fixed;
     top: 0;
-    right: -100%;
+    left: -100%;
     width: 80%;
     max-width: 300px;
     height: 100vh;
     background: rgba(11, 11, 11, 0.96);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
-    border-left: 1px solid var(--glass-border);
+    border-right: 1px solid var(--glass-border);
     z-index: 2000;
     padding: 6rem 2rem 2rem 2rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
     transition: var(--transition-smooth);
 }
 
 .mobile-drawer.active {
-    right: 0;
+    left: 0;
 }
 
 body.theme-light .mobile-drawer {
@@ -552,6 +552,9 @@ body.theme-light .mobile-drawer {
     }
     .mobile-only-btn {
         display: inline-flex !important;
+    }
+    .lang-switcher {
+        display: none !important;
     }
     .hero-title {
         font-size: 3.2rem;
