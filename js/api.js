@@ -122,8 +122,8 @@ export async function initApi() {
       news: getStaticNews()
     };
   } catch (error) {
-    console.warn("⚠️ Impossible de joindre l'API de production, chargement des données de secours :", error);
-    return getFallbackData();
+    console.error("❌ Impossible de joindre l'API de production :", error);
+    throw error;
   }
 }
 

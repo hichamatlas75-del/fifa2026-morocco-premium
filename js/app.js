@@ -91,7 +91,32 @@ class WorldCupApp {
 
         } catch (error) {
             console.error('Erreur de chargement des données FIFA:', error);
+            this.displayOnlineError(error);
         }
+    }
+
+    displayOnlineError(error) {
+        // Masquer le badge de synchronisation
+        const badge = document.getElementById('data-source-badge');
+        if (badge) {
+            badge.style.display = 'none';
+        }
+
+        // Afficher l'erreur dans les conteneurs de grilles majeurs
+        const containers = ['calendar-grid', 'live-matches-grid', 'teams-grid', 'morocco-dashboard', 'groups-container', 'top-scorers', 'top-assists'];
+        containers.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem; background: rgba(193, 39, 45, 0.05); border: 1px solid var(--rouge-maroc); border-radius: 12px; color: var(--white); font-family: sans-serif; font-size: 0.9rem;">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: var(--rouge-maroc); font-size: 1.8rem; margin-bottom: 0.8rem;"></i>
+                        <h4 style="margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 700; color: var(--rouge-maroc);">Erreur de Connexion Directe</h4>
+                        <p style="opacity: 0.8;">Impossible de charger les données en ligne. Jeton d'API (FOOTBALL_DATA_API_TOKEN) manquant ou invalide.</p>
+                        <p style="font-size: 0.75rem; opacity: 0.5; margin-top: 0.5rem; font-family: monospace; word-break: break-all;">${error.message || error}</p>
+                    </div>
+                `;
+            }
+        });
     }
 
     applyInitialRender() {
