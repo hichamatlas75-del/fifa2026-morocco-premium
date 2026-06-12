@@ -36,8 +36,6 @@ export function initPremiumFeatures(app) {
 
     document.getElementById('compare-team-a')?.addEventListener('change', () => renderComparison(app));
     document.getElementById('compare-team-b')?.addEventListener('change', () => renderComparison(app));
-    document.getElementById('simulator-group-select')?.addEventListener('change', () => renderSimulator(app));
-    document.getElementById('simulator-matches')?.addEventListener('input', () => renderSimulatorStandings(app));
 }
 
 export function refreshPremiumFeatures(app) {
@@ -49,7 +47,6 @@ export function refreshPremiumFeatures(app) {
     renderAlerts(app);
     renderNextMatch(app);
     renderComparison(app);
-    renderSimulator(app);
 }
 
 function teamName(app, tla, fallback = tla) {
@@ -210,56 +207,7 @@ function renderComparison(app) {
     `;
 }
 
-function renderSimulator(app) {
-    const group = document.getElementById('simulator-group-select')?.value;
-    const container = document.getElementById('simulator-matches');
-    if (!group || !container) return;
 
-    const matches = app.data.matches.filter(match => match.group === group);
-    container.innerHTML = matches.map(match => `
-        <div class="sim-match" data-sim-match="${match.id}">
-            <span>${getFlag(match.homeTla)} ${teamName(app, match.homeTla, match.homeTeam)}</span>
-            <input type="number" min="0" max="20" value="${match.status === 'FINISHED' ? match.homeScore : 0}" data-home-score>
-            <input type="number" min="0" max="20" value="${match.status === 'FINISHED' ? match.awayScore : 0}" data-away-score>
-            <span>${getFlag(match.awayTla)} ${teamName(app, match.awayTla, match.awayTeam)}</span>
-        </div>
-    `).join('');
-    renderSimulatorStandings(app);
-}
-
-function renderSimulatorStandings(app) {
-    const group = document.getElementById('simulator-group-select')?.value;
-    const container = document.getElementById('simulator-standings');
-    if (!group || !container) return;
-
-    const simulatedMatches = Array.from(document.querySelectorAll('[data-sim-match]')).map(row => {
-        const match = app.data.matches.find(item => String(item.id) === row.getAttribute('data-sim-match'));
-        return {
-            ...match,
-            homeScore: Number(row.querySelector('[data-home-score]')?.value || 0),
-            awayScore: Number(row.querySelector('[data-away-score]')?.value || 0),
-            status: 'FINISHED'
-        };
-    });
-
-    const standings = computeStandings(simulatedMatches);
-    container.innerHTML = `
-        <table class="feature-table">
-            <thead><tr><th>#</th><th>Équipe</th><th>MJ</th><th>DB</th><th>Pts</th></tr></thead>
-            <tbody>
-                ${standings.map(row => `
-                    <tr class="${row.rank <= 2 ? 'qualified-row' : ''}">
-                        <td>${row.rank}</td>
-                        <td>${getFlag(row.tla)} ${teamName(app, row.tla)}</td>
-                        <td>${row.p}</td>
-                        <td>${row.gf - row.ga}</td>
-                        <td><strong>${row.pts}</strong></td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-}
 
 function computeStandings(matches) {
     const teams = new Map();

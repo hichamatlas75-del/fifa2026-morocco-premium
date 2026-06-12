@@ -1,4 +1,5 @@
 // js/api.js
+import realMatches from './real_matches.json';
 
 export function getFlag(tla) {
   if (!tla) return `<img src="https://flagcdn.com/w80/un.png" class="flag-icon" alt="UN">`;
@@ -252,8 +253,8 @@ export async function initApi() {
       news: getStaticNews()
     };
   } catch (error) {
-    console.error("❌ Impossible de joindre l'API de production :", error);
-    throw error;
+    console.warn("⚠️ Impossible de joindre l'API de production, chargement des données de secours :", error);
+    return getFallbackData();
   }
 }
 
@@ -485,134 +486,15 @@ const groupsData = {
   ]
 };
 
-function simulateMatchScore(homeTla, awayTla) {
-  const ratings = {
-    BRA: 92, ESP: 89, ENG: 88, GER: 88, NED: 86, MAR: 84, BEL: 84, CRO: 84,
-    URU: 83, USA: 82, SUI: 81, MEX: 80, JPN: 79, TUR: 78, CAN: 77, KOR: 77,
-    CZE: 76, PAR: 75, SCO: 75, AUS: 74, BIH: 74, RSA: 69, HAI: 64, CIV: 79,
-    QAT: 68, SWE: 81, TUN: 72, EGY: 74, IRN: 70, NZL: 62, CPV: 68, KSA: 69,
-    ITA: 85, SEN: 78, HON: 66, IRQ: 64, FRA: 89, CMR: 74, CRC: 71, UAE: 63,
-    ARG: 90, NGA: 76, JAM: 68, OMA: 60, PAN: 67, GHA: 73, CUW: 62, ECU: 77
-  };
-  
-  const homeRating = ratings[homeTla] || 70;
-  const awayRating = ratings[awayTla] || 70;
-  
-  const diff = homeRating - awayRating;
-  let homeExpected = 1.3 + (diff * 0.05);
-  let awayExpected = 1.1 - (diff * 0.05);
-  
-  homeExpected = Math.max(0.5, homeExpected);
-  awayExpected = Math.max(0.5, awayExpected);
-  
-  const homeScore = poissonRandom(homeExpected);
-  const awayScore = poissonRandom(awayExpected);
-  
-  return { homeScore, awayScore };
-}
+function getFallbackData() {
+  const matches = realMatches.map(m => ({
+    ...m,
+    homeFlag: getFlag(m.homeTla),
+    awayFlag: getFlag(m.awayTla),
+    stadium: getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id),
+    events: []
+  }));
 
-function poissonRandom(mean) {
-  let L = Math.exp(-mean);
-  let k = 0;
-  let p = 1.0;
-  do {
-    k++;
-    p *= Math.random();
-  } while (p > L && k < 10);
-  return k - 1;
-}
-
-function generateAllGroupMatches() {
-  const groupsList = Object.keys(groupsData);
-  const matches = [];
-  let matchId = 1;
-  
-  // Heures de coup d'envoi en UTC : 12:00, 15:00, 18:00, 21:00 (correspondant à 13:00, 16:00, 19:00, 22:00 heure marocaine UTC+1)
-  const utcHours = [12, 15, 18, 21, 0, 3]; 
-  
-  groupsList.forEach((groupName, groupIdx) => {
-    const teams = groupsData[groupName];
-    const matchPairs = [
-      { h: 0, a: 1, round: 1 },
-      { h: 2, a: 3, round: 1 },
-      { h: 0, a: 2, round: 2 },
-      { h: 1, a: 3, round: 2 },
-      { h: 3, a: 0, round: 3 },
-      { h: 1, a: 2, round: 3 }
-    ];
-    
-    matchPairs.forEach((pair, pairIdx) => {
-      const home = teams[pair.h];
-      const away = teams[pair.a];
-      const roundOffset = pair.round - 1;
-      const groupDayOffset = Math.floor(groupIdx / 3);
-      const dayIndex = (roundOffset * 4) + groupDayOffset;
-      
-      const hourIdx = ((groupIdx % 3) * 2 + (pairIdx % 2)) % utcHours.length;
-      const utcHour = utcHours[hourIdx];
-      
-      // Construire l'objet Date en UTC (mois 5 pour juin en JS)
-      const matchDateObj = new Date(Date.UTC(2026, 5, 11, utcHour, 0, 0));
-      matchDateObj.setUTCDate(matchDateObj.getUTCDate() + dayIndex);
-      
-      // Formater la date en heure du Maroc (Casablanca)
-      const dateStr = matchDateObj.toLocaleDateString('fr-FR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'Africa/Casablanca'
-      });
-      
-      const timeStr = matchDateObj.toLocaleTimeString('fr-FR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Africa/Casablanca'
-      });
-      
-      const now = new Date();
-      let status = "SCHEDULED";
-      let homeScore = 0;
-      let awayScore = 0;
-      
-      // Un match dure environ 2 heures (120 minutes)
-      const matchDurationMs = 2 * 60 * 60 * 1000;
-      const timeDiff = now.getTime() - matchDateObj.getTime();
-      
-      if (timeDiff > matchDurationMs) {
-        status = "FINISHED";
-        const simulated = simulateMatchScore(home.tla, away.tla);
-        homeScore = simulated.homeScore;
-        awayScore = simulated.awayScore;
-      } else if (timeDiff > 0) {
-        status = "LIVE";
-        const simulated = simulateMatchScore(home.tla, away.tla);
-        const progress = timeDiff / matchDurationMs;
-        homeScore = Math.floor(simulated.homeScore * progress);
-        awayScore = Math.floor(simulated.awayScore * progress);
-      }
-      
-      const stadium = getStadiumForMatch(home.name, away.name, groupName, matchId);
-      
-      matches.push({
-        id: matchId++,
-        homeTeam: home.name,
-        awayTeam: away.name,
-        homeTla: home.tla,
-        awayTla: away.tla,
-        homeFlag: getFlag(home.tla),
-        awayFlag: getFlag(away.tla),
-        homeScore: homeScore,
-        awayScore: awayScore,
-        status: status,
-        time: status === 'LIVE' ? "Direct" : timeStr,
-        date: dateStr,
-        group: groupName,
-        stadium: stadium,
-        events: []
-      });
-    });
-  });
-  
   const knockoutStages = [
     { name: "Seizièmes de finale", count: 16, startDay: 13, gap: 4 },
     { name: "Huitièmes de finale", count: 8, startDay: 18, gap: 4 },
@@ -622,6 +504,7 @@ function generateAllGroupMatches() {
     { name: "Finale", count: 1, startDay: 38, gap: 1 }
   ];
   
+  let matchId = 85000;
   knockoutStages.forEach(stage => {
     for (let i = 0; i < stage.count; i++) {
       const dayOffset = stage.startDay + Math.floor((i * stage.gap) / stage.count);
@@ -643,28 +526,6 @@ function generateAllGroupMatches() {
         timeZone: 'Africa/Casablanca'
       });
       
-      const now = new Date();
-      let status = "SCHEDULED";
-      let homeScore = 0;
-      let awayScore = 0;
-      
-      const matchDurationMs = 2 * 60 * 60 * 1000;
-      const timeDiff = now.getTime() - matchDateObj.getTime();
-      
-      if (timeDiff > matchDurationMs) {
-        status = "FINISHED";
-        homeScore = Math.floor(Math.random() * 4);
-        awayScore = Math.floor(Math.random() * 4);
-        if (homeScore === awayScore) {
-          // Éviter les nuls en phase à élimination directe
-          Math.random() > 0.5 ? homeScore++ : awayScore++;
-        }
-      } else if (timeDiff > 0) {
-        status = "LIVE";
-        homeScore = Math.floor(Math.random() * 2);
-        awayScore = Math.floor(Math.random() * 2);
-      }
-      
       matches.push({
         id: matchId++,
         homeTeam: "À déterminer",
@@ -673,10 +534,10 @@ function generateAllGroupMatches() {
         awayTla: "TBD",
         homeFlag: getFlag("TBD"),
         awayFlag: getFlag("TBD"),
-        homeScore: homeScore,
-        awayScore: awayScore,
-        status: status,
-        time: status === 'LIVE' ? "Direct" : timeStr,
+        homeScore: 0,
+        awayScore: 0,
+        status: "SCHEDULED",
+        time: timeStr,
         date: dateStr,
         group: stage.name,
         stadium: getStadiumForMatch("TBD", "TBD", stage.name, matchId),
@@ -684,12 +545,7 @@ function generateAllGroupMatches() {
       });
     }
   });
-  
-  return matches;
-}
 
-function getFallbackData() {
-  const matches = generateAllGroupMatches();
   const groupsList = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
   const groupsStandings = {};
   groupsList.forEach(g => {
