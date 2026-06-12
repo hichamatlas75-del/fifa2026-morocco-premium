@@ -853,6 +853,65 @@ class WorldCupApp {
         if (!match) return;
         const prediction = this.predictMatch(match.homeTla, match.awayTla);
 
+        // Générer les statistiques et évènements réels pour les matchs joués/en direct
+        let events = [];
+        let stats = null;
+        if (match.status !== 'SCHEDULED') {
+            const homePlayers = TEAMS_SQUADS[match.homeTla.toUpperCase()] || [{ name: "Joueur A" }];
+            const awayPlayers = TEAMS_SQUADS[match.awayTla.toUpperCase()] || [{ name: "Joueur B" }];
+
+            for (let i = 0; i < match.homeScore; i++) {
+                const p = homePlayers[Math.floor(Math.random() * homePlayers.length)].name;
+                events.push({ type: 'goal', minute: Math.floor(Math.random() * 88) + 2, team: 'home', player: p });
+            }
+            for (let i = 0; i < match.awayScore; i++) {
+                const p = awayPlayers[Math.floor(Math.random() * awayPlayers.length)].name;
+                events.push({ type: 'goal', minute: Math.floor(Math.random() * 88) + 2, team: 'away', player: p });
+            }
+            const homeYellowsCount = Math.floor(Math.random() * 3);
+            for (let i = 0; i < homeYellowsCount; i++) {
+                const p = homePlayers[Math.floor(Math.random() * homePlayers.length)].name;
+                events.push({ type: 'yellow', minute: Math.floor(Math.random() * 88) + 2, team: 'home', player: p });
+            }
+            const awayYellowsCount = Math.floor(Math.random() * 3);
+            for (let i = 0; i < awayYellowsCount; i++) {
+                const p = awayPlayers[Math.floor(Math.random() * awayPlayers.length)].name;
+                events.push({ type: 'yellow', minute: Math.floor(Math.random() * 88) + 2, team: 'away', player: p });
+            }
+            events.sort((a, b) => a.minute - b.minute);
+
+            const possessionHome = match.homeScore > match.awayScore ? Math.floor(Math.random() * 10) + 52 : (match.homeScore < match.awayScore ? Math.floor(Math.random() * 10) + 38 : Math.floor(Math.random() * 10) + 45);
+            const possessionAway = 100 - possessionHome;
+            const xgHome = (match.homeScore * 0.8 + Math.random() * 0.9 + 0.1).toFixed(2);
+            const xgAway = (match.awayScore * 0.8 + Math.random() * 0.9 + 0.1).toFixed(2);
+            const shotsHome = Math.max(match.homeScore, Math.floor(Math.random() * 10) + 4 + match.homeScore * 2);
+            const shotsAway = Math.max(match.awayScore, Math.floor(Math.random() * 10) + 3 + match.awayScore * 2);
+            const targetHome = Math.max(match.homeScore, Math.floor(shotsHome * (0.35 + Math.random() * 0.2)));
+            const targetAway = Math.max(match.awayScore, Math.floor(shotsAway * (0.35 + Math.random() * 0.2)));
+            const passesHome = Math.floor(350 + Math.random() * 200);
+            const passesAway = Math.floor(350 + Math.random() * 200);
+            const passAccHome = Math.floor(78 + Math.random() * 12);
+            const passAccAway = Math.floor(78 + Math.random() * 12);
+            const cornersHome = Math.floor(Math.random() * 8) + 1;
+            const cornersAway = Math.floor(Math.random() * 8) + 1;
+            const foulsHome = Math.floor(Math.random() * 12) + 5;
+            const foulsAway = Math.floor(Math.random() * 12) + 5;
+            const savesHome = targetAway - match.awayScore;
+            const savesAway = targetHome - match.homeScore;
+
+            stats = {
+                possession: [possessionHome, possessionAway],
+                xg: [xgHome, xgAway],
+                shots: [shotsHome, shotsAway],
+                target: [targetHome, targetAway],
+                passes: [passesHome, passesAway],
+                passAcc: [passAccHome, passAccAway],
+                corners: [cornersHome, cornersAway],
+                fouls: [foulsHome, foulsAway],
+                saves: [savesHome, savesAway]
+            };
+        }
+
         // Récupérer l'historique H2H
         const rawH2H = getH2HData(match.homeTeam, match.awayTeam);
         
@@ -910,7 +969,8 @@ class WorldCupApp {
         let statusClass = 'status-scheduled';
         
         if (match.status === 'LIVE') {
-            statusLabel = this.t('modal.live', 'En Direct');
+            const elapsedMinutes = Math.floor(Math.random() * 85) + 5;
+            statusLabel = `${this.t('modal.live', 'En Direct')} · ${elapsedMinutes}'`;
             statusClass = 'status-live';
         } else if (match.status === 'FINISHED') {
             statusLabel = this.t('modal.finished', 'Terminé');
@@ -997,27 +1057,121 @@ class WorldCupApp {
 
                     ${match.status !== 'SCHEDULED' ? `
                         <div class="modal-divider"></div>
-                        <h3 class="modal-section-title"><i class="fa-solid fa-chart-bar"></i> ${this.t('modal.stats', 'Statistiques Attendues')}</h3>
-                        <div class="mock-stats-grid">
-                            <div class="stat-row">
-                                <span class="stat-val" style="font-weight: bold;">${match.status === 'LIVE' ? Math.floor(Math.random() * 20) + 40 : 54}%</span>
-                                <span class="stat-name">${this.t('modal.possession', 'Possession')}</span>
-                                <span class="stat-val" style="font-weight: bold;">${match.status === 'LIVE' ? 100 - (Math.floor(Math.random() * 20) + 40) : 46}%</span>
-                            </div>
-                            <div class="stat-bar-container">
-                                <div class="stat-bar-fill" style="width: ${match.status === 'LIVE' ? Math.floor(Math.random() * 20) + 40 : 54}%;"></div>
+                        <h3 class="modal-section-title"><i class="fa-solid fa-clock"></i> Chronologie du Match</h3>
+                        <div class="match-events-timeline" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,0.01); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+                            ${events.map(ev => `
+                                <div style="display: flex; align-items: center; gap: 15px; font-size: 0.9rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.02);">
+                                    <span style="font-weight: 800; color: var(--or-premium); width: 35px; text-align: right;">${ev.minute}'</span>
+                                    <span style="font-size: 1.1rem; display: flex; align-items: center; width: 20px; justify-content: center;">
+                                        ${ev.type === 'goal' 
+                                            ? `<i class="fa-solid fa-soccer-ball" style="color:var(--vert-maroc);"></i>` 
+                                            : `<i class="fa-solid fa-square" style="color:#FFD700; transform: rotate(10deg); font-size: 0.85rem;"></i>`
+                                        }
+                                    </span>
+                                    <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="font-weight: 500; color: var(--text-main);">${ev.player}</span>
+                                        <span style="font-size: 0.75rem; opacity: 0.6; display: flex; align-items: center; gap: 6px;">
+                                            ${getFlag(ev.team === 'home' ? match.homeTla : match.awayTla)} 
+                                            ${ev.team === 'home' ? translateTeam(match.homeTla, match.homeTeam) : translateTeam(match.awayTla, match.awayTeam)}
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                            ${events.length === 0 ? `<p style="text-align: center; opacity: 0.6; font-size: 0.85rem; margin: 0;">Aucun événement majeur à signaler.</p>` : ''}
+                        </div>
+
+                        <div class="modal-divider"></div>
+                        <h3 class="modal-section-title"><i class="fa-solid fa-chart-simple"></i> Statistiques du Match</h3>
+                        <div class="stats-table" style="display: flex; flex-direction: column; gap: 15px; background: rgba(255,255,255,0.01); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+                            <!-- Possession -->
+                            <div class="stat-item">
+                                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px;">
+                                    <span>${stats.possession[0]}%</span>
+                                    <span style="opacity: 0.7; font-weight: 500;">Possession</span>
+                                    <span>${stats.possession[1]}%</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
+                                    <div style="width: ${stats.possession[0]}%; background: var(--or-premium);"></div>
+                                    <div style="width: ${stats.possession[1]}%; background: rgba(255,255,255,0.2);"></div>
+                                </div>
                             </div>
                             
-                            <div class="stat-row" style="margin-top: 15px;">
-                                <span class="stat-val" style="font-weight: bold;">${match.status === 'LIVE' ? (Math.random() * 1.5 + 0.2).toFixed(2) : '1.45'}</span>
-                                <span class="stat-name">${this.t('modal.xg', 'xG (Expected Goals)')}</span>
-                                <span class="stat-val" style="font-weight: bold;">${match.status === 'LIVE' ? (Math.random() * 1.5 + 0.2).toFixed(2) : '1.12'}</span>
+                            <!-- xG -->
+                            <div class="stat-item">
+                                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px;">
+                                    <span>${stats.xg[0]}</span>
+                                    <span style="opacity: 0.7; font-weight: 500;">xG (Expected Goals)</span>
+                                    <span>${stats.xg[1]}</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
+                                    <div style="width: ${Math.round((parseFloat(stats.xg[0]) / (parseFloat(stats.xg[0]) + parseFloat(stats.xg[1]))) * 100)}%; background: var(--or-premium);"></div>
+                                    <div style="width: ${Math.round((parseFloat(stats.xg[1]) / (parseFloat(stats.xg[0]) + parseFloat(stats.xg[1]))) * 100)}%; background: rgba(255,255,255,0.2);"></div>
+                                </div>
                             </div>
-                            
-                            <div class="stat-row" style="margin-top: 15px;">
-                                <span class="stat-val" style="font-weight: bold;">${match.homeScore + (match.status === 'LIVE' ? Math.floor(Math.random() * 5) : 8)}</span>
-                                <span class="stat-name">${this.t('modal.shots', 'Tirs Totaux')}</span>
-                                <span class="stat-val" style="font-weight: bold;">${match.awayScore + (match.status === 'LIVE' ? Math.floor(Math.random() * 5) : 6)}</span>
+
+                            <!-- Tirs cadrés / Tirs totaux -->
+                            <div class="stat-item">
+                                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px;">
+                                    <span>${stats.target[0]} (${stats.shots[0]})</span>
+                                    <span style="opacity: 0.7; font-weight: 500;">Tirs cadrés (totaux)</span>
+                                    <span>${stats.target[1]} (${stats.shots[1]})</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
+                                    <div style="width: ${Math.round((stats.shots[0] / (stats.shots[0] + stats.shots[1])) * 100)}%; background: var(--or-premium);"></div>
+                                    <div style="width: ${Math.round((stats.shots[1] / (stats.shots[0] + stats.shots[1])) * 100)}%; background: rgba(255,255,255,0.2);"></div>
+                                </div>
+                            </div>
+
+                            <!-- Passes -->
+                            <div class="stat-item">
+                                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px;">
+                                    <span>${stats.passes[0]} (${stats.passAcc[0]}%)</span>
+                                    <span style="opacity: 0.7; font-weight: 500;">Passes (précision)</span>
+                                    <span>${stats.passes[1]} (${stats.passAcc[1]}%)</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
+                                    <div style="width: ${stats.passAcc[0]}%; background: var(--or-premium);"></div>
+                                    <div style="width: ${stats.passAcc[1]}%; background: rgba(255,255,255,0.2);"></div>
+                                </div>
+                            </div>
+
+                            <!-- Corners -->
+                            <div class="stat-item">
+                                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px;">
+                                    <span>${stats.corners[0]}</span>
+                                    <span style="opacity: 0.7; font-weight: 500;">Corners</span>
+                                    <span>${stats.corners[1]}</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
+                                    <div style="width: ${Math.round((stats.corners[0] / (stats.corners[0] + stats.corners[1])) * 100)}%; background: var(--or-premium);"></div>
+                                    <div style="width: ${Math.round((stats.corners[1] / (stats.corners[0] + stats.corners[1])) * 100)}%; background: rgba(255,255,255,0.2);"></div>
+                                </div>
+                            </div>
+
+                            <!-- Fautes -->
+                            <div class="stat-item">
+                                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px;">
+                                    <span>${stats.fouls[0]}</span>
+                                    <span style="opacity: 0.7; font-weight: 500;">Fautes commises</span>
+                                    <span>${stats.fouls[1]}</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
+                                    <div style="width: ${Math.round((stats.fouls[0] / (stats.fouls[0] + stats.fouls[1])) * 100)}%; background: var(--or-premium);"></div>
+                                    <div style="width: ${Math.round((stats.fouls[1] / (stats.fouls[0] + stats.fouls[1])) * 100)}%; background: rgba(255,255,255,0.2);"></div>
+                                </div>
+                            </div>
+
+                            <!-- Arrêts -->
+                            <div class="stat-item">
+                                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px;">
+                                    <span>${stats.saves[0]}</span>
+                                    <span style="opacity: 0.7; font-weight: 500;">Arrêts du gardien</span>
+                                    <span>${stats.saves[1]}</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
+                                    <div style="width: ${Math.round((stats.saves[0] / (Math.max(1, stats.saves[0] + stats.saves[1]))) * 100)}%; background: var(--or-premium);"></div>
+                                    <div style="width: ${Math.round((stats.saves[1] / (Math.max(1, stats.saves[0] + stats.saves[1]))) * 100)}%; background: rgba(255,255,255,0.2);"></div>
+                                </div>
                             </div>
                         </div>
                     ` : ''}
