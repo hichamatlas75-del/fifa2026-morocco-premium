@@ -18,6 +18,7 @@ window.addEventListener('error', (event) => {
 
 import { initApi, getH2HData, getFlag } from './api.js';
 import { setupWebSockets } from './socket.js';
+import { TEAMS_SQUADS } from './teams_squads.js';
 import { 
     renderMatches, 
     renderLiveMatches, 
@@ -833,6 +834,13 @@ class WorldCupApp {
                 console.log("⚽ [App] Carte cliquée :", card.id);
                 const matchId = parseInt(card.id.replace('match-', ''), 10);
                 this.openMatchDetails(matchId);
+                return;
+            }
+
+            const teamCard = e.target.closest('.team-card-clickable');
+            if (teamCard) {
+                const teamTla = teamCard.getAttribute('data-team-tla');
+                this.openTeamSquadModal(teamTla);
             }
         });
     }
@@ -1040,6 +1048,70 @@ class WorldCupApp {
         modal.querySelector('[data-calendar-match]')?.addEventListener('click', () => {
             this.downloadCalendarEvent(match);
         });
+    }
+
+    openTeamSquadModal(teamTla) {
+        console.log("⚽ [App] Ouverture de la composition de l'équipe :", teamTla);
+        if (!this.data) return;
+
+        const squad = TEAMS_SQUADS[teamTla.toUpperCase()] || [];
+        const teamName = this.t(`teams.${teamTla.toUpperCase()}`, teamTla);
+
+        let modal = document.getElementById('team-squad-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'team-squad-modal';
+            document.body.appendChild(modal);
+        }
+
+        modal.className = 'match-details-modal';
+        
+        modal.innerHTML = `
+            <div class="modal-backdrop"></div>
+            <div class="modal-content premium-card" style="max-height: 85vh; overflow-y: auto;">
+                <button class="modal-close-btn" id="close-squad-modal" aria-label="Fermer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                
+                <div class="modal-header" style="text-align: center; margin-bottom: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                    <div style="font-size: 4rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));">${getFlag(teamTla)}</div>
+                    <h2 class="font-sport" style="font-size: 1.8rem; color: var(--or-premium); margin: 0; font-weight: 700; text-transform: uppercase;">
+                        ${teamName}
+                    </h2>
+                    <span class="group-label" style="font-size: 0.85rem;">Effectif Coupe du Monde 2026</span>
+                </div>
+                
+                <div class="modal-body">
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 1rem;">
+                        ${squad.length > 0 ? squad.map((p, idx) => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; transition: var(--transition-smooth);">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="font-weight: 900; color: var(--or-premium); font-size: 0.95rem; width: 20px;">${idx + 1}</span>
+                                    <span style="font-weight: 500; color: var(--text-main);">${p.name}</span>
+                                </div>
+                                <span style="opacity: 0.6; font-size: 0.75rem; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${p.club}</span>
+                            </div>
+                        `).join('') : `
+                            <p style="text-align: center; opacity: 0.6; padding: 2rem;">Aucune composition disponible pour ce pays.</p>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        const closeBtn = modal.querySelector('#close-squad-modal');
+        const backdrop = modal.querySelector('.modal-backdrop');
+        
+        const closeModal = () => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        };
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (backdrop) backdrop.addEventListener('click', closeModal);
     }
 
     predictMatch(homeTla, awayTla) {

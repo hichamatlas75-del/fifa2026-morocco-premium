@@ -131,10 +131,10 @@ export function renderTeams(matches) {
     const teams = Array.from(teamsMap.values()).sort((a, b) => translateTeam(a.tla, a.name).localeCompare(translateTeam(b.tla, b.name)));
 
     container.innerHTML = teams.map(team => `
-        <div class="premium-card" style="padding: 1.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
-            <span style="font-size: 3rem; margin-bottom: 0.5rem; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));">${getFlag(team.tla)}</span>
-            <h4 class="font-sport" style="font-size: 1rem; color: var(--text-main); font-weight: 700; margin-bottom: 0.2rem;">${translateTeam(team.tla, team.name)}</h4>
-            <p style="font-size: 0.75rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">${translateGroupDisplay(team.group)}</p>
+        <div class="premium-card team-card-clickable" data-team-tla="${team.tla}" style="padding: 1.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
+            <span style="font-size: 3rem; margin-bottom: 0.5rem; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); pointer-events: none;">${getFlag(team.tla)}</span>
+            <h4 class="font-sport" style="font-size: 1rem; color: var(--text-main); font-weight: 700; margin-bottom: 0.2rem; pointer-events: none;">${translateTeam(team.tla, team.name)}</h4>
+            <p style="font-size: 0.75rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; pointer-events: none;">${translateGroupDisplay(team.group)}</p>
         </div>
     `).join('');
 }
