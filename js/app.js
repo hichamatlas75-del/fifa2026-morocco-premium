@@ -387,20 +387,28 @@ class WorldCupApp {
         const btn = document.getElementById('theme-toggle');
         if (!btn) return;
 
-        const isLight = localStorage.getItem('theme') === 'light';
+        // Default to light theme if no preference is saved
+        const isDark = localStorage.getItem('theme') === 'dark';
         
-        if (isLight) {
-            document.body.classList.replace('theme-dark', 'theme-light');
+        if (isDark) {
+            document.body.classList.remove('theme-light');
+            document.body.classList.add('theme-dark');
+            btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+        } else {
+            document.body.classList.remove('theme-dark');
+            document.body.classList.add('theme-light');
             btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
         }
 
         btn.addEventListener('click', () => {
             if (document.body.classList.contains('theme-light')) {
-                document.body.classList.replace('theme-light', 'theme-dark');
+                document.body.classList.remove('theme-light');
+                document.body.classList.add('theme-dark');
                 btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
                 localStorage.setItem('theme', 'dark');
             } else {
-                document.body.classList.replace('theme-dark', 'theme-light');
+                document.body.classList.remove('theme-dark');
+                document.body.classList.add('theme-light');
                 btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
                 localStorage.setItem('theme', 'light');
             }
