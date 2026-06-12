@@ -496,14 +496,7 @@ class WorldCupApp {
         const statHosts = document.getElementById('stat-hosts');
         if (statHosts) statHosts.innerText = this.currentLang === 'en' ? 'Host Countries' : 'Pays Hôtes';
 
-        // 5. Countdown labels
-        const countdownBoxes = document.querySelectorAll('.countdown-box');
-        if (countdownBoxes.length === 4) {
-            countdownBoxes[0].querySelector('.countdown-label').innerText = this.t('hero.countdown.days');
-            countdownBoxes[1].querySelector('.countdown-label').innerText = this.t('hero.countdown.hours');
-            countdownBoxes[2].querySelector('.countdown-label').innerText = this.t('hero.countdown.minutes');
-            countdownBoxes[3].querySelector('.countdown-label').innerText = this.t('hero.countdown.seconds');
-        }
+
 
         // 6. Section Titles
         const secCalendar = document.getElementById('sec-title-calendar');

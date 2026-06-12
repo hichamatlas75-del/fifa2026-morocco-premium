@@ -95,7 +95,8 @@ function renderDataSource(app) {
     if (!badge) return;
     const isApi = app.data.dataSource === 'api';
     badge.className = `data-source-badge ${isApi ? 'is-api' : 'is-fallback'}`;
-    badge.innerHTML = `<span></span>${isApi ? 'API synchronisée' : 'Données de secours'}`;
+    badge.innerHTML = `<span></span>`;
+    badge.title = isApi ? 'API synchronisée' : 'Données de secours';
 }
 
 function translateGroup(app, group) {

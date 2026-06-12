@@ -87,12 +87,7 @@
             <p class="hero-tagline">UNITED 2026 — ÉDITION MAROC</p>
             <h1 class="hero-title">Coupe du Monde<br><span style="color:var(--or-premium)">FIFA 2026</span></h1>
             
-            <div class="countdown-container">
-                <div class="countdown-box"><span class="countdown-val" id="days">00</span><span class="countdown-label">Jours</span></div>
-                <div class="countdown-box"><span class="countdown-val" id="hours">00</span><span class="countdown-label">Heures</span></div>
-                <div class="countdown-box"><span class="countdown-val" id="minutes">00</span><span class="countdown-label">Min</span></div>
-                <div class="countdown-box"><span class="countdown-val" id="seconds">00</span><span class="countdown-label">Sec</span></div>
-            </div>
+
 
             <div class="cta-group">
                 <a href="#calendar" class="btn-premium btn-gold"><i class="fa-solid fa-calendar-days"></i> Voir les Matchs</a>
@@ -255,24 +250,6 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
     <script type="module" src="./js/app.js"></script>
-    
-    <script>
-        const targetDate = new Date('June 11, 2026 20:00:00').getTime();
-        function updateCountdown() {
-            const now = new Date().getTime();
-            const diff = targetDate - now;
-            if (diff <= 0) return;
-            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const s = Math.floor((diff % (1000 * 60)) / 1000);
-            document.getElementById('days').innerText = String(d).padStart(2, '0');
-            document.getElementById('hours').innerText = String(h).padStart(2, '0');
-            document.getElementById('minutes').innerText = String(m).padStart(2, '0');
-            document.getElementById('seconds').innerText = String(s).padStart(2, '0');
-        }
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
-    </script>
+
 </body>
 </html>

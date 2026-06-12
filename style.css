@@ -52,6 +52,23 @@ body.theme-light {
     --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
 }
 
+/* Hero section light mode overrides */
+body.theme-light .hero-tagline {
+    color: var(--green-maroc);
+}
+
+body.theme-light .hero-title {
+    background: linear-gradient(135deg, #0B0B0B 30%, #444444 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+body.theme-light .hero-title span {
+    color: var(--red-maroc) !important;
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
+}
+
 /* Language Switcher Styles */
 .lang-switcher {
     display: flex;
@@ -556,18 +573,14 @@ body.theme-light .mobile-drawer {
     .lang-switcher {
         display: none !important;
     }
+    .hero {
+        height: auto;
+        min-height: 85vh;
+        padding-top: 120px;
+        padding-bottom: 60px;
+    }
     .hero-title {
         font-size: 3.2rem;
-    }
-    .countdown-container {
-        gap: 0.5rem;
-    }
-    .countdown-box {
-        min-width: 70px;
-        padding: 0.6rem;
-    }
-    .countdown-val {
-        font-size: 1.6rem;
     }
     .section-title {
         font-size: 2.2rem;
@@ -913,14 +926,12 @@ body.theme-light .team-card-clickable:hover {
 .data-source-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--glass-border);
-    padding: 0.35rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--white);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
     backdrop-filter: blur(5px);
     transition: all 0.3s ease;
 }
