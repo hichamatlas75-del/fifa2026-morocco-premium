@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fifa2026-ma-v1';
+const CACHE_NAME = 'fifa2026-ma-v2';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -32,17 +32,19 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   if (new URL(request.url).pathname === '/api-proxy') return;
 
+  // Stratégie Network-First pour éviter le blocage du cache
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(request).then((response) => {
-        const copy = response.clone();
+    fetch(request)
+      .then((response) => {
         if (response.ok && new URL(request.url).origin === self.location.origin) {
+          const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => {
+        // Fallback sur le cache en cas de panne réseau ou mode hors-ligne
+        return caches.match(request);
+      })
   );
 });
