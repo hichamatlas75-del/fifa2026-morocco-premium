@@ -606,6 +606,21 @@ body.theme-light .mobile-drawer {
     margin-bottom: 0.8rem;
 }
 
+/* Cartes d'équipes interactives */
+.team-card-clickable {
+    transition: var(--transition-smooth) !important;
+}
+.team-card-clickable:hover {
+    transform: translateY(-6px) scale(1.03);
+    border-color: var(--or-premium) !important;
+    box-shadow: 0 12px 30px rgba(255, 215, 0, 0.15), var(--card-shadow);
+}
+body.theme-light .team-card-clickable:hover {
+    border-color: var(--green-maroc) !important;
+    box-shadow: 0 12px 30px rgba(0, 98, 51, 0.12), var(--card-shadow);
+}
+
+
 #groups-container .flag-icon {
     height: 16px;
     border-radius: 2px;
