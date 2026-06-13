@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fifa2026-ma-v2';
+const CACHE_NAME = 'fifa2026-ma-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -30,7 +30,7 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
 
   if (request.method !== 'GET') return;
-  if (new URL(request.url).pathname === '/api-proxy') return;
+  if (new URL(request.url).pathname === '/api-proxy' || new URL(request.url).pathname === '/api-worldcup') return;
 
   // Stratégie Network-First pour éviter le blocage du cache
   event.respondWith(

@@ -1,5 +1,5 @@
 // js/socket.js
-import { getDeterministicEvents, getDeterministicStats } from './api.js';
+import { getDeterministicEvents, getDeterministicStats, updateWorldCupGames } from './api.js';
 
 let lastMatchesState = [];
 
@@ -32,6 +32,9 @@ function startPolling(app) {
     // Interroger l'API toutes les 30 secondes
     setInterval(async () => {
         try {
+            // Mettre à jour les buteurs réels depuis worldcup26.ir
+            await updateWorldCupGames();
+
             const res = await fetch('/api-proxy');
             if (!res.ok) throw new Error('Erreur de réponse du proxy');
             const data = await res.json();

@@ -137,19 +137,23 @@ const englishToTla = {
   "panama": "PAN"
 };
 
-export async function initApi() {
+export async function updateWorldCupGames() {
   try {
     const irResponse = await fetch('/api-worldcup');
     if (irResponse.ok) {
       const irData = await irResponse.json();
       if (irData && irData.games) {
         worldCupApiGames = irData.games;
-        console.log("⚽ [API] Chargement des buteurs réels depuis worldcup26.ir réussi :", worldCupApiGames.length, "matchs");
+        console.log("⚽ [API] Mise à jour des buteurs réels depuis worldcup26.ir :", worldCupApiGames.length, "matchs");
       }
     }
   } catch (e) {
     console.warn("⚠️ Impossible de joindre l'API de secours worldcup26.ir :", e);
   }
+}
+
+export async function initApi() {
+  await updateWorldCupGames();
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 3000);
