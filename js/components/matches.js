@@ -37,16 +37,27 @@ export function renderMatches(matches, containerId = 'calendar-grid', shouldScro
         return;
     }
 
-    // Find the next upcoming (scheduled or live) match in the list
-    const nextMatch = matches.find(m => m.status === 'SCHEDULED' || m.status === 'LIVE') || matches[matches.length - 1];
+    // Find the next upcoming (scheduled only) match in the list
+    const nextMatch = matches.find(m => m.status === 'SCHEDULED') || matches.find(m => m.status === 'LIVE') || matches[matches.length - 1];
 
     container.innerHTML = matches.map(match => {
         const isLive = match.status === 'LIVE';
         const isFinished = match.status === 'FINISHED';
         const favoriteTeam = window.App?.favoriteTeam || 'MAR';
         const isFavorite = match.homeTla === favoriteTeam || match.awayTla === favoriteTeam;
-        const isNextMatch = containerId === 'calendar-grid' && nextMatch && match.id === nextMatch.id;
+        const isNextMatch = containerId === 'calendar-grid' && nextMatch && match.id === nextMatch.id && match.status === 'SCHEDULED';
         
+        const activeLang = window.App ? window.App.currentLang : 'fr';
+        let bannerClass = '';
+        let bannerText = '';
+        if (isLive) {
+            bannerClass = 'live-match-highlight';
+            bannerText = activeLang === 'en' ? 'MATCH IN PROGRESS' : 'MATCH EN COURS';
+        } else if (isNextMatch) {
+            bannerClass = 'next-match-highlight';
+            bannerText = activeLang === 'en' ? 'NEXT MATCH' : 'PROCHAIN MATCH';
+        }
+
         let statusBadge = '';
         if (isLive) {
             statusBadge = `<span class="live-badge" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;"><span class="live-pulse"></span> ${t('modal.live', 'Direct')} ${match.time}</span>`;
@@ -66,7 +77,7 @@ export function renderMatches(matches, containerId = 'calendar-grid', shouldScro
         }
 
         return `
-            <div class="premium-card match-card ${isFavorite ? 'favorite-match' : ''} ${isNextMatch ? 'next-match-highlight' : ''}" id="match-${match.id}" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;">
+            <div class="premium-card match-card ${isFavorite ? 'favorite-match' : ''} ${bannerClass}" id="match-${match.id}" ${bannerText ? `data-banner="${bannerText}"` : ''} style="display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.8rem; opacity: 0.7;">
                     <span>${displayDate}</span>
                     <span style="display:flex; align-items:center; gap:8px;">

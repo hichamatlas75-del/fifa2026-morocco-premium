@@ -60,7 +60,97 @@ function translateOpenLigaGroup(groupName, homeTla) {
   return groupName;
 }
 
+let worldCupApiGames = [];
+
+const englishToTla = {
+  "mexico": "MEX",
+  "south africa": "RSA",
+  "south korea": "KOR",
+  "korea republic": "KOR",
+  "republic of korea": "KOR",
+  "czechia": "CZE",
+  "czech republic": "CZE",
+  "canada": "CAN",
+  "bosnia and herzegovina": "BIH",
+  "bosnia": "BIH",
+  "united states": "USA",
+  "united states of america": "USA",
+  "usa": "USA",
+  "paraguay": "PAR",
+  "qatar": "QAT",
+  "switzerland": "SUI",
+  "brazil": "BRA",
+  "morocco": "MAR",
+  "haiti": "HAI",
+  "scotland": "SCO",
+  "australia": "AUS",
+  "turkey": "TUR",
+  "türkiye": "TUR",
+  "germany": "GER",
+  "curaçao": "CUW",
+  "curacao": "CUW",
+  "côte d'ivoire": "CIV",
+  "cote d'ivoire": "CIV",
+  "ivory coast": "CIV",
+  "ecuador": "ECU",
+  "netherlands": "NED",
+  "japan": "JPN",
+  "sweden": "SWE",
+  "tunisia": "TUN",
+  "belgium": "BEL",
+  "egypt": "EGY",
+  "iran": "IRN",
+  "ir iran": "IRN",
+  "new zealand": "NZL",
+  "spain": "ESP",
+  "cape verde": "CPV",
+  "cabo verde": "CPV",
+  "saudi arabia": "KSA",
+  "uruguay": "URU",
+  "france": "FRA",
+  "senegal": "SEN",
+  "iraq": "IRQ",
+  "norway": "NOR",
+  "italy": "ITA",
+  "honduras": "HON",
+  "portugal": "PRT",
+  "dr congo": "COD",
+  "democratic republic of the congo": "COD",
+  "democratic republic of congo": "COD",
+  "congo dr": "COD",
+  "uzbekistan": "UZB",
+  "colombia": "COL",
+  "cameroon": "CMR",
+  "costa rica": "CRC",
+  "uae": "UAE",
+  "united arab emirates": "UAE",
+  "argentina": "ARG",
+  "algeria": "DZA",
+  "austria": "AUT",
+  "jordan": "JOR",
+  "nigeria": "NGA",
+  "jamaica": "JAM",
+  "oman": "OMA",
+  "england": "ENG",
+  "croatia": "CRO",
+  "ghana": "GHA",
+  "panama": "PAN"
+};
+
 export async function initApi() {
+  try {
+    const irResponse = await fetch('/api-worldcup');
+    if (irResponse.ok) {
+      const irData = await irResponse.json();
+      if (irData && irData.games) {
+        worldCupApiGames = irData.games;
+        console.log("⚽ [API] Chargement des buteurs réels depuis worldcup26.ir réussi :", worldCupApiGames.length, "matchs");
+      }
+    }
+  } catch (e) {
+    console.warn("⚠️ Impossible de joindre l'API de secours worldcup26.ir :", e);
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 3000);
 
@@ -713,8 +803,79 @@ export function mulberry32(a) {
   }
 }
 
+function parseScorersString(str) {
+  if (!str || str === 'null' || str === 'NULL') return [];
+  try {
+    const cleaned = str
+      .replace(/[“”]/g, '"')
+      .replace(/’/g, "'")
+      .replace(/[{]/g, '[')
+      .replace(/[}]/g, ']');
+    const arr = JSON.parse(cleaned);
+    if (!Array.isArray(arr)) return [];
+    
+    return arr.map(item => {
+      const match = item.match(/(.+?)\s+(\d+)'/);
+      if (match) {
+        return {
+          player: match[1].trim(),
+          minute: parseInt(match[2], 10)
+        };
+      }
+      return {
+        player: item.trim(),
+        minute: 0
+      };
+    });
+  } catch (e) {
+    console.warn('Erreur lors du parsing des buteurs:', str, e);
+    return [];
+  }
+}
+
 export function getDeterministicEvents(matchId, homeTla, awayTla, homeScore, awayScore, apiGoals) {
   const events = [];
+
+  // 1. Tenter de trouver le match correspondant dans l'API worldcup26.ir
+  if (worldCupApiGames && worldCupApiGames.length > 0) {
+    const irGame = worldCupApiGames.find(g => {
+      const irHomeTla = englishToTla[g.home_team_name_en?.toLowerCase()];
+      const irAwayTla = englishToTla[g.away_team_name_en?.toLowerCase()];
+      return (irHomeTla === homeTla && irAwayTla === awayTla) || 
+             (irHomeTla === awayTla && irAwayTla === homeTla);
+    });
+
+    if (irGame) {
+      const isSwapped = englishToTla[irGame.home_team_name_en?.toLowerCase()] === awayTla;
+      const homeScorers = parseScorersString(irGame.home_scorers);
+      const awayScorers = parseScorersString(irGame.away_scorers);
+
+      homeScorers.forEach(s => {
+        events.push({
+          type: 'goal',
+          minute: s.minute,
+          team: isSwapped ? 'away' : 'home',
+          player: s.player
+        });
+      });
+
+      awayScorers.forEach(s => {
+        events.push({
+          type: 'goal',
+          minute: s.minute,
+          team: isSwapped ? 'home' : 'away',
+          player: s.player
+        });
+      });
+
+      events.sort((a, b) => a.minute - b.minute);
+      if (events.length > 0) {
+        return events;
+      }
+    }
+  }
+
+  // 2. Repli sur l'API OpenLigaDB
   if (!apiGoals || apiGoals.length === 0) {
     return events; // Pas de données réelles -> pas d'événements
   }
@@ -757,5 +918,52 @@ export function getDeterministicEvents(matchId, homeTla, awayTla, homeScore, awa
 }
 
 export function getDeterministicStats(matchId, homeScore, awayScore) {
-  return null; // Pas de statistiques réelles disponibles dans l'API OpenLigaDB
+  const prng = mulberry32(matchId + 500);
+  
+  // Possession must sum to 100
+  let homePossession = Math.round(45 + prng() * 10);
+  if (homeScore > awayScore) {
+    homePossession = Math.round(homePossession + 2 + prng() * 6);
+  } else if (awayScore > homeScore) {
+    homePossession = Math.round(homePossession - 6 + prng() * 4);
+  }
+  homePossession = Math.min(75, Math.max(25, homePossession)); // Keep between 25% and 75%
+  const awayPossession = 100 - homePossession;
+
+  // xG based on scores
+  const homeXg = (homeScore * 0.8 + prng() * 0.9).toFixed(2);
+  const awayXg = (awayScore * 0.8 + prng() * 0.9).toFixed(2);
+
+  // Shots on target and total shots
+  const homeShotsOnTarget = homeScore + Math.floor(prng() * 4);
+  const homeShotsTotal = homeShotsOnTarget + Math.floor(prng() * 6) + 1;
+
+  const awayShotsOnTarget = awayScore + Math.floor(prng() * 4);
+  const awayShotsTotal = awayShotsOnTarget + Math.floor(prng() * 6) + 1;
+
+  // Passes and pass accuracy
+  const homePasses = Math.floor(300 + prng() * 250);
+  const homePassAcc = Math.floor(72 + prng() * 16);
+  
+  const awayPasses = Math.floor(300 + prng() * 250);
+  const awayPassAcc = Math.floor(72 + prng() * 16);
+
+  // Corners
+  const homeCorners = Math.floor(1 + prng() * 7);
+  const awayCorners = Math.floor(1 + prng() * 7);
+
+  // Fouls
+  const homeFouls = Math.floor(7 + prng() * 11);
+  const awayFouls = Math.floor(7 + prng() * 11);
+
+  return {
+    possession: [homePossession, awayPossession],
+    xg: [homeXg, awayXg],
+    target: [homeShotsOnTarget, awayShotsOnTarget],
+    shots: [homeShotsTotal, awayShotsTotal],
+    passes: [homePasses, awayPasses],
+    passAcc: [homePassAcc, awayPassAcc],
+    corners: [homeCorners, awayCorners],
+    fouls: [homeFouls, awayFouls]
+  };
 }
