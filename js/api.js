@@ -1,5 +1,6 @@
 // js/api.js
 import realMatches from './real_matches.json';
+import { TEAMS_SQUADS } from './teams_squads.js';
 
 export function getFlag(tla) {
   if (!tla) return `<img src="https://flagcdn.com/w80/un.png" class="flag-icon" alt="UN">`;
@@ -176,7 +177,8 @@ export async function initApi() {
           groupName,
           m.matchID
         ),
-        events: []
+        events: getDeterministicEvents(m.matchID, normHomeTla, normAwayTla, homeScore, awayScore, m.goals),
+        stats: getDeterministicStats(m.matchID, homeScore, awayScore)
       };
     });
 
@@ -523,7 +525,8 @@ function getFallbackData() {
     homeFlag: getFlag(m.homeTla),
     awayFlag: getFlag(m.awayTla),
     stadium: getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id),
-    events: []
+    events: getDeterministicEvents(m.id, m.homeTla, m.awayTla, m.homeScore, m.awayScore, null),
+    stats: getDeterministicStats(m.id, m.homeScore, m.awayScore)
   }));
 
   const knockoutStages = [
@@ -698,4 +701,61 @@ function getStadiumForMatch(homeTeam, awayTeam, groupName, matchId) {
     "San Francisco Bay Area Stadium"
   ];
   return otherStadiums[matchId % otherStadiums.length];
+}
+
+// Détecteur pseudo-aléatoire déterministe pour conserver la cohérence
+export function mulberry32(a) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+
+export function getDeterministicEvents(matchId, homeTla, awayTla, homeScore, awayScore, apiGoals) {
+  const events = [];
+  if (!apiGoals || apiGoals.length === 0) {
+    return events; // Pas de données réelles -> pas d'événements
+  }
+
+  const homePlayers = TEAMS_SQUADS[homeTla.toUpperCase()] || [{ name: "Joueur A" }];
+  const awayPlayers = TEAMS_SQUADS[awayTla.toUpperCase()] || [{ name: "Joueur B" }];
+
+  // Trier les buts reçus par l'API
+  const sortedGoals = [...apiGoals].sort((a, b) => a.matchMinute - b.matchMinute || a.goalID - b.goalID);
+  
+  for (let i = 0; i < sortedGoals.length; i++) {
+    const goal = sortedGoals[i];
+    let scoringTeam = 'home';
+    
+    if (i === 0) {
+      if (goal.scoreTeam2 > 0) scoringTeam = 'away';
+    } else {
+      const prevGoal = sortedGoals[i - 1];
+      if (goal.scoreTeam2 > prevGoal.scoreTeam2) scoringTeam = 'away';
+    }
+
+    let player = goal.goalGetterName;
+    if (!player || player.trim() === "") {
+      const prng = mulberry32(matchId + i + 100);
+      const list = scoringTeam === 'home' ? homePlayers : awayPlayers;
+      player = list[Math.floor(prng() * list.length)].name;
+    }
+
+    events.push({
+      type: 'goal',
+      minute: goal.matchMinute,
+      team: scoringTeam,
+      player: player
+    });
+  }
+
+  // Trier tous les événements par minute
+  events.sort((a, b) => a.minute - b.minute);
+  return events;
+}
+
+export function getDeterministicStats(matchId, homeScore, awayScore) {
+  return null; // Pas de statistiques réelles disponibles dans l'API OpenLigaDB
 }

@@ -16,7 +16,7 @@ window.addEventListener('error', (event) => {
     `;
 });
 
-import { initApi, getH2HData, getFlag } from './api.js';
+import { initApi, getH2HData, getFlag, getDeterministicEvents, getDeterministicStats } from './api.js';
 import { setupWebSockets } from './socket.js';
 import { TEAMS_SQUADS } from './teams_squads.js';
 import { 
@@ -305,6 +305,8 @@ class WorldCupApp {
             match.awayScore = data.awayScore;
             match.time = data.time;
             match.status = data.status;
+            if (data.events) match.events = data.events;
+            if (data.stats) match.stats = data.stats;
             
             // Rafraîchir les sections live
             renderLiveMatches(this.data.matches);
@@ -883,63 +885,18 @@ class WorldCupApp {
         if (!match) return;
         const prediction = this.predictMatch(match.homeTla, match.awayTla);
 
-        // Générer les statistiques et évènements réels pour les matchs joués/en direct
-        let events = [];
-        let stats = null;
+        // Récupérer les statistiques et évènements réels/déterministes du match
+        let events = match.events;
+        let stats = match.stats;
         if (match.status !== 'SCHEDULED') {
-            const homePlayers = TEAMS_SQUADS[match.homeTla.toUpperCase()] || [{ name: "Joueur A" }];
-            const awayPlayers = TEAMS_SQUADS[match.awayTla.toUpperCase()] || [{ name: "Joueur B" }];
-
-            for (let i = 0; i < match.homeScore; i++) {
-                const p = homePlayers[Math.floor(Math.random() * homePlayers.length)].name;
-                events.push({ type: 'goal', minute: Math.floor(Math.random() * 88) + 2, team: 'home', player: p });
+            if (!events) {
+                events = getDeterministicEvents(match.id, match.homeTla, match.awayTla, match.homeScore, match.awayScore, match.goals || null);
+                match.events = events;
             }
-            for (let i = 0; i < match.awayScore; i++) {
-                const p = awayPlayers[Math.floor(Math.random() * awayPlayers.length)].name;
-                events.push({ type: 'goal', minute: Math.floor(Math.random() * 88) + 2, team: 'away', player: p });
+            if (!stats) {
+                stats = getDeterministicStats(match.id, match.homeScore, match.awayScore);
+                match.stats = stats;
             }
-            const homeYellowsCount = Math.floor(Math.random() * 3);
-            for (let i = 0; i < homeYellowsCount; i++) {
-                const p = homePlayers[Math.floor(Math.random() * homePlayers.length)].name;
-                events.push({ type: 'yellow', minute: Math.floor(Math.random() * 88) + 2, team: 'home', player: p });
-            }
-            const awayYellowsCount = Math.floor(Math.random() * 3);
-            for (let i = 0; i < awayYellowsCount; i++) {
-                const p = awayPlayers[Math.floor(Math.random() * awayPlayers.length)].name;
-                events.push({ type: 'yellow', minute: Math.floor(Math.random() * 88) + 2, team: 'away', player: p });
-            }
-            events.sort((a, b) => a.minute - b.minute);
-
-            const possessionHome = match.homeScore > match.awayScore ? Math.floor(Math.random() * 10) + 52 : (match.homeScore < match.awayScore ? Math.floor(Math.random() * 10) + 38 : Math.floor(Math.random() * 10) + 45);
-            const possessionAway = 100 - possessionHome;
-            const xgHome = (match.homeScore * 0.8 + Math.random() * 0.9 + 0.1).toFixed(2);
-            const xgAway = (match.awayScore * 0.8 + Math.random() * 0.9 + 0.1).toFixed(2);
-            const shotsHome = Math.max(match.homeScore, Math.floor(Math.random() * 10) + 4 + match.homeScore * 2);
-            const shotsAway = Math.max(match.awayScore, Math.floor(Math.random() * 10) + 3 + match.awayScore * 2);
-            const targetHome = Math.max(match.homeScore, Math.floor(shotsHome * (0.35 + Math.random() * 0.2)));
-            const targetAway = Math.max(match.awayScore, Math.floor(shotsAway * (0.35 + Math.random() * 0.2)));
-            const passesHome = Math.floor(350 + Math.random() * 200);
-            const passesAway = Math.floor(350 + Math.random() * 200);
-            const passAccHome = Math.floor(78 + Math.random() * 12);
-            const passAccAway = Math.floor(78 + Math.random() * 12);
-            const cornersHome = Math.floor(Math.random() * 8) + 1;
-            const cornersAway = Math.floor(Math.random() * 8) + 1;
-            const foulsHome = Math.floor(Math.random() * 12) + 5;
-            const foulsAway = Math.floor(Math.random() * 12) + 5;
-            const savesHome = targetAway - match.awayScore;
-            const savesAway = targetHome - match.homeScore;
-
-            stats = {
-                possession: [possessionHome, possessionAway],
-                xg: [xgHome, xgAway],
-                shots: [shotsHome, shotsAway],
-                target: [targetHome, targetAway],
-                passes: [passesHome, passesAway],
-                passAcc: [passAccHome, passAccAway],
-                corners: [cornersHome, cornersAway],
-                fouls: [foulsHome, foulsAway],
-                saves: [savesHome, savesAway]
-            };
         }
 
         // Récupérer l'historique H2H
@@ -1110,6 +1067,7 @@ class WorldCupApp {
                             ${events.length === 0 ? `<p style="text-align: center; opacity: 0.6; font-size: 0.85rem; margin: 0;">Aucun événement majeur à signaler.</p>` : ''}
                         </div>
 
+                        ${stats ? `
                         <div class="modal-divider"></div>
                         <h3 class="modal-section-title"><i class="fa-solid fa-chart-simple"></i> Statistiques du Match</h3>
                         <div class="stats-table" style="display: flex; flex-direction: column; gap: 15px; background: rgba(255,255,255,0.01); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
@@ -1204,6 +1162,7 @@ class WorldCupApp {
                                 </div>
                             </div>
                         </div>
+                        ` : ''}
                     ` : ''}
                 </div>
             </div>
