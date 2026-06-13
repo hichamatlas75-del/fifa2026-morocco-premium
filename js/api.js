@@ -956,6 +956,10 @@ export function getDeterministicStats(matchId, homeScore, awayScore) {
   const homeFouls = Math.floor(7 + prng() * 11);
   const awayFouls = Math.floor(7 + prng() * 11);
 
+  // Saves (based on opponent's shots on target)
+  const homeSaves = Math.max(0, awayShotsOnTarget - awayScore + Math.floor(prng() * 2));
+  const awaySaves = Math.max(0, homeShotsOnTarget - homeScore + Math.floor(prng() * 2));
+
   return {
     possession: [homePossession, awayPossession],
     xg: [homeXg, awayXg],
@@ -964,6 +968,7 @@ export function getDeterministicStats(matchId, homeScore, awayScore) {
     passes: [homePasses, awayPasses],
     passAcc: [homePassAcc, awayPassAcc],
     corners: [homeCorners, awayCorners],
-    fouls: [homeFouls, awayFouls]
+    fouls: [homeFouls, awayFouls],
+    saves: [homeSaves, awaySaves]
   };
 }
