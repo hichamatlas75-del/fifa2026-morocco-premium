@@ -152,205 +152,339 @@ export async function updateWorldCupGames() {
   }
 }
 
+const TLA_MAP = {
+  CHE: "SUI",
+  HTI: "HAI",
+  SCT: "SCO",
+  DEU: "GER",
+  NLD: "NED",
+  SAU: "KSA",
+  URY: "URU",
+  HRV: "CRO"
+};
+
+const TEAM_NAMES_FR = {
+  MEX: "Mexique", RSA: "Afrique du Sud", KOR: "Corée du Sud", CZE: "République Tchèque",
+  CAN: "Canada", BIH: "Bosnie-Herzégovine", QAT: "Qatar", SUI: "Suisse",
+  BRA: "Brésil", MAR: "Maroc", HAI: "Haïti", SCO: "Écosse",
+  USA: "États-Unis", PAR: "Paraguay", AUS: "Australie", TUR: "Turquie",
+  GER: "Allemagne", CUW: "Curaçao", CIV: "Côte d'Ivoire", ECU: "Équateur",
+  NED: "Pays-Bas", JPN: "Japon", SWE: "Suède", TUN: "Tunisie",
+  BEL: "Belgique", EGY: "Égypte", IRN: "Iran", NZL: "Nouvelle-Zélande",
+  ESP: "Espagne", CPV: "Cap-Vert", KSA: "Arabie Saoudite", URU: "Uruguay",
+  ITA: "Italie", SEN: "Sénégal", HON: "Honduras", IRQ: "Irak",
+  FRA: "France", CMR: "Cameroun", CRC: "Costa Rica", UAE: "Émirats Arabes Unis",
+  ARG: "Argentine", NGA: "Nigéria", JAM: "Jamaïque", OMA: "Oman",
+  ENG: "Angleterre", CRO: "Croatie", GHA: "Ghana", PAN: "Panama",
+  NOR: "Norvège", DZA: "Algérie", AUT: "Autriche", JOR: "Jordanie",
+  PRT: "Portugal", COD: "RD Congo", UZB: "Ouzbékistan", COL: "Colombie"
+};
+
+export function parseOpenLigaDBData(rawData) {
+  const rawMatches = Array.isArray(rawData) ? rawData : (rawData.matches || []);
+
+  const matches = rawMatches.map(m => {
+    const homeTla = (m.team1.shortName || 'TBD').toUpperCase();
+    const awayTla = (m.team2.shortName || 'TBD').toUpperCase();
+    
+    const normHomeTla = TLA_MAP[homeTla] || homeTla;
+    const normAwayTla = TLA_MAP[awayTla] || awayTla;
+
+    const homeTeamName = TEAM_NAMES_FR[normHomeTla] || m.team1.teamName;
+    const awayTeamName = TEAM_NAMES_FR[normAwayTla] || m.team2.teamName;
+
+    const matchDate = new Date(m.matchDateTimeUTC || m.matchDateTime);
+    const timeStr = matchDate.toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      timeZone: 'Africa/Casablanca' 
+    });
+    const dateStr = matchDate.toLocaleDateString('fr-FR', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric',
+      timeZone: 'Africa/Casablanca'
+    });
+
+    let homeScore = 0;
+    let awayScore = 0;
+    
+    if (m.matchResults && m.matchResults.length > 0) {
+      const endResult = m.matchResults.find(r => r.resultOrderID === 2 || r.resultName === 'Endergebnis');
+      if (endResult) {
+        homeScore = endResult.pointsTeam1;
+        awayScore = endResult.pointsTeam2;
+      } else {
+        const sortedResults = [...m.matchResults].sort((a, b) => b.resultOrderID - a.resultOrderID);
+        homeScore = sortedResults[0].pointsTeam1;
+        awayScore = sortedResults[0].pointsTeam2;
+      }
+    } else if (m.goals && m.goals.length > 0) {
+      const lastGoal = m.goals[m.goals.length - 1];
+      homeScore = lastGoal.scoreTeam1;
+      awayScore = lastGoal.scoreTeam2;
+    }
+
+    const now = new Date();
+    const timeDiff = now.getTime() - matchDate.getTime();
+    const matchDurationMs = 2 * 60 * 60 * 1000;
+    const isFinished = m.matchIsFinished;
+    const isLive = !isFinished && timeDiff > 0 && timeDiff < matchDurationMs;
+
+    const groupName = getGroupForTeam(normHomeTla) || translateOpenLigaGroup(m.group.groupName, normHomeTla);
+
+    return {
+      id: m.matchID,
+      homeTeam: homeTeamName,
+      awayTeam: awayTeamName,
+      homeTla: normHomeTla,
+      awayTla: normAwayTla,
+      homeFlag: getFlag(normHomeTla),
+      awayFlag: getFlag(normAwayTla),
+      homeScore: homeScore,
+      awayScore: awayScore,
+      status: isLive ? 'LIVE' : isFinished ? 'FINISHED' : 'SCHEDULED',
+      time: isLive ? "Direct" : timeStr,
+      date: dateStr,
+      utcDate: matchDate.toISOString(),
+      group: groupName,
+      stadium: getStadiumForMatch(
+        homeTeamName,
+        awayTeamName,
+        groupName,
+        m.matchID
+      ),
+      events: getDeterministicEvents(m.matchID, normHomeTla, normAwayTla, homeScore, awayScore, m.goals),
+      stats: getDeterministicStats(m.matchID, homeScore, awayScore)
+    };
+  });
+
+  const knockoutStages = [
+    { name: "Seizièmes de finale", count: 16, startDay: 13, gap: 4 },
+    { name: "Huitièmes de finale", count: 8, startDay: 18, gap: 4 },
+    { name: "Quarts de finale", count: 4, startDay: 23, gap: 3 },
+    { name: "Demi-finales", count: 2, startDay: 28, gap: 2 },
+    { name: "Match 3e place", count: 1, startDay: 37, gap: 1 },
+    { name: "Finale", count: 1, startDay: 38, gap: 1 }
+  ];
+
+  let currentMatchId = 85000;
+  knockoutStages.forEach(stage => {
+    const stageExists = matches.some(m => m.group === stage.name);
+    if (!stageExists) {
+      for (let i = 0; i < stage.count; i++) {
+        const dayOffset = stage.startDay + Math.floor((i * stage.gap) / stage.count);
+        const utcHour = i % 2 === 0 ? 19 : 22;
+        
+        const matchDateObj = new Date(Date.UTC(2026, 5, 11, utcHour - 1, 0, 0));
+        matchDateObj.setUTCDate(matchDateObj.getUTCDate() + dayOffset);
+        
+        const dateStr = matchDateObj.toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          timeZone: 'Africa/Casablanca'
+        });
+        
+        const timeStr = matchDateObj.toLocaleTimeString('fr-FR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Africa/Casablanca'
+        });
+        
+        const mId = currentMatchId++;
+        matches.push({
+          id: mId,
+          homeTeam: "À déterminer",
+          awayTeam: "À déterminer",
+          homeTla: "TBD",
+          awayTla: "TBD",
+          homeFlag: getFlag("TBD"),
+          awayFlag: getFlag("TBD"),
+          homeScore: 0,
+          awayScore: 0,
+          status: "SCHEDULED",
+          time: timeStr,
+          date: dateStr,
+          group: stage.name,
+          stadium: getStadiumForMatch("TBD", "TBD", stage.name, mId),
+          events: []
+        });
+      }
+    }
+  });
+
+  const groupsList = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
+  const groupsStandings = {};
+  groupsList.forEach(g => {
+    groupsStandings[g] = computeGroupStandings(matches, g);
+  });
+
+  return {
+    dataSource: "api",
+    matches: matches,
+    stadiums: getStaticStadiums(),
+    moroccoSquad: getStaticSquad(),
+    standings: {
+      groups: groupsStandings,
+      scorers: getStaticScorers(),
+      assists: getStaticAssists()
+    },
+    news: getStaticNews()
+  };
+}
+
+export function parseFootballData(rawData) {
+  const fdMatches = rawData.matches || [];
+  
+  // Trier chronologiquement pour aligner 1-à-1 avec les identifiants OpenLigaDB stables de real_matches.json
+  const sortedFd = [...fdMatches].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+  const sortedReal = [...realMatches].sort((a, b) => a.id - b.id);
+  
+  const idMap = new Map();
+  sortedFd.forEach((m, idx) => {
+    if (sortedReal[idx]) {
+      idMap.set(m.id, sortedReal[idx].id);
+    }
+  });
+
+  const mapFdStage = (stage) => {
+    const mapping = {
+      'GROUP_STAGE': '',
+      'LAST_32': 'Seizièmes de finale',
+      'LAST_16': 'Huitièmes de finale',
+      'QUARTER_FINALS': 'Quarts de finale',
+      'SEMI_FINALS': 'Demi-finales',
+      'THIRD_PLACE': 'Match 3e place',
+      'FINAL': 'Finale'
+    };
+    return mapping[stage] || stage;
+  };
+
+  const matches = fdMatches.map(m => {
+    const matchId = idMap.get(m.id) || m.id;
+
+    const homeTla = (m.homeTeam?.tla || 'TBD').toUpperCase();
+    const awayTla = (m.awayTeam?.tla || 'TBD').toUpperCase();
+
+    const normHomeTla = TLA_MAP[homeTla] || homeTla;
+    const normAwayTla = TLA_MAP[awayTla] || awayTla;
+
+    const homeTeamName = TEAM_NAMES_FR[normHomeTla] || m.homeTeam?.name || "À déterminer";
+    const awayTeamName = TEAM_NAMES_FR[normAwayTla] || m.awayTeam?.name || "À déterminer";
+
+    const matchDate = new Date(m.utcDate);
+    const timeStr = matchDate.toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      timeZone: 'Africa/Casablanca' 
+    });
+    const dateStr = matchDate.toLocaleDateString('fr-FR', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric',
+      timeZone: 'Africa/Casablanca'
+    });
+
+    const homeScore = m.score?.fullTime?.home !== null && m.score?.fullTime?.home !== undefined ? m.score.fullTime.home : 0;
+    const awayScore = m.score?.fullTime?.away !== null && m.score?.fullTime?.away !== undefined ? m.score.fullTime.away : 0;
+
+    const isFinished = m.status === 'FINISHED' || m.status === 'AWARDED';
+    const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'LIVE';
+    const status = isLive ? 'LIVE' : isFinished ? 'FINISHED' : 'SCHEDULED';
+
+    const groupName = m.stage === 'GROUP_STAGE' 
+      ? (m.group ? m.group.replace('GROUP_', 'Groupe ').replace('Group ', 'Groupe ') : 'Groupe A') 
+      : mapFdStage(m.stage);
+
+    return {
+      id: matchId,
+      homeTeam: homeTeamName,
+      awayTeam: awayTeamName,
+      homeTla: normHomeTla,
+      awayTla: normAwayTla,
+      homeFlag: getFlag(normHomeTla),
+      awayFlag: getFlag(normAwayTla),
+      homeScore: homeScore,
+      awayScore: awayScore,
+      status: status,
+      time: isLive ? "Direct" : timeStr,
+      date: dateStr,
+      utcDate: matchDate.toISOString(),
+      group: groupName,
+      stadium: getStadiumForMatch(
+        homeTeamName,
+        awayTeamName,
+        groupName,
+        matchId
+      ),
+      events: getDeterministicEvents(matchId, normHomeTla, normAwayTla, homeScore, awayScore, null),
+      stats: getDeterministicStats(matchId, homeScore, awayScore)
+    };
+  });
+
+  const groupsList = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
+  const groupsStandings = {};
+  groupsList.forEach(g => {
+    groupsStandings[g] = computeGroupStandings(matches, g);
+  });
+
+  return {
+    dataSource: "api",
+    matches: matches,
+    stadiums: getStaticStadiums(),
+    moroccoSquad: getStaticSquad(),
+    standings: {
+      groups: groupsStandings,
+      scorers: getStaticScorers(),
+      assists: getStaticAssists()
+    },
+    news: getStaticNews()
+  };
+}
+
 export async function initApi() {
   await updateWorldCupGames();
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3000);
-
+  // 1. Tenter d'interroger OpenLigaDB via /api-proxy
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
     const response = await fetch('/api-proxy', { signal: controller.signal });
     clearTimeout(timeoutId);
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const rawData = await response.json();
-    
     if (rawData.error) {
       throw new Error(rawData.error);
     }
-
-    const rawMatches = Array.isArray(rawData) ? rawData : (rawData.matches || []);
-
-    const tlaMap = {
-      CHE: "SUI",
-      HTI: "HAI",
-      SCT: "SCO",
-      DEU: "GER",
-      NLD: "NED",
-      SAU: "KSA",
-      URY: "URU",
-      HRV: "CRO"
-    };
-
-    const teamNamesFr = {
-      MEX: "Mexique", RSA: "Afrique du Sud", KOR: "Corée du Sud", CZE: "République Tchèque",
-      CAN: "Canada", BIH: "Bosnie-Herzégovine", QAT: "Qatar", SUI: "Suisse",
-      BRA: "Brésil", MAR: "Maroc", HAI: "Haïti", SCO: "Écosse",
-      USA: "États-Unis", PAR: "Paraguay", AUS: "Australie", TUR: "Turquie",
-      GER: "Allemagne", CUW: "Curaçao", CIV: "Côte d'Ivoire", ECU: "Équateur",
-      NED: "Pays-Bas", JPN: "Japon", SWE: "Suède", TUN: "Tunisie",
-      BEL: "Belgique", EGY: "Égypte", IRN: "Iran", NZL: "Nouvelle-Zélande",
-      ESP: "Espagne", CPV: "Cap-Vert", KSA: "Arabie Saoudite", URU: "Uruguay",
-      ITA: "Italie", SEN: "Sénégal", HON: "Honduras", IRQ: "Irak",
-      FRA: "France", CMR: "Cameroun", CRC: "Costa Rica", UAE: "Émirats Arabes Unis",
-      ARG: "Argentine", NGA: "Nigéria", JAM: "Jamaïque", OMA: "Oman",
-      ENG: "Angleterre", CRO: "Croatie", GHA: "Ghana", PAN: "Panama",
-      NOR: "Norvège", DZA: "Algérie", AUT: "Autriche", JOR: "Jordanie",
-      PRT: "Portugal", COD: "RD Congo", UZB: "Ouzbékistan", COL: "Colombie"
-    };
-
-    const matches = rawMatches.map(m => {
-      const homeTla = (m.team1.shortName || 'TBD').toUpperCase();
-      const awayTla = (m.team2.shortName || 'TBD').toUpperCase();
-      
-      const normHomeTla = tlaMap[homeTla] || homeTla;
-      const normAwayTla = tlaMap[awayTla] || awayTla;
-
-      const homeTeamName = teamNamesFr[normHomeTla] || m.team1.teamName;
-      const awayTeamName = teamNamesFr[normAwayTla] || m.team2.teamName;
-
-      const matchDate = new Date(m.matchDateTimeUTC || m.matchDateTime);
-      // Heure locale marocaine (Casablanca = UTC+1)
-      const timeStr = matchDate.toLocaleTimeString('fr-FR', { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        timeZone: 'Africa/Casablanca' 
-      });
-      const dateStr = matchDate.toLocaleDateString('fr-FR', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric',
-        timeZone: 'Africa/Casablanca'
-      });
-
-      let homeScore = 0;
-      let awayScore = 0;
-      
-      if (m.matchResults && m.matchResults.length > 0) {
-        const endResult = m.matchResults.find(r => r.resultOrderID === 2 || r.resultName === 'Endergebnis');
-        if (endResult) {
-          homeScore = endResult.pointsTeam1;
-          awayScore = endResult.pointsTeam2;
-        } else {
-          const sortedResults = [...m.matchResults].sort((a, b) => b.resultOrderID - a.resultOrderID);
-          homeScore = sortedResults[0].pointsTeam1;
-          awayScore = sortedResults[0].pointsTeam2;
-        }
-      } else if (m.goals && m.goals.length > 0) {
-        const lastGoal = m.goals[m.goals.length - 1];
-        homeScore = lastGoal.scoreTeam1;
-        awayScore = lastGoal.scoreTeam2;
-      }
-
-      const now = new Date();
-      const timeDiff = now.getTime() - matchDate.getTime();
-      const matchDurationMs = 2 * 60 * 60 * 1000;
-      const isFinished = m.matchIsFinished;
-      const isLive = !isFinished && timeDiff > 0 && timeDiff < matchDurationMs;
-
-      const groupName = getGroupForTeam(normHomeTla) || translateOpenLigaGroup(m.group.groupName, normHomeTla);
-
-      return {
-        id: m.matchID,
-        homeTeam: homeTeamName,
-        awayTeam: awayTeamName,
-        homeTla: normHomeTla,
-        awayTla: normAwayTla,
-        homeFlag: getFlag(normHomeTla),
-        awayFlag: getFlag(normAwayTla),
-        homeScore: homeScore,
-        awayScore: awayScore,
-        status: isLive ? 'LIVE' : isFinished ? 'FINISHED' : 'SCHEDULED',
-        time: isLive ? "Direct" : timeStr,
-        date: dateStr,
-        group: groupName,
-        stadium: getStadiumForMatch(
-          homeTeamName,
-          awayTeamName,
-          groupName,
-          m.matchID
-        ),
-        events: getDeterministicEvents(m.matchID, normHomeTla, normAwayTla, homeScore, awayScore, m.goals),
-        stats: getDeterministicStats(m.matchID, homeScore, awayScore)
-      };
-    });
-
-    const knockoutStages = [
-      { name: "Seizièmes de finale", count: 16, startDay: 13, gap: 4 },
-      { name: "Huitièmes de finale", count: 8, startDay: 18, gap: 4 },
-      { name: "Quarts de finale", count: 4, startDay: 23, gap: 3 },
-      { name: "Demi-finales", count: 2, startDay: 28, gap: 2 },
-      { name: "Match 3e place", count: 1, startDay: 37, gap: 1 },
-      { name: "Finale", count: 1, startDay: 38, gap: 1 }
-    ];
-
-    let currentMatchId = 85000;
-    knockoutStages.forEach(stage => {
-      const stageExists = matches.some(m => m.group === stage.name);
-      if (!stageExists) {
-        for (let i = 0; i < stage.count; i++) {
-          const dayOffset = stage.startDay + Math.floor((i * stage.gap) / stage.count);
-          const utcHour = i % 2 === 0 ? 19 : 22; // Correspond à 20:00 ou 23:00 heure marocaine (ou 19:00 / 22:00 UTC)
-          
-          const matchDateObj = new Date(Date.UTC(2026, 5, 11, utcHour - 1, 0, 0));
-          matchDateObj.setUTCDate(matchDateObj.getUTCDate() + dayOffset);
-          
-          const dateStr = matchDateObj.toLocaleDateString('fr-FR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-            timeZone: 'Africa/Casablanca'
-          });
-          
-          const timeStr = matchDateObj.toLocaleTimeString('fr-FR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'Africa/Casablanca'
-          });
-          
-          matches.push({
-            id: currentMatchId++,
-            homeTeam: "À déterminer",
-            awayTeam: "À déterminer",
-            homeTla: "TBD",
-            awayTla: "TBD",
-            homeFlag: getFlag("TBD"),
-            awayFlag: getFlag("TBD"),
-            homeScore: 0,
-            awayScore: 0,
-            status: "SCHEDULED",
-            time: timeStr,
-            date: dateStr,
-            group: stage.name,
-            stadium: getStadiumForMatch("TBD", "TBD", stage.name, currentMatchId),
-            events: []
-          });
-        }
-      }
-    });
-
-    const groupsList = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
-    const groupsStandings = {};
-    groupsList.forEach(g => {
-      groupsStandings[g] = computeGroupStandings(matches, g);
-    });
-
-    return {
-      dataSource: "api",
-      matches: matches,
-      stadiums: getStaticStadiums(),
-      moroccoSquad: getStaticSquad(),
-      standings: {
-        groups: groupsStandings,
-        scorers: getStaticScorers(),
-        assists: getStaticAssists()
-      },
-      news: getStaticNews()
-    };
+    
+    return parseOpenLigaDBData(rawData);
   } catch (error) {
-    console.warn("⚠️ Impossible de joindre l'API de production, chargement des données de secours :", error);
-    return getFallbackData();
+    console.warn("⚠️ Impossible de joindre l'API OpenLigaDB via proxy, tentative avec football-data.org...", error);
+    
+    // 2. Tenter d'interroger football-data.org via /api-footballdata
+    try {
+      const controller2 = new AbortController();
+      const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
+      const response = await fetch('/api-footballdata', { signal: controller2.signal });
+      clearTimeout(timeoutId2);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const rawData = await response.json();
+      if (rawData.error) {
+        throw new Error(rawData.error);
+      }
+      
+      return parseFootballData(rawData);
+    } catch (error2) {
+      console.warn("⚠️ Impossible de joindre football-data.org via proxy, chargement des données de secours locales :", error2);
+      return getFallbackData();
+    }
   }
 }
 
@@ -487,19 +621,19 @@ function getStaticSquad() {
 
 function getStaticScorers() {
   return [
-    { rank: 1, player: "Vinícius Júnior", team: "Brésil", flag: getFlag("BRA"), goals: 0 },
-    { rank: 2, player: "Brahim Díaz", team: "Maroc", flag: getFlag("MAR"), goals: 0 },
-    { rank: 3, player: "Santiago Giménez", team: "Mexique", flag: getFlag("MEX"), goals: 0 },
-    { rank: 4, player: "Christian Pulisic", team: "États-Unis", flag: getFlag("USA"), goals: 0 }
+    { rank: 1, player: "Vinícius Júnior", team: "Brésil", tla: "BRA", flag: getFlag("BRA"), goals: 0 },
+    { rank: 2, player: "Brahim Díaz", team: "Maroc", tla: "MAR", flag: getFlag("MAR"), goals: 0 },
+    { rank: 3, player: "Santiago Giménez", team: "Mexique", tla: "MEX", flag: getFlag("MEX"), goals: 0 },
+    { rank: 4, player: "Christian Pulisic", team: "États-Unis", tla: "USA", flag: getFlag("USA"), goals: 0 }
   ];
 }
 
 function getStaticAssists() {
   return [
-    { rank: 1, player: "Rodrygo", team: "Brésil", flag: getFlag("BRA"), assists: 0 },
-    { rank: 2, player: "Achraf Hakimi", team: "Maroc", flag: getFlag("MAR"), assists: 0 },
-    { rank: 3, player: "Hirving Lozano", team: "Mexique", flag: getFlag("MEX"), assists: 0 },
-    { rank: 4, player: "Weston McKennie", team: "États-Unis", flag: getFlag("USA"), assists: 0 }
+    { rank: 1, player: "Rodrygo", team: "Brésil", tla: "BRA", flag: getFlag("BRA"), assists: 0 },
+    { rank: 2, player: "Achraf Hakimi", team: "Maroc", tla: "MAR", flag: getFlag("MAR"), assists: 0 },
+    { rank: 3, player: "Hirving Lozano", team: "Mexique", tla: "MEX", flag: getFlag("MEX"), assists: 0 },
+    { rank: 4, player: "Weston McKennie", team: "États-Unis", tla: "USA", flag: getFlag("USA"), assists: 0 }
   ];
 }
 
@@ -654,8 +788,9 @@ function getFallbackData() {
         timeZone: 'Africa/Casablanca'
       });
       
+      const mId = matchId++;
       matches.push({
-        id: matchId++,
+        id: mId,
         homeTeam: "À déterminer",
         awayTeam: "À déterminer",
         homeTla: "TBD",
@@ -668,7 +803,7 @@ function getFallbackData() {
         time: timeStr,
         date: dateStr,
         group: stage.name,
-        stadium: getStadiumForMatch("TBD", "TBD", stage.name, matchId),
+        stadium: getStadiumForMatch("TBD", "TBD", stage.name, mId),
         events: []
       });
     }

@@ -249,7 +249,7 @@ export function renderStandings(standings) {
             <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
                 <tbody>
                     ${standings.scorers.map(s => {
-                        const tla = s.team === 'Brésil' ? 'BRA' : s.team === 'Maroc' ? 'MAR' : s.team === 'Mexique' ? 'MEX' : s.team === 'États-Unis' ? 'USA' : '';
+                        const tla = s.tla || '';
                         return `
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
                                 <td style="padding: 8px 4px; font-weight: bold; color: var(--or-premium); width: 25px;">${s.rank}</td>
@@ -275,7 +275,7 @@ export function renderStandings(standings) {
             <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
                 <tbody>
                     ${standings.assists.map(s => {
-                        const tla = s.team === 'Brésil' ? 'BRA' : s.team === 'Maroc' ? 'MAR' : s.team === 'Mexique' ? 'MEX' : s.team === 'États-Unis' ? 'USA' : '';
+                        const tla = s.tla || '';
                         return `
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
                                 <td style="padding: 8px 4px; font-weight: bold; color: var(--or-premium); width: 25px;">${s.rank}</td>

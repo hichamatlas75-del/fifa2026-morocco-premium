@@ -36,6 +36,8 @@ export function initPremiumFeatures(app) {
 
     document.getElementById('compare-team-a')?.addEventListener('change', () => renderComparison(app));
     document.getElementById('compare-team-b')?.addEventListener('change', () => renderComparison(app));
+    document.getElementById('analytics-team-a')?.addEventListener('change', () => app.initChart());
+    document.getElementById('analytics-team-b')?.addEventListener('change', () => app.initChart());
 }
 
 export function refreshPremiumFeatures(app) {
@@ -64,13 +66,22 @@ function uniqueTeams(app) {
 
 function populateFeatureSelects(app) {
     const teams = uniqueTeams(app);
-    const selectIds = ['favorite-team-select', 'compare-team-a', 'compare-team-b'];
+    const selectIds = ['favorite-team-select', 'compare-team-a', 'compare-team-b', 'analytics-team-a', 'analytics-team-b'];
+    const currentLang = app.currentLang;
 
     selectIds.forEach((id) => {
         const select = document.getElementById(id);
-        if (!select || select.dataset.ready === '1') return;
+        if (!select) return;
+        
+        const currentVal = select.value;
+        
+        if (select.dataset.ready === '1' && select.dataset.lang === currentLang) return;
+        
         select.innerHTML = teams.map(team => `<option value="${team.tla}">${teamName(app, team.tla, team.name)}</option>`).join('');
         select.dataset.ready = '1';
+        select.dataset.lang = currentLang;
+        
+        if (currentVal) select.value = currentVal;
     });
 
     const favoriteSelect = document.getElementById('favorite-team-select');
@@ -81,12 +92,27 @@ function populateFeatureSelects(app) {
     if (teamA && !teamA.value) teamA.value = 'MAR';
     if (teamB && (!teamB.value || teamB.value === teamA?.value)) teamB.value = 'BRA';
 
+    const analyticsA = document.getElementById('analytics-team-a');
+    const analyticsB = document.getElementById('analytics-team-b');
+    if (analyticsA && !analyticsA.value) analyticsA.value = 'MAR';
+    if (analyticsB && (!analyticsB.value || analyticsB.value === analyticsA?.value)) analyticsB.value = 'BRA';
+
     const groupSelect = document.getElementById('simulator-group-select');
-    if (groupSelect && groupSelect.dataset.ready !== '1') {
-        const groups = [...new Set(app.data.matches.map(match => match.group))].filter(Boolean).sort();
-        groupSelect.innerHTML = groups.map(group => `<option value="${group}">${translateGroup(app, group)}</option>`).join('');
-        groupSelect.value = groups.includes('Groupe C') ? 'Groupe C' : groups[0] || '';
-        groupSelect.dataset.ready = '1';
+    if (groupSelect) {
+        const currentVal = groupSelect.value;
+        if (groupSelect.dataset.ready === '1' && groupSelect.dataset.lang === currentLang) {
+            // Déjà prêt
+        } else {
+            const groups = [...new Set(app.data.matches.map(match => match.group))].filter(Boolean).sort();
+            groupSelect.innerHTML = groups.map(group => `<option value="${group}">${translateGroup(app, group)}</option>`).join('');
+            groupSelect.dataset.ready = '1';
+            groupSelect.dataset.lang = currentLang;
+            if (currentVal) {
+                groupSelect.value = currentVal;
+            } else {
+                groupSelect.value = groups.includes('Groupe C') ? 'Groupe C' : groups[0] || '';
+            }
+        }
     }
 }
 

@@ -307,6 +307,7 @@ class WorldCupApp {
             match.status = data.status;
             if (data.events) match.events = data.events;
             if (data.stats) match.stats = data.stats;
+            if (data.liveMinute !== undefined) match.liveMinute = data.liveMinute;
             
             // Rafraîchir les sections live
             renderLiveMatches(this.data.matches);
@@ -599,6 +600,12 @@ class WorldCupApp {
         if (titleAnalytics) {
             titleAnalytics.innerHTML = `<i class="fa-solid fa-chart-line" style="color:var(--or-premium)"></i> ${this.t('analyticsZone.title')}`;
         }
+
+        // 13. Analytics team labels
+        const lblTeamA = document.getElementById('lbl-analytics-team-a');
+        if (lblTeamA) lblTeamA.innerText = this.t('analyticsZone.teamA', 'Équipe A :');
+        const lblTeamB = document.getElementById('lbl-analytics-team-b');
+        if (lblTeamB) lblTeamB.innerText = this.t('analyticsZone.teamB', 'Équipe B :');
     }
 
     setupLanguageSwitcher() {
@@ -647,6 +654,11 @@ class WorldCupApp {
 
                 // Recréer le graphe
                 this.initChart();
+
+                // Ré-initialiser la carte Leaflet pour traduire les popups des stades
+                if (this.data && this.data.stadiums) {
+                    this.initMap(this.data.stadiums);
+                }
             }
         };
 
@@ -770,27 +782,154 @@ class WorldCupApp {
             this.t('analyticsZone.radar.pressing', 'Efficacité Pressing')
         ];
 
+        // Équipes sélectionnées
+        const teamAVal = document.getElementById('analytics-team-a')?.value || 'MAR';
+        const teamBVal = document.getElementById('analytics-team-b')?.value || 'BRA';
+
+        // Puissance des équipes pour générer des stats réalistes
+        const ratings = {
+            BRA: 92, ESP: 89, ENG: 88, GER: 88, NED: 86, MAR: 84, BEL: 84, CRO: 84,
+            URU: 83, USA: 82, SUI: 81, MEX: 80, JPN: 79, TUR: 78, CAN: 77, KOR: 77,
+            CZE: 76, PAR: 75, SCO: 75, AUS: 74, BIH: 74, RSA: 69, HAI: 64
+        };
+
+        const getTeamStats = (tla, opponentTla) => {
+            const rA = ratings[tla.toUpperCase()] || 70;
+            const rB = ratings[opponentTla.toUpperCase()] || 70;
+            
+            // 1. Possession (%)
+            let possession = Math.round(50 + (rA - rB) * 0.5);
+            possession = Math.max(35, Math.min(65, possession));
+            
+            // 2. xG (Expected Goals)
+            const tlaCodeSum = (tla.charCodeAt(0) || 0) + (tla.charCodeAt(1) || 0);
+            let xg = 0.5 + (rA - 60) * 0.04 + (tlaCodeSum % 10) * 0.05;
+            xg = Math.max(0.4, Math.min(3.5, xg));
+            
+            // 3. Tirs cadrés (Shots on Target)
+            const tlaCodeLast = tla.charCodeAt(2) || 0;
+            let shotsOnTarget = Math.round(xg * 3.5 + (tlaCodeLast % 3));
+            shotsOnTarget = Math.max(2, Math.min(15, shotsOnTarget));
+            
+            // 4. Précision Passes (%)
+            let passAccuracy = Math.round(70 + (rA - 60) * 0.5 + (tlaCodeSum % 5));
+            passAccuracy = Math.max(65, Math.min(95, passAccuracy));
+            
+            // 5. Duels Gagnés (%)
+            let duelsWon = Math.round(50 + (rA - rB) * 0.3 + (tlaCodeSum % 7) - 3);
+            duelsWon = Math.max(40, Math.min(60, duelsWon));
+            
+            // 6. Efficacité Pressing (%)
+            let pressing = Math.round(65 + (rA - 60) * 0.6 + (tlaCodeLast % 8));
+            pressing = Math.max(55, Math.min(92, pressing));
+            
+            return { possession, xg, shotsOnTarget, passAccuracy, duelsWon, pressing };
+        };
+
+        const statsA = getTeamStats(teamAVal, teamBVal);
+        const statsB = getTeamStats(teamBVal, teamAVal);
+
+        // Rééquilibrer possession et duels pour la cohérence
+        if (teamAVal !== teamBVal) {
+            const totalPoss = statsA.possession + statsB.possession;
+            statsA.possession = Math.round((statsA.possession / totalPoss) * 100);
+            statsB.possession = 100 - statsA.possession;
+
+            const totalDuels = statsA.duelsWon + statsB.duelsWon;
+            statsA.duelsWon = Math.round((statsA.duelsWon / totalDuels) * 100);
+            statsB.duelsWon = 100 - statsA.duelsWon;
+        } else {
+            statsA.possession = 50;
+            statsB.possession = 50;
+            statsA.duelsWon = 50;
+            statsB.duelsWon = 50;
+        }
+
+        // xG est mis sur échelle 30 et shotsOnTarget sur échelle 8 pour un rendu visuel équilibré
+        const scaleXG = 30;
+        const scaleShots = 8;
+
+        const dataA = [
+            statsA.possession,
+            Math.min(100, Math.round(statsA.xg * scaleXG)),
+            Math.min(100, Math.round(statsA.shotsOnTarget * scaleShots)),
+            statsA.passAccuracy,
+            statsA.duelsWon,
+            statsA.pressing
+        ];
+
+        const dataB = [
+            statsB.possession,
+            Math.min(100, Math.round(statsB.xg * scaleXG)),
+            Math.min(100, Math.round(statsB.shotsOnTarget * scaleShots)),
+            statsB.passAccuracy,
+            statsB.duelsWon,
+            statsB.pressing
+        ];
+
+        const getTeamLabel = (tla) => {
+            const name = this.t(`teams.${tla.toUpperCase()}`, tla);
+            const flags = {
+                MAR: "🇲🇦 ", BRA: "🇧🇷 ", USA: "🇺🇸 ", MEX: "🇲🇽 ", CAN: "🇨🇦 ",
+                SUI: "🇨🇭 ", GER: "🇩🇪 ", ESP: "🇪🇸 ", ENG: "🏴󠁧󠁢󠁥󠁮穫 ", CRO: "🇭🇷 ",
+                NED: "🇳🇱 ", BEL: "🇧🇪 ", URU: "🇺🇾 ", JPN: "🇯🇵 ", KOR: "🇰🇷 ",
+                AUS: "🇦🇺 ", TUR: "🇹🇷 ", RSA: "🇿🇦 ", HAI: "🇭🇹 ", SCO: "🏴󠁧󠁢󠁳󠁣󠁴󠁿 ",
+                CZE: "🇨🇿 ", PAR: "🇵🇾 ", BIH: "🇧🇦 "
+            };
+            const flag = flags[tla.toUpperCase()] || "🏳️ ";
+            return `${flag}${name}`;
+        };
+
+        const getTeamStyle = (tla, isTeamA) => {
+            if (tla.toUpperCase() === 'MAR') {
+                return {
+                    bg: 'rgba(0, 98, 51, 0.25)',
+                    border: '#006233',
+                    point: '#FFD700'
+                };
+            }
+            if (tla.toUpperCase() === 'BRA') {
+                return {
+                    bg: 'rgba(255, 223, 0, 0.15)',
+                    border: '#009c3b',
+                    point: '#ffdf00'
+                };
+            }
+            return isTeamA ? {
+                bg: 'rgba(255, 215, 0, 0.15)',
+                border: '#FFD700',
+                point: '#FFFFFF'
+            } : {
+                bg: 'rgba(30, 144, 255, 0.15)',
+                border: '#1E90FF',
+                point: '#FFFFFF'
+            };
+        };
+
+        const styleA = getTeamStyle(teamAVal, true);
+        const styleB = getTeamStyle(teamBVal, false);
+
         this.chart = new Chart(ctx, {
             type: 'radar',
             data: {
                 labels: radarLabels,
                 datasets: [
                     {
-                        label: this.t('analyticsZone.radar.maroc', '🇲🇦 Maroc (Lions de l\'Atlas)'),
-                        data: [52, 1.8, 7, 86, 58, 78],
-                        backgroundColor: 'rgba(0, 98, 51, 0.25)',
-                        borderColor: '#006233',
-                        pointBackgroundColor: '#FFD700',
-                        pointBorderColor: '#006233',
+                        label: getTeamLabel(teamAVal),
+                        data: dataA,
+                        backgroundColor: styleA.bg,
+                        borderColor: styleA.border,
+                        pointBackgroundColor: styleA.point,
+                        pointBorderColor: styleA.border,
                         borderWidth: 2
                     },
                     {
-                        label: this.t('analyticsZone.radar.brazil', '🇧🇷 Brésil'),
-                        data: [48, 2.1, 9, 89, 52, 72],
-                        backgroundColor: 'rgba(255, 223, 0, 0.15)',
-                        borderColor: '#009c3b',
-                        pointBackgroundColor: '#ffdf00',
-                        pointBorderColor: '#009c3b',
+                        label: getTeamLabel(teamBVal),
+                        data: dataB,
+                        backgroundColor: styleB.bg,
+                        borderColor: styleB.border,
+                        pointBackgroundColor: styleB.point,
+                        pointBorderColor: styleB.border,
                         borderWidth: 2
                     }
                 ]
@@ -805,6 +944,26 @@ class WorldCupApp {
                             font: {
                                 family: 'Inter',
                                 size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                let val = context.raw;
+                                // Récupérer la valeur décimale non mise à l'échelle pour l'affichage
+                                if (context.label.includes('xG')) {
+                                    val = (val / scaleXG).toFixed(2) + ' xG';
+                                } else if (context.label.includes('cadrés') || context.label.includes('Target')) {
+                                    val = Math.round(val / scaleShots) + ' tirs';
+                                } else {
+                                    val = val + '%';
+                                }
+                                return label + val;
                             }
                         }
                     }
@@ -956,8 +1115,10 @@ class WorldCupApp {
         let statusClass = 'status-scheduled';
         
         if (match.status === 'LIVE') {
-            const elapsedMinutes = Math.floor(Math.random() * 85) + 5;
-            statusLabel = `${this.t('modal.live', 'En Direct')} · ${elapsedMinutes}'`;
+            if (!match.liveMinute) {
+                match.liveMinute = (match.id % 75) + 10;
+            }
+            statusLabel = `${this.t('modal.live', 'En Direct')} · ${match.liveMinute}'`;
             statusClass = 'status-live';
         } else if (match.status === 'FINISHED') {
             statusLabel = this.t('modal.finished', 'Terminé');
@@ -1051,7 +1212,7 @@ class WorldCupApp {
                                     <span style="font-weight: 800; color: var(--or-premium); width: 35px; text-align: right;">${ev.minute}'</span>
                                     <span style="font-size: 1.1rem; display: flex; align-items: center; width: 20px; justify-content: center;">
                                         ${ev.type === 'goal' 
-                                            ? `<i class="fa-solid fa-soccer-ball" style="color:var(--vert-maroc);"></i>` 
+                                            ? `<i class="fa-solid fa-futbol" style="color:var(--vert-maroc);"></i>` 
                                             : `<i class="fa-solid fa-square" style="color:#FFD700; transform: rotate(10deg); font-size: 0.85rem;"></i>`
                                         }
                                     </span>
@@ -1092,8 +1253,17 @@ class WorldCupApp {
                                     <span>${stats.xg[1]}</span>
                                 </div>
                                 <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
-                                    <div style="width: ${Math.round((parseFloat(stats.xg[0]) / (parseFloat(stats.xg[0]) + parseFloat(stats.xg[1]))) * 100)}%; background: var(--or-premium);"></div>
-                                    <div style="width: ${Math.round((parseFloat(stats.xg[1]) / (parseFloat(stats.xg[0]) + parseFloat(stats.xg[1]))) * 100)}%; background: rgba(255,255,255,0.2);"></div>
+                                    ${(() => {
+                                        const xgHome = parseFloat(stats.xg[0]) || 0;
+                                        const xgAway = parseFloat(stats.xg[1]) || 0;
+                                        const xgTotal = (xgHome + xgAway) || 1;
+                                        const pctHome = Math.round((xgHome / xgTotal) * 100);
+                                        const pctAway = 100 - pctHome;
+                                        return `
+                                            <div style="width: ${pctHome}%; background: var(--or-premium);"></div>
+                                            <div style="width: ${pctAway}%; background: rgba(255,255,255,0.2);"></div>
+                                        `;
+                                    })()}
                                 </div>
                             </div>
 
@@ -1290,15 +1460,57 @@ class WorldCupApp {
 
     downloadCalendarEvent(match) {
         const title = `${match.homeTeam} vs ${match.awayTeam}`;
+        
+        // Parsing de la date (ex: "11 juin 2026")
+        const monthsFr = {
+            'janvier': 0, 'février': 1, 'mars': 2, 'avril': 3, 'mai': 4, 'juin': 5,
+            'juillet': 6, 'août': 7, 'septembre': 8, 'octobre': 9, 'novembre': 10, 'décembre': 11
+        };
+        const dateClean = (match.date || '').toLowerCase().trim();
+        const parts = dateClean.split(' ');
+        const day = parseInt(parts[0], 10) || 11;
+        const monthStr = parts[1] || 'juin';
+        const year = parseInt(parts[2], 10) || 2026;
+        const month = monthsFr[monthStr] !== undefined ? monthsFr[monthStr] : 5; // Juin par défaut
+        
+        // Parsing de l'heure (ex: "20:00")
+        const timeParts = (match.time || '20:00').split(':');
+        const hours = parseInt(timeParts[0], 10) || 20;
+        const minutes = parseInt(timeParts[1], 10) || 0;
+        
+        // Casablanca est en UTC+1 pendant le mois de juin.
+        // Nous créons une date UTC en soustrayant 1 heure de l'heure marocaine pour DTSTART.
+        const utcDateObj = new Date(Date.UTC(year, month, day, hours - 1, minutes));
+        
+        const formatICSDate = (date) => {
+            return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        };
+        
+        const dtstart = formatICSDate(utcDateObj);
+        
+        // Durée moyenne d'un match (environ 2 heures)
+        const endDateObj = new Date(utcDateObj.getTime() + 2 * 60 * 60 * 1000);
+        const dtend = formatICSDate(endDateObj);
+        
+        const dtstamp = formatICSDate(new Date());
+        const uid = `match-${match.id}-fifa2026@moroccopremium.ma`;
+        
         const body = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
+            'PRODID:-//FIFA 2026 Morocco Premium Platform//FR',
             'BEGIN:VEVENT',
+            `UID:${uid}`,
+            `DTSTAMP:${dtstamp}`,
+            `DTSTART:${dtstart}`,
+            `DTEND:${dtend}`,
             `SUMMARY:${title}`,
             `DESCRIPTION:Coupe du Monde FIFA 2026 - ${match.group} - ${match.stadium}`,
+            `LOCATION:${match.stadium}`,
             'END:VEVENT',
             'END:VCALENDAR'
         ].join('\n');
+        
         const blob = new Blob([body], { type: 'text/calendar;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');

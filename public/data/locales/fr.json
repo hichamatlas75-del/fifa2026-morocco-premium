@@ -59,6 +59,8 @@
   },
   "analyticsZone": {
     "title": "Visualisations de Données Avancées (xG, Possession, Pressing)",
+    "teamA": "Équipe A :",
+    "teamB": "Équipe B :",
     "radar": {
       "possession": "Possession (%)",
       "xg": "xG (Buts attendus)",

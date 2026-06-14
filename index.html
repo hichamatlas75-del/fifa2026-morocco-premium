@@ -218,7 +218,17 @@
                 <div class="premium-card"><h3 id="title-assists">Passeurs</h3><div id="top-assists"></div></div>
             </div>
             <div id="analytics" class="premium-card" style="padding: 2.5rem;">
-                <h3 id="title-analytics" style="margin-bottom: 2rem;"><i class="fa-solid fa-chart-line" style="color:var(--or-premium)"></i> Visualisations de Données Avancées (xG, Possession, Pressing)</h3>
+                <h3 id="title-analytics" style="margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-line" style="color:var(--or-premium)"></i> Visualisations de Données Avancées (xG, Possession, Pressing)</h3>
+                <div class="analytics-controls" style="display: flex; gap: 1.5rem; margin-bottom: 2rem; justify-content: flex-start; align-items: center; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; opacity: 0.8; font-weight: 500;" id="lbl-analytics-team-a">Équipe A :</span>
+                        <select id="analytics-team-a" class="control-btn" style="border-radius: 8px; padding: 0.4rem 1rem; width: 180px; text-align: left;"></select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; opacity: 0.8; font-weight: 500;" id="lbl-analytics-team-b">Équipe B :</span>
+                        <select id="analytics-team-b" class="control-btn" style="border-radius: 8px; padding: 0.4rem 1rem; width: 180px; text-align: left;"></select>
+                    </div>
+                </div>
                 <div style="position: relative; height:400px; width:100%;">
                     <canvas id="advancedStatsChart"></canvas>
                 </div>

@@ -1,25 +1,42 @@
 // js/socket.js
-import { getDeterministicEvents, getDeterministicStats, updateWorldCupGames } from './api.js';
+import { 
+  getDeterministicEvents, 
+  getDeterministicStats, 
+  updateWorldCupGames, 
+  parseOpenLigaDBData, 
+  parseFootballData 
+} from './api.js';
 
 let lastMatchesState = [];
 
 export function setupWebSockets(app) {
     console.log("🔌 Initialisation de la connexion temps réel...");
 
-    // Tenter de faire une première requête pour tester la présence du proxy Cloudflare
+    // Tenter de faire une première requête pour tester la présence des proxys Cloudflare
     fetch('/api-proxy')
         .then(res => {
-            if (!res.ok) throw new Error('Proxy non disponible');
+            if (!res.ok) throw new Error('Proxy OpenLigaDB non disponible');
             return res.json();
         })
         .then(data => {
-            console.log("✅ Proxy d'API Cloudflare détecté. Activation du mode Polling réel.");
+            console.log("✅ Proxy d'API OpenLigaDB détecté. Activation du mode Polling réel.");
             startPolling(app);
         })
         .catch(err => {
-            console.warn("⚠️ Proxy inaccessible. Les scores resteront en attente jusqu'au retour de l'API.", err);
-            // Continuer à retenter la connexion en arrière-plan
-            startPolling(app);
+            console.warn("⚠️ Proxy OpenLigaDB inaccessible. Tentative avec Football-Data...", err);
+            fetch('/api-footballdata')
+                .then(res => {
+                    if (!res.ok) throw new Error('Proxy Football-Data non disponible');
+                    return res.json();
+                })
+                .then(data => {
+                    console.log("✅ Proxy d'API Football-Data détecté. Activation du mode Polling réel.");
+                    startPolling(app);
+                })
+                .catch(err2 => {
+                    console.warn("⚠️ Les deux proxys sont inaccessibles. Les scores resteront en attente.", err2);
+                    startPolling(app);
+                });
         });
 }
 
@@ -35,79 +52,91 @@ function startPolling(app) {
             // Mettre à jour les buteurs réels depuis worldcup26.ir
             await updateWorldCupGames();
 
-            const res = await fetch('/api-proxy');
-            if (!res.ok) throw new Error('Erreur de réponse du proxy');
-            const data = await res.json();
+            let normalizedMatches = [];
+            let source = 'openligadb';
 
-            const rawMatches = Array.isArray(data) ? data : (data.matches || []);
-            if (rawMatches.length === 0) return;
+            try {
+                const res = await fetch('/api-proxy');
+                if (!res.ok) throw new Error('Erreur de réponse du proxy OpenLigaDB');
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                const parsed = parseOpenLigaDBData(data);
+                normalizedMatches = parsed.matches;
+            } catch (err1) {
+                console.warn("⚠️ API OpenLigaDB indisponible en polling, tentative avec Football-Data...", err1);
+                try {
+                    const res = await fetch('/api-footballdata');
+                    if (!res.ok) throw new Error('Erreur de réponse du proxy Football-Data');
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error);
+                    const parsed = parseFootballData(data);
+                    normalizedMatches = parsed.matches;
+                    source = 'footballdata';
+                } catch (err2) {
+                    console.warn("⚠️ Les deux API de polling sont indisponibles.", err2);
+                    return; // Retenter au prochain intervalle
+                }
+            }
 
-            rawMatches.forEach(m => {
-                const isFinished = m.matchIsFinished;
-                const now = new Date();
-                const matchDate = new Date(m.matchDateTimeUTC || m.matchDateTime);
-                const timeDiff = now.getTime() - matchDate.getTime();
-                const matchDurationMs = 2 * 60 * 60 * 1000;
-                const isLive = !isFinished && timeDiff > 0 && timeDiff < matchDurationMs;
-                const status = isLive ? 'LIVE' : isFinished ? 'FINISHED' : 'SCHEDULED';
+            if (!normalizedMatches || normalizedMatches.length === 0) return;
 
-                // Déterminer les scores
-                let homeScore = 0;
-                let awayScore = 0;
-                if (m.matchResults && m.matchResults.length > 0) {
-                    const endResult = m.matchResults.find(r => r.resultOrderID === 2 || r.resultName === 'Endergebnis');
-                    if (endResult) {
-                        homeScore = endResult.pointsTeam1;
-                        awayScore = endResult.pointsTeam2;
-                    } else {
-                        const sortedResults = [...m.matchResults].sort((a, b) => b.resultOrderID - a.resultOrderID);
-                        homeScore = sortedResults[0].pointsTeam1;
-                        awayScore = sortedResults[0].pointsTeam2;
-                    }
-                } else if (m.goals && m.goals.length > 0) {
-                    const lastGoal = m.goals[m.goals.length - 1];
-                    homeScore = lastGoal.scoreTeam1;
-                    awayScore = lastGoal.scoreTeam2;
+            normalizedMatches.forEach(polledMatch => {
+                // Trouver l'état précédent par id
+                let prevMatch = lastMatchesState.find(x => x.id === polledMatch.id);
+                // Si non trouvé par ID, chercher par TLA
+                if (!prevMatch && polledMatch.homeTla && polledMatch.awayTla) {
+                    prevMatch = lastMatchesState.find(x => x.homeTla === polledMatch.homeTla && x.awayTla === polledMatch.awayTla);
                 }
 
-                // Trouver l'état précédent stocké dans l'app
-                const prevMatch = lastMatchesState.find(x => x.id === m.matchID);
-
                 if (prevMatch) {
+                    const homeScore = polledMatch.homeScore;
+                    const awayScore = polledMatch.awayScore;
+                    const status = polledMatch.status;
+
                     // Détecter si un but a été marqué
                     const homeGoal = homeScore > prevMatch.homeScore;
                     const awayGoal = awayScore > prevMatch.awayScore;
                     const goalScored = homeGoal || awayGoal;
                     
                     let scoringTeam = '';
-                    if (homeGoal) scoringTeam = prevMatch.homeTeam;
-                    if (awayGoal) scoringTeam = prevMatch.awayTeam;
+                    if (homeGoal) scoringTeam = prevMatch.homeTla;
+                    if (awayGoal) scoringTeam = prevMatch.awayTla;
 
                     // Détecter le coup d'envoi (passage de SCHEDULED à LIVE)
                     const isKickoff = prevMatch.status === 'SCHEDULED' && status === 'LIVE';
 
-                    // Générer la chronologie et les statistiques mises à jour
-                    const events = getDeterministicEvents(m.matchID, prevMatch.homeTla, prevMatch.awayTla, homeScore, awayScore, m.goals);
-                    const stats = getDeterministicStats(m.matchID, homeScore, awayScore);
+                    // Récupérer/calculer les minutes de jeu si LIVE
+                    let liveMinute = polledMatch.liveMinute || prevMatch.liveMinute;
+                    if (status === 'LIVE' && polledMatch.utcDate) {
+                        const matchDate = new Date(polledMatch.utcDate);
+                        const now = new Date();
+                        const timeDiff = now.getTime() - matchDate.getTime();
+                        const elapsed = Math.floor(timeDiff / 60000);
+                        liveMinute = Math.min(90, Math.max(1, elapsed));
+                    }
 
                     // Mettre à jour l'état de référence local
                     prevMatch.homeScore = homeScore;
                     prevMatch.awayScore = awayScore;
                     prevMatch.status = status;
-                    prevMatch.events = events;
-                    prevMatch.stats = stats;
+                    prevMatch.events = polledMatch.events;
+                    prevMatch.stats = polledMatch.stats;
+                    if (liveMinute) {
+                        prevMatch.liveMinute = liveMinute;
+                    }
 
                     const updateData = {
-                        matchId: m.matchID,
+                        matchId: prevMatch.id, // Toujours utiliser le stable matchId de prevMatch
                         homeScore: homeScore,
                         awayScore: awayScore,
-                        time: isLive ? 'Direct' : prevMatch.time,
+                        time: status === 'LIVE' ? 'Direct' : prevMatch.time,
                         status: status,
                         event: goalScored ? 'GOAL' : null,
                         team: scoringTeam,
                         score: `${homeScore} - ${awayScore}`,
-                        events: events,
-                        stats: stats
+                        events: polledMatch.events,
+                        stats: polledMatch.stats,
+                        liveMinute: liveMinute
                     };
 
                     // Mettre à jour l'UI et l'état de l'application
@@ -125,7 +154,7 @@ function startPolling(app) {
 
                     // Si un but est marqué, déclencher les effets premium
                     if (goalScored) {
-                        app.triggerGoalAnimation(m.matchID);
+                        app.triggerGoalAnimation(prevMatch.id);
                         const scoringTeamTranslated = app.t(`teams.${scoringTeam.toUpperCase()}`, scoringTeam);
                         const goalMsg = app.t('notification.goal', "BUT ! {team} vient de marquer ! Score : {score}")
                             .replace('{team}', scoringTeamTranslated)
@@ -139,3 +168,4 @@ function startPolling(app) {
         }
     }, 30000);
 }
+

@@ -59,6 +59,8 @@
   },
   "analyticsZone": {
     "title": "Advanced Data Visualization (xG, Possession, Pressing)",
+    "teamA": "Team A:",
+    "teamB": "Team B:",
     "radar": {
       "possession": "Possession (%)",
       "xg": "xG (Expected Goals)",
