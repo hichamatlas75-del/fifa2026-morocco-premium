@@ -95,9 +95,13 @@ export function renderMatches(matches, containerId = 'calendar-grid', shouldScro
                     </div>
                     
                     <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <span class="font-sport" id="score-home-${match.id}" style="font-size: 2rem; font-weight: 900; min-width: 25px; text-align: center;">${match.homeScore}</span>
-                        <span style="opacity: 0.5; font-size: 1.2rem;">-</span>
-                        <span class="font-sport" id="score-away-${match.id}" style="font-size: 2rem; font-weight: 900; min-width: 25px; text-align: center;">${match.awayScore}</span>
+                        ${match.status === 'SCHEDULED' ? `
+                            <span class="font-sport" style="font-size: 1.4rem; font-weight: 900; opacity: 0.4; letter-spacing: 2px;">VS</span>
+                        ` : `
+                            <span class="font-sport" id="score-home-${match.id}" style="font-size: 2rem; font-weight: 900; min-width: 25px; text-align: center;">${match.homeScore}</span>
+                            <span style="opacity: 0.5; font-size: 1.2rem;">-</span>
+                            <span class="font-sport" id="score-away-${match.id}" style="font-size: 2rem; font-weight: 900; min-width: 25px; text-align: center;">${match.awayScore}</span>
+                        `}
                     </div>
                     
                     <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center;">

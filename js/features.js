@@ -239,32 +239,43 @@ function renderComparison(app) {
 function computeStandings(matches) {
     const teams = new Map();
 
+    // Initialize all teams in the map
     matches.forEach(match => {
         [match.homeTla, match.awayTla].forEach(tla => {
-            if (!teams.has(tla)) teams.set(tla, { tla, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
+            if (tla && tla !== 'TBD' && !teams.has(tla)) {
+                teams.set(tla, { tla, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
+            }
         });
-        const home = teams.get(match.homeTla);
-        const away = teams.get(match.awayTla);
-        home.p++;
-        away.p++;
-        home.gf += match.homeScore;
-        home.ga += match.awayScore;
-        away.gf += match.awayScore;
-        away.ga += match.homeScore;
+    });
 
-        if (match.homeScore > match.awayScore) {
-            home.w++;
-            home.pts += 3;
-            away.l++;
-        } else if (match.homeScore < match.awayScore) {
-            away.w++;
-            away.pts += 3;
-            home.l++;
-        } else {
-            home.d++;
-            away.d++;
-            home.pts++;
-            away.pts++;
+    // Only compute stats for matches that are LIVE or FINISHED
+    matches.forEach(match => {
+        if (match.status === 'LIVE' || match.status === 'FINISHED') {
+            const home = teams.get(match.homeTla);
+            const away = teams.get(match.awayTla);
+            if (home && away) {
+                home.p++;
+                away.p++;
+                home.gf += match.homeScore;
+                home.ga += match.awayScore;
+                away.gf += match.awayScore;
+                away.ga += match.homeScore;
+
+                if (match.homeScore > match.awayScore) {
+                    home.w++;
+                    home.pts += 3;
+                    away.l++;
+                } else if (match.homeScore < match.awayScore) {
+                    away.w++;
+                    away.pts += 3;
+                    home.l++;
+                } else {
+                    home.d++;
+                    away.d++;
+                    home.pts++;
+                    away.pts++;
+                }
+            }
         }
     });
 

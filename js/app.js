@@ -315,6 +315,10 @@ class WorldCupApp {
 
             // Mettre à jour l'élément spécifique dans le calendrier s'il est affiché
             const scoreHomeEl = document.getElementById(`score-home-${data.matchId}`);
+            if ((data.status === 'LIVE' || data.status === 'FINISHED') && !scoreHomeEl) {
+                this.applyFilters();
+                return;
+            }
             const scoreAwayEl = document.getElementById(`score-away-${data.matchId}`);
             const statusEl = document.getElementById(`status-${data.matchId}`);
             
