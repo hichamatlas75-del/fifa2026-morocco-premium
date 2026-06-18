@@ -1070,20 +1070,40 @@ export function getDeterministicEvents(matchId, homeTla, awayTla, homeScore, awa
       const awayScorers = parseScorersString(irGame.away_scorers);
 
       homeScorers.forEach(s => {
+        let detail = 'normal';
+        let name = s.player || '';
+        if (name.toLowerCase().includes('(pen)') || name.toLowerCase().includes('(p)')) {
+          detail = 'penalty';
+          name = name.replace(/\(pen\)/i, '').replace(/\(p\)/i, '').trim();
+        } else if (name.toLowerCase().includes('(og)') || name.toLowerCase().includes('(csc)')) {
+          detail = 'own_goal';
+          name = name.replace(/\(og\)/i, '').replace(/\(csc\)/i, '').trim();
+        }
         events.push({
           type: 'goal',
+          detail: detail,
           minute: s.minute,
           team: isSwapped ? 'away' : 'home',
-          player: s.player
+          player: name
         });
       });
 
       awayScorers.forEach(s => {
+        let detail = 'normal';
+        let name = s.player || '';
+        if (name.toLowerCase().includes('(pen)') || name.toLowerCase().includes('(p)')) {
+          detail = 'penalty';
+          name = name.replace(/\(pen\)/i, '').replace(/\(p\)/i, '').trim();
+        } else if (name.toLowerCase().includes('(og)') || name.toLowerCase().includes('(csc)')) {
+          detail = 'own_goal';
+          name = name.replace(/\(og\)/i, '').replace(/\(csc\)/i, '').trim();
+        }
         events.push({
           type: 'goal',
+          detail: detail,
           minute: s.minute,
           team: isSwapped ? 'home' : 'away',
-          player: s.player
+          player: name
         });
       });
 
@@ -1123,8 +1143,13 @@ export function getDeterministicEvents(matchId, homeTla, awayTla, homeScore, awa
       player = list[Math.floor(prng() * list.length)].name;
     }
 
+    let detail = 'normal';
+    if (goal.isPenalty) detail = 'penalty';
+    if (goal.isOwnGoal) detail = 'own_goal';
+
     events.push({
       type: 'goal',
+      detail: detail,
       minute: goal.matchMinute,
       team: scoringTeam,
       player: player

@@ -284,41 +284,119 @@ function startRealTimeActionSimulation(app) {
         if (rand < 0.08) {
             // 1. BUT !
             goalScored = true;
-            if (isHome) {
-                match.homeScore++;
+
+            const goalRand = Math.random();
+            let goalDetail = 'normal';
+            if (goalRand < 0.12) {
+                goalDetail = 'penalty';
+            } else if (goalRand < 0.20) {
+                goalDetail = 'own_goal';
+            }
+
+            if (goalDetail === 'own_goal') {
+                if (isHome) {
+                    match.awayScore++;
+                } else {
+                    match.homeScore++;
+                }
             } else {
-                match.awayScore++;
+                if (isHome) {
+                    match.homeScore++;
+                } else {
+                    match.awayScore++;
+                }
             }
 
             match.events.push({
                 type: 'goal',
+                detail: goalDetail,
                 minute: currentMin,
                 team: isHome ? 'home' : 'away',
                 player: chosenPlayer
             });
 
             // Ajuster les stats
-            if (isHome) {
-                match.stats.target[0]++;
-                match.stats.shots[0]++;
-                match.stats.xg[0] = (parseFloat(match.stats.xg[0]) + 0.75 + Math.random() * 0.2).toFixed(2);
+            if (goalDetail === 'own_goal') {
+                if (isHome) {
+                    match.stats.target[1]++;
+                    match.stats.shots[1]++;
+                    match.stats.xg[1] = (parseFloat(match.stats.xg[1]) + 0.5).toFixed(2);
+                } else {
+                    match.stats.target[0]++;
+                    match.stats.shots[0]++;
+                    match.stats.xg[0] = (parseFloat(match.stats.xg[0]) + 0.5).toFixed(2);
+                }
             } else {
-                match.stats.target[1]++;
-                match.stats.shots[1]++;
-                match.stats.xg[1] = (parseFloat(match.stats.xg[1]) + 0.75 + Math.random() * 0.2).toFixed(2);
+                const xgVal = goalDetail === 'penalty' ? 0.76 : (0.4 + Math.random() * 0.4);
+                if (isHome) {
+                    match.stats.target[0]++;
+                    match.stats.shots[0]++;
+                    match.stats.xg[0] = (parseFloat(match.stats.xg[0]) + xgVal).toFixed(2);
+                } else {
+                    match.stats.target[1]++;
+                    match.stats.shots[1]++;
+                    match.stats.xg[1] = (parseFloat(match.stats.xg[1]) + xgVal).toFixed(2);
+                }
             }
 
-            const teamName = isHome ? match.homeTeam : match.awayTeam;
             const scoreStr = `${match.homeScore} - ${match.awayScore}`;
-            const teamNameTrans = app.t(`teams.${(isHome ? match.homeTla : match.awayTla).toUpperCase()}`, teamName);
-            notificationMsg = app.t('notification.goal', "BUT ! {team} vient de marquer ! Score : {score}")
-                .replace('{team}', teamNameTrans)
-                .replace('{score}', scoreStr);
+            let notificationMsgKey = 'notification.goal';
+            let defaultNotifMsg = "BUT ! {team} vient de marquer ! Score : {score}";
 
-        } else if (rand < 0.22) {
-            // 2. CARTON JAUNE
+            if (goalDetail === 'penalty') {
+                notificationMsgKey = 'notification.goal_penalty';
+                defaultNotifMsg = "BUT sur penalty ! {team} marque ! Score : {score}";
+            } else if (goalDetail === 'own_goal') {
+                notificationMsgKey = 'notification.goal_own_goal';
+                defaultNotifMsg = "BUT contre son camp ! Score : {score}";
+            }
+
+            const scoringTeamIsHome = goalDetail === 'own_goal' ? !isHome : isHome;
+            const teamName = scoringTeamIsHome ? match.homeTeam : match.awayTeam;
+            const teamTla = scoringTeamIsHome ? match.homeTla : match.awayTla;
+            const teamNameTrans = app.t(`teams.${teamTla.toUpperCase()}`, teamName);
+
+            if (goalDetail === 'own_goal') {
+                const ownGoalPlayerTeamTla = isHome ? match.homeTla : match.awayTla;
+                const ownGoalPlayerTeamName = isHome ? match.homeTeam : match.awayTeam;
+                const playerTeamTrans = app.t(`teams.${ownGoalPlayerTeamTla.toUpperCase()}`, ownGoalPlayerTeamName);
+                notificationMsg = app.t(notificationMsgKey, "BUT contre son camp de {player} ({playerTeam}) ! Score : {score}")
+                    .replace('{player}', chosenPlayer)
+                    .replace('{playerTeam}', playerTeamTrans)
+                    .replace('{score}', scoreStr);
+            } else {
+                notificationMsg = app.t(notificationMsgKey, defaultNotifMsg)
+                    .replace('{team}', teamNameTrans)
+                    .replace('{score}', scoreStr)
+                    .replace('{player}', chosenPlayer);
+            }
+
+        } else if (rand < 0.12) {
+            // 1b. PENALTY MANQUÉ
+            match.events.push({
+                type: 'penalty_miss',
+                detail: 'penalty_miss',
+                minute: currentMin,
+                team: isHome ? 'home' : 'away',
+                player: chosenPlayer
+            });
+
+            if (isHome) {
+                match.stats.shots[0]++;
+                match.stats.xg[0] = (parseFloat(match.stats.xg[0]) + 0.76).toFixed(2);
+            } else {
+                match.stats.shots[1]++;
+                match.stats.xg[1] = (parseFloat(match.stats.xg[1]) + 0.76).toFixed(2);
+            }
+
+        } else if (rand < 0.26) {
+            // 2. CARTONS (jaune ou rouge)
+            const cardRand = Math.random();
+            const cardDetail = cardRand < 0.85 ? 'yellow' : 'red';
+
             match.events.push({
                 type: 'card',
+                detail: cardDetail,
                 minute: currentMin,
                 team: isHome ? 'home' : 'away',
                 player: chosenPlayer

@@ -203,5 +203,13 @@
       "title": "Technologie d'arbitrage : La puce connectée dans le ballon officielle testée avec succès",
       "summary": "Le nouveau ballon embarque une puce de haute précision transmettant la position exacte du ballon 500 fois par seconde."
     }
+  },
+  "events": {
+    "penalty": "pén.",
+    "own_goal": "CSC",
+    "yellow_card": "Carton jaune",
+    "red_card": "Carton rouge",
+    "penalty_miss": "Penalty manqué",
+    "none": "Aucun événement majeur à signaler."
   }
 }

@@ -66,5 +66,13 @@
       "title": "Tecnología arbitral: Supera con éxito las pruebas el chip del balón oficial",
       "summary": "El nuevo balón del torneo incluye un chip de alta precisión que transmite su ubicación exacta 500 veces por segundo."
     }
+  },
+  "events": {
+    "penalty": "pen.",
+    "own_goal": "pp",
+    "yellow_card": "Tarjeta amarilla",
+    "red_card": "Tarjeta roja",
+    "penalty_miss": "Penalti fallado",
+    "none": "Ningún evento importante que reportar."
   }
 }

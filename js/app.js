@@ -1076,24 +1076,56 @@ class WorldCupApp {
         const translateTeam = (tla, defaultName) => {
             return this.t(`teams.${tla}`, defaultName);
         };
-        return events.map(ev => `
-            <div style="display: flex; align-items: center; gap: 15px; font-size: 0.9rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.02);">
-                <span style="font-weight: 800; color: var(--or-premium); width: 35px; text-align: right;">${ev.minute === 'MT' ? 'MT' : `${ev.minute}'`}</span>
-                <span style="font-size: 1.1rem; display: flex; align-items: center; width: 20px; justify-content: center;">
-                    ${ev.type === 'goal' 
-                        ? `<i class="fa-solid fa-futbol" style="color:var(--vert-maroc);"></i>` 
-                        : `<i class="fa-solid fa-square" style="color:#FFD700; transform: rotate(10deg); font-size: 0.85rem;"></i>`
-                    }
-                </span>
-                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 500; color: var(--text-main);">${ev.player}</span>
-                    <span style="font-size: 0.75rem; opacity: 0.6; display: flex; align-items: center; gap: 6px;">
-                        ${getFlag(ev.team === 'home' ? match.homeTla : match.awayTla)} 
-                        ${ev.team === 'home' ? translateTeam(match.homeTla, match.homeTeam) : translateTeam(match.awayTla, match.awayTeam)}
+        
+        if (!events || events.length === 0) {
+            return `<p style="text-align: center; opacity: 0.6; font-size: 0.85rem; margin: 15px 0; padding: 10px 0;">${this.t('events.none', 'Aucun événement majeur à signaler.')}</p>`;
+        }
+
+        return events.map(ev => {
+            let iconHtml = '';
+            let detailSuffix = '';
+            
+            if (ev.type === 'goal') {
+                if (ev.detail === 'penalty') {
+                    iconHtml = `<i class="fa-solid fa-futbol" style="color:var(--vert-maroc);" title="${this.t('events.penalty', 'Penalty')}"></i>`;
+                    detailSuffix = ` <span style="font-size: 0.8rem; color: var(--vert-maroc); font-weight: 700;">(${this.t('events.penalty', 'pén.')})</span>`;
+                } else if (ev.detail === 'own_goal') {
+                    iconHtml = `<i class="fa-solid fa-futbol" style="color:#C1272D;" title="${this.t('events.own_goal', 'CSC')}"></i>`;
+                    detailSuffix = ` <span style="font-size: 0.8rem; color: #C1272D; font-weight: 700;">(${this.t('events.own_goal', 'CSC')})</span>`;
+                } else {
+                    iconHtml = `<i class="fa-solid fa-futbol" style="color:var(--vert-maroc);" title="But"></i>`;
+                }
+            } else if (ev.type === 'card') {
+                if (ev.detail === 'red') {
+                    iconHtml = `<i class="fa-solid fa-square" style="color:#C1272D; transform: rotate(10deg); font-size: 0.85rem;" title="${this.t('events.red_card', 'Carton rouge')}"></i>`;
+                    detailSuffix = ` <span style="font-size: 0.8rem; color: #C1272D; font-weight: 700;">(${this.t('events.red_card', 'Carton rouge')})</span>`;
+                } else {
+                    // yellow (default)
+                    iconHtml = `<i class="fa-solid fa-square" style="color:#FFD700; transform: rotate(10deg); font-size: 0.85rem;" title="${this.t('events.yellow_card', 'Carton jaune')}"></i>`;
+                }
+            } else if (ev.type === 'penalty_miss') {
+                iconHtml = `<i class="fa-solid fa-circle-xmark" style="color:#C1272D; font-size: 0.9rem;" title="${this.t('events.penalty_miss', 'Penalty manqué')}"></i>`;
+                detailSuffix = ` <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5); font-weight: 500;">(${this.t('events.penalty_miss', 'Penalty manqué')})</span>`;
+            } else {
+                iconHtml = `<i class="fa-solid fa-futbol" style="color:var(--text-main);"></i>`;
+            }
+
+            return `
+                <div style="display: flex; align-items: center; gap: 15px; font-size: 0.9rem; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                    <span style="font-weight: 800; color: var(--or-premium); width: 35px; text-align: right;">${ev.minute === 'MT' ? 'MT' : `${ev.minute}'`}</span>
+                    <span style="font-size: 1.1rem; display: flex; align-items: center; width: 20px; justify-content: center;">
+                        ${iconHtml}
                     </span>
+                    <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                        <span style="font-weight: 500; color: var(--text-main);">${ev.player}${detailSuffix}</span>
+                        <span style="font-size: 0.75rem; opacity: 0.6; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            ${getFlag(ev.team === 'home' ? match.homeTla : match.awayTla)} 
+                            ${ev.team === 'home' ? translateTeam(match.homeTla, match.homeTeam) : translateTeam(match.awayTla, match.awayTeam)}
+                        </span>
+                    </div>
                 </div>
-            </div>
-        `).join('') + (events.length === 0 ? `<p style="text-align: center; opacity: 0.6; font-size: 0.85rem; margin: 0;">Aucun événement majeur à signaler.</p>` : '');
+            `;
+        }).join('');
     }
 
     renderModalStats(stats) {

@@ -203,5 +203,13 @@
       "title": "Refereeing Technology: Connected Ball Chip Successfully Tested",
       "summary": "The new match ball features a high-precision chip transmitting the exact position 500 times per second."
     }
+  },
+  "events": {
+    "penalty": "pen.",
+    "own_goal": "OG",
+    "yellow_card": "Yellow card",
+    "red_card": "Red card",
+    "penalty_miss": "Penalty missed",
+    "none": "No major events to report."
   }
 }
