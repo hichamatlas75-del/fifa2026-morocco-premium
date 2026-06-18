@@ -30,7 +30,7 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
 
   if (request.method !== 'GET') return;
-  if (new URL(request.url).pathname === '/api-proxy' || new URL(request.url).pathname === '/api-worldcup') return;
+  if (new URL(request.url).pathname === '/api-proxy' || new URL(request.url).pathname === '/api-worldcup' || new URL(request.url).pathname === '/api-footballdata') return;
 
   // Stratégie Network-First pour éviter le blocage du cache
   event.respondWith(

@@ -2,9 +2,15 @@ import { getFlag } from './api.js';
 import { renderMatches } from './components/matches.js';
 
 const TEAM_RATINGS = {
-    BRA: 92, ESP: 89, ENG: 88, GER: 88, NED: 86, MAR: 84, BEL: 84, CRO: 84,
-    URU: 83, USA: 82, SUI: 81, MEX: 80, JPN: 79, TUR: 78, CAN: 77, KOR: 77,
-    CZE: 76, PAR: 75, SCO: 75, AUS: 74, BIH: 74, RSA: 69, HAI: 64
+    BRA: 92, ARG: 91, FRA: 90, ESP: 89, ENG: 88, GER: 88, PRT: 87,
+    NED: 86, ITA: 85, MAR: 84, BEL: 84, CRO: 84, COL: 84,
+    URU: 83, USA: 82, SUI: 81, MEX: 80, SEN: 80, JPN: 79, DZA: 79,
+    TUR: 78, NGA: 78, EGY: 78, KOR: 77, CAN: 77, SWE: 77,
+    AUT: 76, CZE: 76, NOR: 76, IRN: 76, PAR: 75, SCO: 75,
+    CMR: 75, GHA: 75, AUS: 74, BIH: 74, TUN: 74, ECU: 74,
+    COD: 73, UZB: 72, CRC: 72, JOR: 71, PAN: 71, IRQ: 70,
+    HON: 69, RSA: 69, CPV: 68, NZL: 67, KSA: 67, CUW: 63,
+    HAI: 64, JAM: 66, OMA: 65, UAE: 66
 };
 
 let initialized = false;

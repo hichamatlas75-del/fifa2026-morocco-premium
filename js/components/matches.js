@@ -70,10 +70,15 @@ export function renderMatches(matches, containerId = 'calendar-grid', shouldScro
         // Traduction dynamique de la date (ex: "11 Juin 2026" en français, ou "June 11, 2026" en anglais)
         let displayDate = match.date;
         if (window.App && window.App.currentLang === 'en') {
-            // Mapping de secours pour les mois si nécessaire
-            displayDate = displayDate
-                .replace("Juin", "June")
-                .replace("juin", "June");
+            const monthMap = {
+                'janvier': 'January', 'février': 'February', 'mars': 'March',
+                'avril': 'April', 'mai': 'May', 'juin': 'June',
+                'juillet': 'July', 'août': 'August', 'septembre': 'September',
+                'octobre': 'October', 'novembre': 'November', 'décembre': 'December'
+            };
+            Object.entries(monthMap).forEach(([fr, en]) => {
+                displayDate = displayDate.replace(new RegExp(fr, 'gi'), en);
+            });
         }
 
         return `
@@ -319,7 +324,15 @@ export function renderNews(news) {
         const summary = t(`newsList.item${item.id}.summary`, '');
         let displayDate = item.date;
         if (window.App && window.App.currentLang === 'en') {
-            displayDate = displayDate.replace("Juin", "June");
+            const monthMap = {
+                'janvier': 'January', 'février': 'February', 'mars': 'March',
+                'avril': 'April', 'mai': 'May', 'juin': 'June',
+                'juillet': 'July', 'août': 'August', 'septembre': 'September',
+                'octobre': 'October', 'novembre': 'November', 'décembre': 'December'
+            };
+            Object.entries(monthMap).forEach(([fr, en]) => {
+                displayDate = displayDate.replace(new RegExp(fr, 'gi'), en);
+            });
         }
         return `
             <div style="height: 180px; overflow: hidden; position: relative;">

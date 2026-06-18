@@ -12,6 +12,11 @@ export default defineConfig({
         target: 'https://worldcup26.ir/get/games',
         changeOrigin: true,
         rewrite: (path) => ''
+      },
+      '/api-footballdata': {
+        target: 'https://api.football-data.org/v4/competitions/WC/matches',
+        changeOrigin: true,
+        rewrite: (path) => ''
       }
     }
   }

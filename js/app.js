@@ -39,6 +39,8 @@ class WorldCupApp {
         this.chart = null;
         this.i18n = null;
         this.favoriteTeam = localStorage.getItem('favoriteTeam') || 'MAR';
+        this._modalAbortController = null;
+        this._searchDebounceTimer = null;
         
         this.init();
     }
@@ -209,7 +211,10 @@ class WorldCupApp {
 
         const filterHandler = () => this.applyFilters();
 
-        if (searchInput) searchInput.addEventListener('input', filterHandler);
+        if (searchInput) searchInput.addEventListener('input', () => {
+            clearTimeout(this._searchDebounceTimer);
+            this._searchDebounceTimer = setTimeout(filterHandler, 300);
+        });
         if (groupSelect) groupSelect.addEventListener('change', filterHandler);
         if (stadiumSelect) stadiumSelect.addEventListener('change', filterHandler);
         if (sortSelect) sortSelect.addEventListener('change', filterHandler);
@@ -389,11 +394,15 @@ class WorldCupApp {
     }
 
     async sendPushNotification(body) {
-        if (Notification.permission === 'granted') {
-            new Notification('Coupe du Monde 2026', {
-                body: body,
-                icon: 'https://cdn-icons-png.flaticon.com/512/5323/5323977.png'
-            });
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            try {
+                new Notification('Coupe du Monde 2026', {
+                    body: body,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/5323/5323977.png'
+                });
+            } catch (e) {
+                console.warn('Notification non supportée :', e);
+            }
         }
     }
 
@@ -407,23 +416,23 @@ class WorldCupApp {
         if (isDark) {
             document.body.classList.remove('theme-light');
             document.body.classList.add('theme-dark');
-            btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
         } else {
             document.body.classList.remove('theme-dark');
             document.body.classList.add('theme-light');
-            btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+            btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
         }
 
         btn.addEventListener('click', () => {
             if (document.body.classList.contains('theme-light')) {
                 document.body.classList.remove('theme-light');
                 document.body.classList.add('theme-dark');
-                btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
                 localStorage.setItem('theme', 'dark');
             } else {
                 document.body.classList.remove('theme-dark');
                 document.body.classList.add('theme-light');
-                btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
                 localStorage.setItem('theme', 'light');
             }
         });
@@ -792,9 +801,15 @@ class WorldCupApp {
 
         // Puissance des équipes pour générer des stats réalistes
         const ratings = {
-            BRA: 92, ESP: 89, ENG: 88, GER: 88, NED: 86, MAR: 84, BEL: 84, CRO: 84,
-            URU: 83, USA: 82, SUI: 81, MEX: 80, JPN: 79, TUR: 78, CAN: 77, KOR: 77,
-            CZE: 76, PAR: 75, SCO: 75, AUS: 74, BIH: 74, RSA: 69, HAI: 64
+            BRA: 92, ARG: 91, FRA: 90, ESP: 89, ENG: 88, GER: 88, PRT: 87,
+            NED: 86, ITA: 85, MAR: 84, BEL: 84, CRO: 84, COL: 84,
+            URU: 83, USA: 82, SUI: 81, MEX: 80, SEN: 80, JPN: 79, DZA: 79,
+            TUR: 78, NGA: 78, EGY: 78, KOR: 77, CAN: 77, SWE: 77,
+            AUT: 76, CZE: 76, NOR: 76, IRN: 76, PAR: 75, SCO: 75,
+            CMR: 75, GHA: 75, AUS: 74, BIH: 74, TUN: 74, ECU: 74,
+            COD: 73, UZB: 72, CRC: 72, JOR: 71, PAN: 71, IRQ: 70,
+            HON: 69, RSA: 69, CPV: 68, NZL: 67, KSA: 67, CUW: 63,
+            HAI: 64, JAM: 66, OMA: 65, UAE: 66
         };
 
         const getTeamStats = (tla, opponentTla) => {
@@ -1149,7 +1164,7 @@ class WorldCupApp {
                 
                 <div class="modal-header">
                     <span class="group-label">${translateGroupDisplay(match.group)}</span>
-                    <span class="date-label"><i class="fa-regular fa-calendar-days"></i> ${match.date.replace("Juin", this.currentLang === 'en' ? "June" : "Juin")}</span>
+                    <span class="date-label"><i class="fa-regular fa-calendar-days"></i> ${this._translateDate(match.date)}</span>
                 </div>
                 
                 <div class="match-score-section">
@@ -1279,8 +1294,8 @@ class WorldCupApp {
                                     <span>${stats.target[1]} (${stats.shots[1]})</span>
                                 </div>
                                 <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
-                                    <div style="width: ${Math.round((stats.shots[0] / (stats.shots[0] + stats.shots[1])) * 100)}%; background: var(--or-premium);"></div>
-                                    <div style="width: ${Math.round((stats.shots[1] / (stats.shots[0] + stats.shots[1])) * 100)}%; background: rgba(255,255,255,0.2);"></div>
+                                    <div style="width: ${Math.round((stats.shots[0] / Math.max(1, stats.shots[0] + stats.shots[1])) * 100)}%; background: var(--or-premium);"></div>
+                                    <div style="width: ${Math.round((stats.shots[1] / Math.max(1, stats.shots[0] + stats.shots[1])) * 100)}%; background: rgba(255,255,255,0.2);"></div>
                                 </div>
                             </div>
 
@@ -1305,8 +1320,8 @@ class WorldCupApp {
                                     <span>${stats.corners[1]}</span>
                                 </div>
                                 <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
-                                    <div style="width: ${Math.round((stats.corners[0] / (stats.corners[0] + stats.corners[1])) * 100)}%; background: var(--or-premium);"></div>
-                                    <div style="width: ${Math.round((stats.corners[1] / (stats.corners[0] + stats.corners[1])) * 100)}%; background: rgba(255,255,255,0.2);"></div>
+                                    <div style="width: ${Math.round((stats.corners[0] / Math.max(1, stats.corners[0] + stats.corners[1])) * 100)}%; background: var(--or-premium);"></div>
+                                    <div style="width: ${Math.round((stats.corners[1] / Math.max(1, stats.corners[0] + stats.corners[1])) * 100)}%; background: rgba(255,255,255,0.2);"></div>
                                 </div>
                             </div>
 
@@ -1318,8 +1333,8 @@ class WorldCupApp {
                                     <span>${stats.fouls[1]}</span>
                                 </div>
                                 <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; display: flex; overflow: hidden;">
-                                    <div style="width: ${Math.round((stats.fouls[0] / (stats.fouls[0] + stats.fouls[1])) * 100)}%; background: var(--or-premium);"></div>
-                                    <div style="width: ${Math.round((stats.fouls[1] / (stats.fouls[0] + stats.fouls[1])) * 100)}%; background: rgba(255,255,255,0.2);"></div>
+                                    <div style="width: ${Math.round((stats.fouls[0] / Math.max(1, stats.fouls[0] + stats.fouls[1])) * 100)}%; background: var(--or-premium);"></div>
+                                    <div style="width: ${Math.round((stats.fouls[1] / Math.max(1, stats.fouls[0] + stats.fouls[1])) * 100)}%; background: rgba(255,255,255,0.2);"></div>
                                 </div>
                             </div>
 
@@ -1345,35 +1360,37 @@ class WorldCupApp {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
 
+        // Nettoyer les anciens listeners pour éviter les fuites de mémoire
+        if (this._modalAbortController) {
+            this._modalAbortController.abort();
+        }
+        this._modalAbortController = new AbortController();
+        const signal = this._modalAbortController.signal;
+
         const closeBtn = modal.querySelector('#close-match-modal');
         const backdrop = modal.querySelector('.modal-backdrop');
-        const content = modal.querySelector('.modal-content');
         
         const closeModal = () => {
             console.log("⚽ [App] Fermeture du modal");
             modal.style.display = 'none';
             document.body.style.overflow = '';
+            if (this._modalAbortController) {
+                this._modalAbortController.abort();
+                this._modalAbortController = null;
+            }
         };
 
-        if (closeBtn) closeBtn.addEventListener('click', closeModal);
-        if (backdrop) backdrop.addEventListener('click', closeModal);
-        if (content) {
-            content.addEventListener('click', (e) => {
-                const interactive = e.target.closest('button, a, input, select, [data-calendar-match], [data-modal-favorite]');
-                if (!interactive) {
-                    closeModal();
-                }
-            });
-        }
+        if (closeBtn) closeBtn.addEventListener('click', closeModal, { signal });
+        if (backdrop) backdrop.addEventListener('click', closeModal, { signal });
         modal.querySelector('[data-modal-favorite]')?.addEventListener('click', (event) => {
             this.favoriteTeam = event.currentTarget.getAttribute('data-modal-favorite') || 'MAR';
             localStorage.setItem('favoriteTeam', this.favoriteTeam);
             this.applyInitialRender();
             refreshPremiumFeatures(this);
-        });
+        }, { signal });
         modal.querySelector('[data-calendar-match]')?.addEventListener('click', () => {
             this.downloadCalendarEvent(match);
-        });
+        }, { signal });
     }
 
     openTeamSquadModal(teamTla) {
@@ -1428,29 +1445,41 @@ class WorldCupApp {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
 
+        // Nettoyer les anciens listeners pour éviter les fuites de mémoire
+        if (this._modalAbortController) {
+            this._modalAbortController.abort();
+        }
+        this._modalAbortController = new AbortController();
+        const signal = this._modalAbortController.signal;
+
         const closeBtn = modal.querySelector('#close-squad-modal');
         const backdrop = modal.querySelector('.modal-backdrop');
-        const content = modal.querySelector('.modal-content');
         
         const closeModal = () => {
             modal.style.display = 'none';
             document.body.style.overflow = '';
+            if (this._modalAbortController) {
+                this._modalAbortController.abort();
+                this._modalAbortController = null;
+            }
         };
 
-        if (closeBtn) closeBtn.addEventListener('click', closeModal);
-        if (backdrop) backdrop.addEventListener('click', closeModal);
-        if (content) {
-            content.addEventListener('click', (e) => {
-                const interactive = e.target.closest('button, a, input, select');
-                if (!interactive) {
-                    closeModal();
-                }
-            });
-        }
+        if (closeBtn) closeBtn.addEventListener('click', closeModal, { signal });
+        if (backdrop) backdrop.addEventListener('click', closeModal, { signal });
     }
 
     predictMatch(homeTla, awayTla) {
-        const ratings = { BRA: 92, MAR: 84, USA: 82, MEX: 80, CAN: 77, SUI: 81, GER: 88, ESP: 89, ENG: 88, CRO: 84, NED: 86, BEL: 84, URU: 83, JPN: 79, KOR: 77, AUS: 74, TUR: 78, RSA: 69, HAI: 64, SCO: 75, CZE: 76, PAR: 75, BIH: 74 };
+        const ratings = {
+            BRA: 92, ARG: 91, FRA: 90, ESP: 89, ENG: 88, GER: 88, PRT: 87,
+            NED: 86, ITA: 85, MAR: 84, BEL: 84, CRO: 84, COL: 84,
+            URU: 83, USA: 82, SUI: 81, MEX: 80, SEN: 80, JPN: 79, DZA: 79,
+            TUR: 78, NGA: 78, EGY: 78, KOR: 77, CAN: 77, SWE: 77,
+            AUT: 76, CZE: 76, NOR: 76, IRN: 76, PAR: 75, SCO: 75,
+            CMR: 75, GHA: 75, AUS: 74, BIH: 74, TUN: 74, ECU: 74,
+            COD: 73, UZB: 72, CRC: 72, JOR: 71, PAN: 71, IRQ: 70,
+            HON: 69, RSA: 69, CPV: 68, NZL: 67, KSA: 67, CUW: 63,
+            HAI: 64, JAM: 66, OMA: 65, UAE: 66
+        };
         const homeRating = ratings[homeTla] || 70;
         const awayRating = ratings[awayTla] || 70;
         const home = Math.round((homeRating / (homeRating + awayRating)) * 100);
@@ -1522,6 +1551,21 @@ class WorldCupApp {
         link.download = `${match.homeTla}-${match.awayTla}.ics`;
         link.click();
         URL.revokeObjectURL(url);
+    }
+
+    _translateDate(dateStr) {
+        if (this.currentLang !== 'en') return dateStr;
+        const monthMap = {
+            'janvier': 'January', 'février': 'February', 'mars': 'March',
+            'avril': 'April', 'mai': 'May', 'juin': 'June',
+            'juillet': 'July', 'août': 'August', 'septembre': 'September',
+            'octobre': 'October', 'novembre': 'November', 'décembre': 'December'
+        };
+        let result = dateStr;
+        Object.entries(monthMap).forEach(([fr, en]) => {
+            result = result.replace(new RegExp(fr, 'gi'), en);
+        });
+        return result;
     }
 }
 

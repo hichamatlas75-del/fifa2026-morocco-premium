@@ -8,6 +8,7 @@ import {
 } from './api.js';
 
 let lastMatchesState = [];
+let pollingIntervalId = null;
 
 export function setupWebSockets(app) {
     console.log("🔌 Initialisation de la connexion temps réel...");
@@ -41,13 +42,19 @@ export function setupWebSockets(app) {
 }
 
 function startPolling(app) {
+    // Clear any existing polling interval to prevent stacking
+    if (pollingIntervalId) {
+        clearInterval(pollingIntervalId);
+        pollingIntervalId = null;
+    }
+
     // Stocker l'état initial des matchs pour la comparaison des buts
     if (app.data && app.data.matches) {
         lastMatchesState = JSON.parse(JSON.stringify(app.data.matches));
     }
 
     // Interroger l'API toutes les 30 secondes
-    setInterval(async () => {
+    pollingIntervalId = setInterval(async () => {
         try {
             // Mettre à jour les buteurs réels depuis worldcup26.ir
             await updateWorldCupGames();

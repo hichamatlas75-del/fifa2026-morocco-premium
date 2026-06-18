@@ -593,11 +593,11 @@ function getStaticSquad() {
     { name: "Noussair Mazraoui", pos: "Défenseurs", num: 3, club: "Manchester United" },
     { name: "Nayef Aguerd", pos: "Défenseurs", num: 5, club: "Olympique de Marseille" },
     { name: "Chadi Riad", pos: "Défenseurs", num: 6, club: "Crystal Palace" },
-    { name: "Issa Diop", pos: "Défenseurs", num: 4, club: "Fulham" },
+    { name: "Issa Diop", pos: "Défenseurs", num: 15, club: "Fulham" },
     { name: "Anass Salah-Eddine", pos: "Défenseurs", num: 20, club: "PSV Eindhoven" },
     { name: "Youssef Belammari", pos: "Défenseurs", num: 13, club: "Al Ahly" },
     { name: "Redouane Halhal", pos: "Défenseurs", num: 24, club: "KV Mechelen" },
-    { name: "Zakaria El Ouahdi", pos: "Défenseurs", num: 15, club: "KRC Genk" },
+    { name: "Zakaria El Ouahdi", pos: "Défenseurs", num: 27, club: "KRC Genk" },
 
     // Milieux
     { name: "Sofyan Amrabat", pos: "Milieux", num: 4, club: "Real Betis" },
@@ -725,19 +725,27 @@ const groupsData = {
     { tla: "FRA", name: "France" },
     { tla: "SEN", name: "Sénégal" },
     { tla: "IRQ", name: "Irak" },
-    { tla: "NOR", name: "Norvège" }
+    { tla: "NOR", name: "Norvège" },
+    { tla: "ITA", name: "Italie" },
+    { tla: "HON", name: "Honduras" }
   ],
   "Groupe J": [
     { tla: "PRT", name: "Portugal" },
     { tla: "COD", name: "RD Congo" },
     { tla: "UZB", name: "Ouzbékistan" },
-    { tla: "COL", name: "Colombie" }
+    { tla: "COL", name: "Colombie" },
+    { tla: "CMR", name: "Cameroun" },
+    { tla: "CRC", name: "Costa Rica" },
+    { tla: "UAE", name: "Émirats Arabes Unis" }
   ],
   "Groupe K": [
     { tla: "ARG", name: "Argentine" },
     { tla: "DZA", name: "Algérie" },
     { tla: "AUT", name: "Autriche" },
-    { tla: "JOR", name: "Jordanie" }
+    { tla: "JOR", name: "Jordanie" },
+    { tla: "NGA", name: "Nigéria" },
+    { tla: "JAM", name: "Jamaïque" },
+    { tla: "OMA", name: "Oman" }
   ],
   "Groupe L": [
     { tla: "ENG", name: "Angleterre" },
