@@ -84,11 +84,13 @@ export function renderMatches(matches, containerId = 'calendar-grid', shouldScro
                 displayDate = displayDate.replace(new RegExp(fr, 'gi'), en);
             });
         }
+        const showKickoff = match.status === 'LIVE' || match.status === 'FINISHED';
+        const timeInfo = showKickoff ? ` · ${match.kickoffTime || match.time}` : '';
 
         return `
             <div class="premium-card match-card ${isFavorite ? 'favorite-match' : ''} ${bannerClass}" id="match-${match.id}" ${bannerText ? `data-banner="${bannerText}"` : ''} style="display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.8rem; opacity: 0.7;">
-                    <span>${displayDate}</span>
+                    <span>${displayDate}${timeInfo}</span>
                     <span style="display:flex; align-items:center; gap:8px;">
                         ${translateGroupDisplay(match.group)}
                         <button class="favorite-toggle ${isFavorite ? 'active' : ''}" data-fav-toggle data-team="${isFavorite ? favoriteTeam : match.homeTla}" aria-label="Suivre cette équipe">

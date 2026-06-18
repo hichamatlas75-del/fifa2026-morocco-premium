@@ -1172,7 +1172,7 @@ class WorldCupApp {
                 
                 <div class="modal-header">
                     <span class="group-label">${translateGroupDisplay(match.group)}</span>
-                    <span class="date-label"><i class="fa-regular fa-calendar-days"></i> ${this._translateDate(match.date)}</span>
+                    <span class="date-label"><i class="fa-regular fa-calendar-days"></i> ${this._translateDate(match.date)} · ${match.kickoffTime || match.time}</span>
                 </div>
                 
                 <div class="match-score-section">
@@ -1198,9 +1198,15 @@ class WorldCupApp {
                 </div>
 
                 <div class="modal-body">
-                    <div class="info-row" style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                        <i class="fa-solid fa-location-dot" style="color: var(--or-premium);"></i> <span>${this.t('modal.stadium', 'Stade')} :</span>
-                        <strong>${match.stadium}</strong>
+                    <div class="info-row" style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                        <span style="display: flex; align-items: center; gap: 6px; margin-right: 15px;">
+                            <i class="fa-solid fa-location-dot" style="color: var(--or-premium);"></i> <span>${this.t('modal.stadium', 'Stade')} :</span>
+                            <strong>${match.stadium}</strong>
+                        </span>
+                        <span style="display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-regular fa-clock" style="color: var(--or-premium);"></i> <span>${this.currentLang === 'en' ? 'Kickoff' : 'Coup d\'envoi'} :</span>
+                            <strong>${match.kickoffTime || match.time}</strong>
+                        </span>
                     </div>
                     <div class="modal-actions-row">
                         <button class="control-btn modal-calendar-btn" data-calendar-match="${match.id}"><i class="fa-solid fa-calendar-plus"></i> Ajouter au calendrier</button>
