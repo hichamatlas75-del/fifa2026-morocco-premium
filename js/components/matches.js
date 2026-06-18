@@ -60,7 +60,11 @@ export function renderMatches(matches, containerId = 'calendar-grid', shouldScro
 
         let statusBadge = '';
         if (isLive) {
-            statusBadge = `<span class="live-badge" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;"><span class="live-pulse"></span> ${t('modal.live', 'Direct')} ${match.time}</span>`;
+            let minDisplay = '';
+            if (match.liveMinute) {
+                minDisplay = match.liveMinute === 'MT' ? ' · MT' : ` · ${match.liveMinute}'`;
+            }
+            statusBadge = `<span class="live-badge" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;"><span class="live-pulse"></span> ${t('modal.live', 'Direct')}${minDisplay}</span>`;
         } else if (isFinished) {
             statusBadge = `<span style="font-size: 0.8rem; opacity: 0.6; font-weight: bold;">${t('modal.finished', 'Terminé')}</span>`;
         } else {

@@ -16,7 +16,7 @@ window.addEventListener('error', (event) => {
     `;
 });
 
-import { initApi, getH2HData, getFlag, getDeterministicEvents, getDeterministicStats } from './api.js';
+import { initApi, getH2HData, getFlag, getDeterministicEvents, getDeterministicStats, calculateLiveMinute } from './api.js';
 import { setupWebSockets } from './socket.js';
 import { TEAMS_SQUADS } from './teams_squads.js';
 import { 
@@ -336,7 +336,11 @@ class WorldCupApp {
             
             if (statusEl) {
                 if (data.status === 'LIVE') {
-                    statusEl.innerHTML = `<span class="live-badge" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;"><span class="live-pulse"></span> ${this.t('modal.live', 'Direct')} ${data.time}</span>`;
+                    let minDisplay = '';
+                    if (data.liveMinute) {
+                        minDisplay = data.liveMinute === 'MT' ? ' · MT' : ` · ${data.liveMinute}'`;
+                    }
+                    statusEl.innerHTML = `<span class="live-badge" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;"><span class="live-pulse"></span> ${this.t('modal.live', 'Direct')}${minDisplay}</span>`;
                 } else if (data.status === 'FINISHED') {
                     statusEl.innerHTML = `<span style="font-size: 0.8rem; opacity: 0.6; font-weight: bold;">${this.t('modal.finished', 'Terminé')}</span>`;
                 } else {
@@ -1134,10 +1138,14 @@ class WorldCupApp {
         let statusClass = 'status-scheduled';
         
         if (match.status === 'LIVE') {
-            if (!match.liveMinute) {
+            const actualLiveMin = calculateLiveMinute(match.utcDate);
+            if (actualLiveMin !== null) {
+                match.liveMinute = actualLiveMin;
+            } else if (!match.liveMinute) {
                 match.liveMinute = (match.id % 75) + 10;
             }
-            statusLabel = `${this.t('modal.live', 'En Direct')} · ${match.liveMinute}'`;
+            const minStr = match.liveMinute === 'MT' ? 'MT' : `${match.liveMinute}'`;
+            statusLabel = `${this.t('modal.live', 'En Direct')} · ${minStr}`;
             statusClass = 'status-live';
         } else if (match.status === 'FINISHED') {
             statusLabel = this.t('modal.finished', 'Terminé');

@@ -4,7 +4,8 @@ import {
   getDeterministicStats, 
   updateWorldCupGames, 
   parseOpenLigaDBData, 
-  parseFootballData 
+  parseFootballData,
+  calculateLiveMinute 
 } from './api.js';
 
 let lastMatchesState = [];
@@ -115,11 +116,7 @@ function startPolling(app) {
                     // Récupérer/calculer les minutes de jeu si LIVE
                     let liveMinute = polledMatch.liveMinute || prevMatch.liveMinute;
                     if (status === 'LIVE' && polledMatch.utcDate) {
-                        const matchDate = new Date(polledMatch.utcDate);
-                        const now = new Date();
-                        const timeDiff = now.getTime() - matchDate.getTime();
-                        const elapsed = Math.floor(timeDiff / 60000);
-                        liveMinute = Math.min(90, Math.max(1, elapsed));
+                        liveMinute = calculateLiveMinute(polledMatch.utcDate);
                     }
 
                     // Mettre à jour l'état de référence local

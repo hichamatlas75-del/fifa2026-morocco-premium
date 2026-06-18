@@ -247,6 +247,7 @@ export function parseOpenLigaDBData(rawData) {
       time: isLive ? "Direct" : timeStr,
       date: dateStr,
       utcDate: matchDate.toISOString(),
+      liveMinute: isLive ? calculateLiveMinute(matchDate.toISOString()) : null,
       group: groupName,
       stadium: getStadiumForMatch(
         homeTeamName,
@@ -306,6 +307,7 @@ export function parseOpenLigaDBData(rawData) {
           status: "SCHEDULED",
           time: timeStr,
           date: dateStr,
+          utcDate: matchDateObj.toISOString(),
           group: stage.name,
           stadium: getStadiumForMatch("TBD", "TBD", stage.name, mId),
           events: []
@@ -411,6 +413,7 @@ export function parseFootballData(rawData) {
       time: isLive ? "Direct" : timeStr,
       date: dateStr,
       utcDate: matchDate.toISOString(),
+      liveMinute: isLive ? calculateLiveMinute(matchDate.toISOString()) : null,
       group: groupName,
       stadium: getStadiumForMatch(
         homeTeamName,
@@ -552,6 +555,45 @@ function computeGroupStandings(matches, groupName) {
       ga: t.ga,
       pts: t.pts
     }));
+}
+
+export function parseMatchDateTimeToUTC(dateStr, timeStr) {
+  const monthsFr = {
+    'janvier': 0, 'février': 1, 'mars': 2, 'avril': 3, 'mai': 4, 'juin': 5,
+    'juillet': 6, 'août': 7, 'septembre': 8, 'octobre': 9, 'novembre': 10, 'décembre': 11
+  };
+  const clean = (dateStr || '').toLowerCase().trim();
+  const parts = clean.split(' ');
+  const day = parseInt(parts[0], 10) || 11;
+  const monthStr = parts[1] || 'juin';
+  const year = parseInt(parts[2], 10) || 2026;
+  const month = monthsFr[monthStr] !== undefined ? monthsFr[monthStr] : 5;
+
+  const timeParts = (timeStr || '20:00').split(':');
+  const hours = parseInt(timeParts[0], 10) || 20;
+  const minutes = parseInt(timeParts[1], 10) || 0;
+
+  // Casablanca time is UTC+1 in June 2026
+  const utcDate = new Date(Date.UTC(year, month, day, hours - 1, minutes, 0));
+  return utcDate.toISOString();
+}
+
+export function calculateLiveMinute(utcDateStr) {
+  if (!utcDateStr) return null;
+  const matchDate = new Date(utcDateStr);
+  const now = new Date();
+  const timeDiff = now.getTime() - matchDate.getTime();
+  const elapsed = Math.floor(timeDiff / 60000);
+
+  if (elapsed < 0) return 1;
+  if (elapsed <= 45) {
+    return elapsed;
+  } else if (elapsed > 45 && elapsed <= 60) {
+    return 'MT'; // Half-time
+  } else {
+    const playTime = elapsed - 15;
+    return Math.min(90, playTime);
+  }
 }
 
 // Les 16 stades officiels du tournoi FIFA 2026 (sans sponsor commercial, avec coordonnées exactes)
@@ -756,14 +798,38 @@ const groupsData = {
 };
 
 function getFallbackData() {
-  const matches = realMatches.map(m => ({
-    ...m,
-    homeFlag: getFlag(m.homeTla),
-    awayFlag: getFlag(m.awayTla),
-    stadium: getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id),
-    events: getDeterministicEvents(m.id, m.homeTla, m.awayTla, m.homeScore, m.awayScore, null),
-    stats: getDeterministicStats(m.id, m.homeScore, m.awayScore)
-  }));
+  const matches = realMatches.map(m => {
+    const utcDate = m.utcDate || parseMatchDateTimeToUTC(m.date, m.time);
+    const matchDate = new Date(utcDate);
+    const now = new Date();
+    const timeDiff = now.getTime() - matchDate.getTime();
+    const matchDurationMs = 2 * 60 * 60 * 1000;
+
+    let status = m.status;
+    if (m.status !== 'FINISHED') {
+      if (timeDiff > 0 && timeDiff < matchDurationMs) {
+        status = 'LIVE';
+      } else if (timeDiff >= matchDurationMs) {
+        status = 'FINISHED';
+      }
+    }
+
+    const isLive = status === 'LIVE';
+    const liveMinute = isLive ? calculateLiveMinute(utcDate) : null;
+
+    return {
+      ...m,
+      status: status,
+      time: isLive ? "Direct" : m.time,
+      utcDate: utcDate,
+      liveMinute: liveMinute,
+      homeFlag: getFlag(m.homeTla),
+      awayFlag: getFlag(m.awayTla),
+      stadium: getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id),
+      events: getDeterministicEvents(m.id, m.homeTla, m.awayTla, m.homeScore, m.awayScore, null),
+      stats: getDeterministicStats(m.id, m.homeScore, m.awayScore)
+    };
+  });
 
   const knockoutStages = [
     { name: "Seizièmes de finale", count: 16, startDay: 13, gap: 4 },
@@ -810,6 +876,7 @@ function getFallbackData() {
         status: "SCHEDULED",
         time: timeStr,
         date: dateStr,
+        utcDate: matchDateObj.toISOString(),
         group: stage.name,
         stadium: getStadiumForMatch("TBD", "TBD", stage.name, mId),
         events: []
