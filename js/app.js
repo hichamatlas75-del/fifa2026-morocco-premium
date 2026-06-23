@@ -394,7 +394,7 @@ class WorldCupApp {
                         ${winnerFlagHtml}
                     </div>
                     <div class="rtf-winner-label">${winnerName}</div>
-                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/512px-2026_FIFA_World_Cup_emblem.svg.png" class="rtf-trophy-img" alt="World Cup Trophy">
+                    <img src="./trophy.svg" class="rtf-trophy-img" alt="World Cup Trophy">
                 </div>
 
                 <div style="margin-top: 1.5rem; width: 100%; display: flex; justify-content: center;">
@@ -546,7 +546,7 @@ class WorldCupApp {
                     ${winnerFlag}
                     <div class="rtf-tree-champion-title">${winnerName}</div>
                 </div>
-                <img src="https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/512px-2026_FIFA_World_Cup_emblem.svg.png" class="rtf-tree-trophy" alt="FIFA Trophy">
+                <img src="./trophy.svg" class="rtf-tree-trophy" alt="FIFA Trophy">
                 
                 <div class="rtf-tree-final-match">
                     ${renderTreeMatch(85031)}
@@ -1132,7 +1132,7 @@ class WorldCupApp {
             try {
                 new Notification('Coupe du Monde 2026', {
                     body: body,
-                    icon: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/512px-2026_FIFA_World_Cup_emblem.svg.png'
+                    icon: './trophy.svg'
                 });
             } catch (e) {
                 console.warn('Notification non supportée :', e);
