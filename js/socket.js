@@ -184,6 +184,17 @@ function startPolling(app) {
                         prevMatch.liveMinute = liveMinute;
                     }
 
+                    if (polledMatch.homeTla && polledMatch.homeTla !== 'TBD') {
+                        prevMatch.homeTla = polledMatch.homeTla;
+                        prevMatch.homeTeam = polledMatch.homeTeam;
+                        prevMatch.homeFlag = polledMatch.homeFlag;
+                    }
+                    if (polledMatch.awayTla && polledMatch.awayTla !== 'TBD') {
+                        prevMatch.awayTla = polledMatch.awayTla;
+                        prevMatch.awayTeam = polledMatch.awayTeam;
+                        prevMatch.awayFlag = polledMatch.awayFlag;
+                    }
+
                     const updateData = {
                         matchId: prevMatch.id, // Toujours utiliser le stable matchId de prevMatch
                         homeScore: homeScore,
@@ -195,7 +206,13 @@ function startPolling(app) {
                         score: `${homeScore} - ${awayScore}`,
                         events: polledMatch.events,
                         stats: polledMatch.stats,
-                        liveMinute: liveMinute
+                        liveMinute: liveMinute,
+                        homeTla: prevMatch.homeTla,
+                        awayTla: prevMatch.awayTla,
+                        homeTeam: prevMatch.homeTeam,
+                        awayTeam: prevMatch.awayTeam,
+                        homeFlag: prevMatch.homeFlag,
+                        awayFlag: prevMatch.awayFlag
                     };
 
                     // Mettre à jour l'UI et l'état de l'application

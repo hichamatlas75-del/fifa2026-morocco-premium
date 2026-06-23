@@ -142,107 +142,13 @@ class WorldCupApp {
     }
 
     computeKnockoutBracket() {
-        if (!this.data || !this.data.matches || !this.data.standings || !this.data.standings.groups) return;
-
-        const groups = this.data.standings.groups;
-
-        // Récupérer les vainqueurs, seconds et troisièmes
-        const qualifiers1 = []; 
-        const qualifiers2 = []; 
-        const thirdPlaces = [];  
-
-        const groupsList = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
-
-        groupsList.forEach(g => {
-            const teams = groups[g] || [];
-            if (teams.length >= 1) qualifiers1.push({ group: g, team: teams[0] });
-            if (teams.length >= 2) qualifiers2.push({ group: g, team: teams[1] });
-            if (teams.length >= 3) thirdPlaces.push({ group: g, team: teams[2] });
-        });
-
-        // Classer les troisièmes pour les 8 meilleurs
-        thirdPlaces.sort((a, b) => {
-            if (b.team.pts !== a.team.pts) return b.team.pts - a.team.pts;
-            const gdA = a.team.gd || 0;
-            const gdB = b.team.gd || 0;
-            if (gdB !== gdA) return gdB - gdA;
-            const gfA = a.team.gf || 0;
-            const gfB = b.team.gf || 0;
-            return gfB - gfA;
-        });
-
-        const best3rd = thirdPlaces.slice(0, 8);
+        if (!this.data || !this.data.matches) return;
 
         const getTeamInfo = (tla) => {
             if (!tla || tla === 'TBD') return { tla: 'TBD', name: 'À déterminer' };
             const name = this.t(`teams.${tla}`, tla);
             return { tla, name };
         };
-
-        const t1A = qualifiers1.find(q => q.group === 'Groupe A')?.team.tla || 'TBD';
-        const t2A = qualifiers2.find(q => q.group === 'Groupe A')?.team.tla || 'TBD';
-        const t1B = qualifiers1.find(q => q.group === 'Groupe B')?.team.tla || 'TBD';
-        const t2B = qualifiers2.find(q => q.group === 'Groupe B')?.team.tla || 'TBD';
-        const t1C = qualifiers1.find(q => q.group === 'Groupe C')?.team.tla || 'TBD';
-        const t2C = qualifiers2.find(q => q.group === 'Groupe C')?.team.tla || 'TBD';
-        const t1D = qualifiers1.find(q => q.group === 'Groupe D')?.team.tla || 'TBD';
-        const t2D = qualifiers2.find(q => q.group === 'Groupe D')?.team.tla || 'TBD';
-        const t1E = qualifiers1.find(q => q.group === 'Groupe E')?.team.tla || 'TBD';
-        const t2E = qualifiers2.find(q => q.group === 'Groupe E')?.team.tla || 'TBD';
-        const t1F = qualifiers1.find(q => q.group === 'Groupe F')?.team.tla || 'TBD';
-        const t2F = qualifiers2.find(q => q.group === 'Groupe F')?.team.tla || 'TBD';
-        const t1G = qualifiers1.find(q => q.group === 'Groupe G')?.team.tla || 'TBD';
-        const t2G = qualifiers2.find(q => q.group === 'Groupe G')?.team.tla || 'TBD';
-        const t1H = qualifiers1.find(q => q.group === 'Groupe H')?.team.tla || 'TBD';
-        const t2H = qualifiers2.find(q => q.group === 'Groupe H')?.team.tla || 'TBD';
-        const t1I = qualifiers1.find(q => q.group === 'Groupe I')?.team.tla || 'TBD';
-        const t2I = qualifiers2.find(q => q.group === 'Groupe I')?.team.tla || 'TBD';
-        const t1J = qualifiers1.find(q => q.group === 'Groupe J')?.team.tla || 'TBD';
-        const t2J = qualifiers2.find(q => q.group === 'Groupe J')?.team.tla || 'TBD';
-        const t1K = qualifiers1.find(q => q.group === 'Groupe K')?.team.tla || 'TBD';
-        const t2K = qualifiers2.find(q => q.group === 'Groupe K')?.team.tla || 'TBD';
-        const t1L = qualifiers1.find(q => q.group === 'Groupe L')?.team.tla || 'TBD';
-        const t2L = qualifiers2.find(q => q.group === 'Groupe L')?.team.tla || 'TBD';
-
-        const t3rd1 = best3rd[0]?.team.tla || 'TBD';
-        const t3rd2 = best3rd[1]?.team.tla || 'TBD';
-        const t3rd3 = best3rd[2]?.team.tla || 'TBD';
-        const t3rd4 = best3rd[3]?.team.tla || 'TBD';
-        const t3rd5 = best3rd[4]?.team.tla || 'TBD';
-        const t3rd6 = best3rd[5]?.team.tla || 'TBD';
-        const t3rd7 = best3rd[6]?.team.tla || 'TBD';
-        const t3rd8 = best3rd[7]?.team.tla || 'TBD';
-
-        const r32Pairings = [
-            [t1A, t2B], // 85000
-            [t1C, t3rd1], // 85001
-            [t1E, t2F], // 85002
-            [t1G, t3rd2], // 85003
-            [t1I, t2J], // 85004
-            [t1K, t3rd3], // 85005
-            [t1B, t2A], // 85006
-            [t1D, t3rd4], // 85007
-            [t1F, t2E], // 85008
-            [t1H, t3rd5], // 85009
-            [t1J, t2I], // 85010
-            [t1L, t3rd6], // 85011
-            [t3rd7, t2C], // 85012
-            [t3rd8, t2D], // 85013
-            [t2G, t2H], // 85014
-            [t2K, t2L]  // 85015
-        ];
-
-        r32Pairings.forEach((pair, idx) => {
-            const m = this.data.matches.find(match => match.id === 85000 + idx);
-            if (m) {
-                m.homeTla = pair[0];
-                m.awayTla = pair[1];
-                m.homeTeam = getTeamInfo(pair[0]).name;
-                m.awayTeam = getTeamInfo(pair[1]).name;
-                m.homeFlag = getFlag(pair[0]);
-                m.awayFlag = getFlag(pair[1]);
-            }
-        });
 
         const getWinnerTla = (match) => {
             if (!match || match.homeTla === 'TBD' || match.awayTla === 'TBD') return 'TBD';
@@ -686,6 +592,18 @@ class WorldCupApp {
             if (data.events) match.events = data.events;
             if (data.stats) match.stats = data.stats;
             if (data.liveMinute !== undefined) match.liveMinute = data.liveMinute;
+            
+            // Mettre à jour les infos d'équipe si elles changent (cas des qualifiés TBD)
+            if (data.homeTla) {
+                match.homeTla = data.homeTla;
+                match.homeTeam = data.homeTeam || match.homeTeam;
+                match.homeFlag = data.homeFlag || match.homeFlag;
+            }
+            if (data.awayTla) {
+                match.awayTla = data.awayTla;
+                match.awayTeam = data.awayTeam || match.awayTeam;
+                match.awayFlag = data.awayFlag || match.awayFlag;
+            }
             
             // Rafraîchir les sections live
             renderLiveMatches(this.data.matches);
