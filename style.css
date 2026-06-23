@@ -1493,71 +1493,114 @@ body.theme-light .team-card-clickable:hover {
 /* --- Road to the Final (Bracket) Styles --- */
 .rtf-bracket-scroll {
     width: 100%;
-    overflow-x: auto;
-    padding: 2rem 0;
-    scrollbar-width: thin;
-    scrollbar-color: var(--or-premium) rgba(0, 0, 0, 0.2);
+    padding: 1rem 0;
+    overflow-x: visible;
 }
 
-.rtf-bracket-scroll::-webkit-scrollbar {
-    height: 8px;
+.rtf-mobile-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    padding: 0 1rem;
+    z-index: 5;
 }
 
-.rtf-bracket-scroll::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 4px;
+.rtf-tab-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
 }
 
-.rtf-bracket-scroll::-webkit-scrollbar-thumb {
-    background: var(--or-premium);
-    border-radius: 4px;
+.rtf-tab-btn:hover {
+    border-color: rgba(255, 215, 0, 0.3);
+    background: rgba(255, 215, 0, 0.05);
+}
+
+.rtf-tab-btn.active {
+    background: linear-gradient(135deg, var(--or-premium), #B8860B);
+    color: #000000;
+    border-color: var(--or-premium);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.25);
+}
+
+body.theme-light .rtf-tab-btn {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-main);
+}
+
+body.theme-light .rtf-tab-btn.active {
+    color: #FFFFFF;
+    background: linear-gradient(135deg, var(--green-maroc), #004d28);
+    border-color: var(--green-maroc);
+    box-shadow: 0 4px 15px rgba(0, 98, 51, 0.25);
 }
 
 .rtf-bracket-container {
     display: flex;
-    justify-content: space-between;
-    align-items: stretch;
-    min-width: 1250px;
-    height: 700px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    height: auto;
+    min-width: auto;
     padding: 0 1rem;
-    position: relative;
-    gap: 1.5rem;
+    gap: 2.5rem;
     margin: 0 auto;
 }
 
 .rtf-column {
-    display: flex;
+    display: none; /* Caché par défaut, affiché via data-active-round */
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: flex-start;
     align-items: center;
     flex: 1;
-    height: 100%;
-    position: relative;
+    width: 100%;
+    max-width: 380px;
+    gap: 1.2rem;
 }
 
 .rtf-column-title {
     font-family: var(--font-heading);
-    font-size: 0.75rem;
+    font-size: 1.1rem;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: var(--or-premium);
-    opacity: 0.85;
+    opacity: 0.95;
     text-align: center;
-    position: absolute;
-    top: -25px;
     width: 100%;
     font-weight: bold;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.5rem;
+}
+
+body.theme-light .rtf-column-title {
+    border-bottom-color: rgba(0, 98, 51, 0.15);
 }
 
 /* Center Trophy and Final Column */
 .rtf-center-column {
-    display: flex;
+    display: none; /* Caché par défaut */
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    flex: 1.5;
-    height: 100%;
-    position: relative;
+    width: 100%;
+    max-width: 420px;
+}
+
+.rtf-center-column .rtf-column-title {
+    margin-bottom: 1.5rem;
 }
 
 .rtf-trophy-container {
@@ -1566,6 +1609,7 @@ body.theme-light .team-card-clickable:hover {
     align-items: center;
     justify-content: center;
     margin-top: 1rem;
+    margin-bottom: 2rem;
     position: relative;
     z-index: 2;
 }
@@ -1589,8 +1633,8 @@ body.theme-light .team-card-clickable:hover {
 }
 
 .rtf-winner-circle {
-    width: 72px;
-    height: 72px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     border: 3px solid var(--or-premium);
     background: rgba(255, 215, 0, 0.1);
@@ -1612,7 +1656,7 @@ body.theme-light .team-card-clickable:hover {
 
 .rtf-winner-label {
     font-family: var(--font-heading);
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: bold;
     color: var(--or-premium);
     letter-spacing: 1px;
@@ -1620,19 +1664,18 @@ body.theme-light .team-card-clickable:hover {
     text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
 }
 
-/* Match Card Box */
+/* Match Card Box - Plus spacieux et premium */
 .rtf-match-pair {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     box-shadow: var(--card-shadow);
     backdrop-filter: blur(10px);
     border-radius: 12px;
-    padding: 0.5rem;
+    padding: 0.8rem 1rem;
     width: 100%;
-    max-width: 135px;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.4rem;
     position: relative;
     z-index: 2;
     transition: var(--transition-smooth);
@@ -1640,8 +1683,8 @@ body.theme-light .team-card-clickable:hover {
 
 .rtf-match-pair:hover {
     border-color: rgba(255, 215, 0, 0.3);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
 }
 
 /* Team row inside match box */
@@ -1649,19 +1692,19 @@ body.theme-light .team-card-clickable:hover {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.4rem;
-    height: 28px;
+    gap: 0.5rem;
+    height: 32px;
 }
 
 .rtf-team-info {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.6rem;
 }
 
 .rtf-team-circle {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.15);
     background: rgba(255, 255, 255, 0.05);
@@ -1677,7 +1720,7 @@ body.theme-light .team-card-clickable:hover {
     background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
     border: 1px dashed rgba(255, 255, 255, 0.2);
     color: rgba(255, 255, 255, 0.3);
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: bold;
 }
 
@@ -1689,59 +1732,28 @@ body.theme-light .team-card-clickable:hover {
 
 .rtf-team-tla {
     font-family: var(--font-primary);
-    font-weight: 500;
-    font-size: 0.75rem;
+    font-weight: 600;
+    font-size: 0.85rem;
     color: var(--text-main);
 }
 
 .rtf-team-score {
     font-family: var(--font-heading);
     font-weight: bold;
-    font-size: 0.85rem;
+    font-size: 1rem;
     color: var(--text-main);
-    width: 18px;
+    width: 20px;
     text-align: right;
-    opacity: 0.9;
+    opacity: 0.95;
 }
 
 .rtf-match-info-meta {
-    font-size: 0.6rem;
-    opacity: 0.5;
+    font-size: 0.7rem;
+    opacity: 0.6;
     text-align: center;
     border-top: 1px solid rgba(255, 255, 255, 0.03);
-    padding-top: 3px;
-    margin-top: 2px;
-}
-
-/* Connecting Lines (CSS-only) */
-/* Connecting lines going right from left columns */
-.rtf-column-left-r32 .rtf-match-pair::after,
-.rtf-column-left-r16 .rtf-match-pair::after,
-.rtf-column-left-qf .rtf-match-pair::after,
-.rtf-column-left-sf .rtf-match-pair::after {
-    content: '';
-    position: absolute;
-    right: -14px;
-    top: 50%;
-    width: 14px;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.15);
-    z-index: 1;
-}
-
-/* Connecting lines going left from right columns */
-.rtf-column-right-r32 .rtf-match-pair::after,
-.rtf-column-right-r16 .rtf-match-pair::after,
-.rtf-column-right-qf .rtf-match-pair::after,
-.rtf-column-right-sf .rtf-match-pair::after {
-    content: '';
-    position: absolute;
-    left: -14px;
-    top: 50%;
-    width: 14px;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.15);
-    z-index: 1;
+    padding-top: 4px;
+    margin-top: 3px;
 }
 
 /* Highlight winners */
@@ -1752,6 +1764,45 @@ body.theme-light .team-card-clickable:hover {
 .rtf-team-row.winner-row .rtf-team-circle {
     border-color: var(--or-premium);
     box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+/* Affiche les colonnes actives selon le round actif */
+.rtf-bracket-container[data-active-round="r32"] .rtf-column-left-r32,
+.rtf-bracket-container[data-active-round="r32"] .rtf-column-right-r32 {
+    display: flex;
+}
+
+.rtf-bracket-container[data-active-round="r16"] .rtf-column-left-r16,
+.rtf-bracket-container[data-active-round="r16"] .rtf-column-right-r16 {
+    display: flex;
+}
+
+.rtf-bracket-container[data-active-round="qf"] .rtf-column-left-qf,
+.rtf-bracket-container[data-active-round="qf"] .rtf-column-right-qf {
+    display: flex;
+}
+
+.rtf-bracket-container[data-active-round="sf"] .rtf-column-left-sf,
+.rtf-bracket-container[data-active-round="sf"] .rtf-column-right-sf {
+    display: flex;
+}
+
+.rtf-bracket-container[data-active-round="final"] .rtf-center-column {
+    display: flex;
+}
+
+/* Responsive pour mobiles */
+@media (max-width: 767px) {
+    .rtf-bracket-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 0 0.5rem;
+    }
+
+    .rtf-column, .rtf-center-column {
+        max-width: 100%;
+    }
 }
 
 /* Theme light adjustments */
@@ -1765,4 +1816,5 @@ body.theme-light .rtf-team-circle.empty-circle {
 body.theme-light .rtf-team-score {
     color: var(--blanc);
 }
+
 

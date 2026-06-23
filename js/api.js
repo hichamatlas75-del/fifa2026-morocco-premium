@@ -331,8 +331,7 @@ export function parseOpenLigaDBData(rawData) {
     moroccoSquad: getStaticSquad(),
     standings: {
       groups: groupsStandings,
-      scorers: getStaticScorers(),
-      assists: getStaticAssists()
+      ...computeScorersAndAssists(matches)
     },
     news: getStaticNews()
   };
@@ -442,8 +441,7 @@ export function parseFootballData(rawData) {
     moroccoSquad: getStaticSquad(),
     standings: {
       groups: groupsStandings,
-      scorers: getStaticScorers(),
-      assists: getStaticAssists()
+      ...computeScorersAndAssists(matches)
     },
     news: getStaticNews()
   };
@@ -495,7 +493,7 @@ export async function initApi() {
 }
 
 // Fonction de calcul des classements en fonction des scores réels (basée sur les TLA uniques et robustes)
-function computeGroupStandings(matches, groupName) {
+export function computeGroupStandings(matches, groupName) {
   // Traduire le nom du groupe en français pour la comparaison si nécessaire
   const groupMatches = matches.filter(m => m.group === groupName || m.group === groupName.replace("Groupe", "Group"));
   const teamsMap = new Map();
@@ -902,8 +900,7 @@ function getFallbackData() {
     moroccoSquad: getStaticSquad(),
     standings: {
       groups: groupsStandings,
-      scorers: getStaticScorers(),
-      assists: getStaticAssists()
+      ...computeScorersAndAssists(matches)
     },
     news: getStaticNews()
   };
@@ -1069,7 +1066,11 @@ export function getDeterministicEvents(matchId, homeTla, awayTla, homeScore, awa
       const homeScorers = parseScorersString(irGame.home_scorers);
       const awayScorers = parseScorersString(irGame.away_scorers);
 
-      homeScorers.forEach(s => {
+      // Load squad players for both teams
+      const homePlayers = TEAMS_SQUADS[homeTla.toUpperCase()] || [{ name: "Joueur A" }];
+      const awayPlayers = TEAMS_SQUADS[awayTla.toUpperCase()] || [{ name: "Joueur B" }];
+
+      homeScorers.forEach((s, idx) => {
         let detail = 'normal';
         let name = s.player || '';
         if (name.toLowerCase().includes('(pen)') || name.toLowerCase().includes('(p)')) {
@@ -1079,16 +1080,30 @@ export function getDeterministicEvents(matchId, homeTla, awayTla, homeScore, awa
           detail = 'own_goal';
           name = name.replace(/\(og\)/i, '').replace(/\(csc\)/i, '').trim();
         }
+        
+        let assistPlayerName = null;
+        if (detail === 'normal') {
+          const prngAssist = mulberry32(matchId + s.minute + idx + 100);
+          if (prngAssist() < 0.7) {
+            const list = isSwapped ? awayPlayers : homePlayers;
+            const teammates = list.filter(p => p.name !== name);
+            if (teammates.length > 0) {
+              assistPlayerName = teammates[Math.floor(prngAssist() * teammates.length)].name;
+            }
+          }
+        }
+
         events.push({
           type: 'goal',
           detail: detail,
           minute: s.minute,
           team: isSwapped ? 'away' : 'home',
-          player: name
+          player: name,
+          assist: assistPlayerName
         });
       });
 
-      awayScorers.forEach(s => {
+      awayScorers.forEach((s, idx) => {
         let detail = 'normal';
         let name = s.player || '';
         if (name.toLowerCase().includes('(pen)') || name.toLowerCase().includes('(p)')) {
@@ -1098,12 +1113,26 @@ export function getDeterministicEvents(matchId, homeTla, awayTla, homeScore, awa
           detail = 'own_goal';
           name = name.replace(/\(og\)/i, '').replace(/\(csc\)/i, '').trim();
         }
+
+        let assistPlayerName = null;
+        if (detail === 'normal') {
+          const prngAssist = mulberry32(matchId + s.minute + idx + 200);
+          if (prngAssist() < 0.7) {
+            const list = isSwapped ? homePlayers : awayPlayers;
+            const teammates = list.filter(p => p.name !== name);
+            if (teammates.length > 0) {
+              assistPlayerName = teammates[Math.floor(prngAssist() * teammates.length)].name;
+            }
+          }
+        }
+
         events.push({
           type: 'goal',
           detail: detail,
           minute: s.minute,
           team: isSwapped ? 'home' : 'away',
-          player: name
+          player: name,
+          assist: assistPlayerName
         });
       });
 
@@ -1147,12 +1176,25 @@ export function getDeterministicEvents(matchId, homeTla, awayTla, homeScore, awa
     if (goal.isPenalty) detail = 'penalty';
     if (goal.isOwnGoal) detail = 'own_goal';
 
+    let assistPlayerName = null;
+    if (detail === 'normal') {
+      const prngAssist = mulberry32(matchId + i + 400);
+      if (prngAssist() < 0.7) {
+        const list = scoringTeam === 'home' ? homePlayers : awayPlayers;
+        const teammates = list.filter(p => p.name !== player);
+        if (teammates.length > 0) {
+          assistPlayerName = teammates[Math.floor(prngAssist() * teammates.length)].name;
+        }
+      }
+    }
+
     events.push({
       type: 'goal',
       detail: detail,
       minute: goal.matchMinute,
       team: scoringTeam,
-      player: player
+      player: player,
+      assist: assistPlayerName
     });
   }
 
@@ -1214,5 +1256,108 @@ export function getDeterministicStats(matchId, homeScore, awayScore) {
     corners: [homeCorners, awayCorners],
     fouls: [homeFouls, awayFouls],
     saves: [homeSaves, awaySaves]
+  };
+}
+
+export function computeScorersAndAssists(matches) {
+  const scorersMap = new Map();
+  const assistsMap = new Map();
+
+  matches.forEach(m => {
+    // On ne compte que les buts des matchs commencés ou terminés
+    if ((m.status === 'LIVE' || m.status === 'FINISHED') && m.events) {
+      m.events.forEach(e => {
+        if (e.type === 'goal' && e.detail !== 'own_goal') {
+          let scoringTeamTla = '';
+          if (e.team === 'home') {
+            scoringTeamTla = m.homeTla;
+          } else if (e.team === 'away') {
+            scoringTeamTla = m.awayTla;
+          } else {
+            scoringTeamTla = m.homeTla;
+          }
+
+          if (e.player) {
+            const playerKey = `${e.player}_${scoringTeamTla}`;
+            if (!scorersMap.has(playerKey)) {
+              scorersMap.set(playerKey, {
+                player: e.player,
+                tla: scoringTeamTla,
+                team: e.team === 'home' ? m.homeTeam : m.awayTeam,
+                goals: 0
+              });
+            }
+            scorersMap.get(playerKey).goals++;
+          }
+
+          if (e.assist) {
+            const assistPlayer = e.assist;
+            const assistKey = `${assistPlayer}_${scoringTeamTla}`;
+            if (!assistsMap.has(assistKey)) {
+              assistsMap.set(assistKey, {
+                player: assistPlayer,
+                tla: scoringTeamTla,
+                team: e.team === 'home' ? m.homeTeam : m.awayTeam,
+                assists: 0
+              });
+            }
+            assistsMap.get(assistKey).assists++;
+          }
+        }
+      });
+    }
+  });
+
+  // Trier et formater les buteurs
+  const sortedScorers = Array.from(scorersMap.values())
+    .sort((a, b) => b.goals - a.goals || a.player.localeCompare(b.player))
+    .map((s, idx) => ({
+      rank: idx + 1,
+      player: s.player,
+      team: s.team,
+      tla: s.tla,
+      flag: getFlag(s.tla),
+      goals: s.goals
+    }));
+
+  // Trier et formater les passeurs
+  const sortedAssists = Array.from(assistsMap.values())
+    .sort((a, b) => b.assists - a.assists || a.player.localeCompare(b.player))
+    .map((s, idx) => ({
+      rank: idx + 1,
+      player: s.player,
+      team: s.team,
+      tla: s.tla,
+      flag: getFlag(s.tla),
+      assists: s.assists
+    }));
+
+  // Charger les buteurs et passeurs statiques par défaut pour remplir si vide
+  const staticScorers = getStaticScorers();
+  const staticAssists = getStaticAssists();
+
+  // Si on a moins de 4 buteurs réels, on complète avec les statiques par défaut
+  staticScorers.forEach(st => {
+    if (sortedScorers.length < 10 && !sortedScorers.some(s => s.player === st.player)) {
+      sortedScorers.push({
+        ...st,
+        rank: sortedScorers.length + 1
+      });
+    }
+  });
+
+  // Si on a moins de 4 passeurs réels, on complète avec les statiques par défaut
+  staticAssists.forEach(sa => {
+    if (sortedAssists.length < 10 && !sortedAssists.some(s => s.player === sa.player)) {
+      sortedAssists.push({
+        ...sa,
+        rank: sortedAssists.length + 1
+      });
+    }
+  });
+
+  return {
+    scorers: sortedScorers.slice(0, 10),
+    assists: sortedAssists.slice(0, 10)
   };
 }

@@ -16,7 +16,7 @@ window.addEventListener('error', (event) => {
     `;
 });
 
-import { initApi, getH2HData, getFlag, getDeterministicEvents, getDeterministicStats, calculateLiveMinute } from './api.js';
+import { initApi, getH2HData, getFlag, getDeterministicEvents, getDeterministicStats, calculateLiveMinute, computeGroupStandings, computeScorersAndAssists } from './api.js';
 import { setupWebSockets } from './socket.js';
 import { TEAMS_SQUADS } from './teams_squads.js';
 import { 
@@ -28,6 +28,13 @@ import {
     renderNews 
 } from './components/matches.js';
 import { initPremiumFeatures, refreshPremiumFeatures } from './features.js';
+
+const ROUND_NAMES = {
+    fr: { r32: '1/16 de Finale', r16: '1/8 de Finale', qf: 'Quarts de finale', sf: 'Demi-finales', final: 'Finale' },
+    en: { r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter Finals', sf: 'Semi Finals', final: 'Final' },
+    es: { r32: '1/16 de Final', r16: '1/8 de Final', qf: 'Cuartos de Final', sf: 'Semifinales', final: 'Final' },
+    ar: { r32: 'دور الـ 32', r16: 'دور الـ 16', qf: 'ربع النهائي', sf: 'نصف النهائي', final: 'النهائي' }
+};
 
 class WorldCupApp {
     constructor() {
@@ -321,17 +328,25 @@ class WorldCupApp {
             winnerTla = finalMatch.homeScore > finalMatch.awayScore ? finalMatch.homeTla : finalMatch.awayTla;
         }
         
-        const winnerName = winnerTla === 'TBD' ? (this.currentLang === 'en' ? 'Champion' : 'Champion') : this.t(`teams.${winnerTla}`, winnerTla);
+        const championNames = {
+            fr: 'Champion',
+            en: 'Champion',
+            es: 'Campeón',
+            ar: 'البطل'
+        };
+        const defaultChamp = championNames[this.currentLang] || championNames['fr'];
+        const winnerName = winnerTla === 'TBD' ? defaultChamp : this.t(`teams.${winnerTla}`, winnerTla);
         const winnerFlagHtml = winnerTla === 'TBD' 
             ? '<i class="fa-solid fa-question text-gold" style="font-size: 1.5rem; opacity: 0.5;"></i>' 
             : getFlag(winnerTla);
 
-        const isEn = this.currentLang === 'en';
+        const lang = this.currentLang || 'fr';
+        const rounds = ROUND_NAMES[lang] || ROUND_NAMES['fr'];
 
         container.innerHTML = `
             <!-- 1. Seizièmes Gauche -->
             <div class="rtf-column rtf-column-left-r32">
-                <div class="rtf-column-title">${isEn ? 'Round of 32' : '1/16 de Finale'}</div>
+                <div class="rtf-column-title">${rounds.r32}</div>
                 ${this._renderBracketMatch(85000)}
                 ${this._renderBracketMatch(85001)}
                 ${this._renderBracketMatch(85002)}
@@ -344,7 +359,7 @@ class WorldCupApp {
 
             <!-- 2. Huitièmes Gauche -->
             <div class="rtf-column rtf-column-left-r16">
-                <div class="rtf-column-title">${isEn ? 'Round of 16' : '1/8 de Finale'}</div>
+                <div class="rtf-column-title">${rounds.r16}</div>
                 ${this._renderBracketMatch(85016)}
                 ${this._renderBracketMatch(85017)}
                 ${this._renderBracketMatch(85018)}
@@ -353,20 +368,20 @@ class WorldCupApp {
 
             <!-- 3. Quarts Gauche -->
             <div class="rtf-column rtf-column-left-qf">
-                <div class="rtf-column-title">${isEn ? 'Quarter Finals' : 'Quarts'}</div>
+                <div class="rtf-column-title">${rounds.qf}</div>
                 ${this._renderBracketMatch(85024)}
                 ${this._renderBracketMatch(85025)}
             </div>
 
             <!-- 4. Demis Gauche -->
             <div class="rtf-column rtf-column-left-sf">
-                <div class="rtf-column-title">${isEn ? 'Semi Finals' : 'Demi-finale'}</div>
+                <div class="rtf-column-title">${rounds.sf}</div>
                 ${this._renderBracketMatch(85028)}
             </div>
 
             <!-- 5. Centre (Finale et Trophée) -->
             <div class="rtf-center-column">
-                <div class="rtf-column-title" style="top: 15px;">${isEn ? 'Final' : 'Finale'}</div>
+                <div class="rtf-column-title" style="top: 15px;">${rounds.final}</div>
                 
                 <div class="rtf-trophy-container">
                     <div class="rtf-winner-circle">
@@ -383,20 +398,20 @@ class WorldCupApp {
 
             <!-- 6. Demis Droite -->
             <div class="rtf-column rtf-column-right-sf">
-                <div class="rtf-column-title">${isEn ? 'Semi Finals' : 'Demi-finale'}</div>
+                <div class="rtf-column-title">${rounds.sf}</div>
                 ${this._renderBracketMatch(85029)}
             </div>
 
             <!-- 7. Quarts Droite -->
             <div class="rtf-column rtf-column-right-qf">
-                <div class="rtf-column-title">${isEn ? 'Quarter Finals' : 'Quarts'}</div>
+                <div class="rtf-column-title">${rounds.qf}</div>
                 ${this._renderBracketMatch(85026)}
                 ${this._renderBracketMatch(85027)}
             </div>
 
             <!-- 8. Huitièmes Droite -->
             <div class="rtf-column rtf-column-right-r16">
-                <div class="rtf-column-title">${isEn ? 'Round of 16' : '1/8 de Finale'}</div>
+                <div class="rtf-column-title">${rounds.r16}</div>
                 ${this._renderBracketMatch(85020)}
                 ${this._renderBracketMatch(85021)}
                 ${this._renderBracketMatch(85022)}
@@ -405,7 +420,7 @@ class WorldCupApp {
 
             <!-- 9. Seizièmes Droite -->
             <div class="rtf-column rtf-column-right-r32">
-                <div class="rtf-column-title">${isEn ? 'Round of 32' : '1/16 de Finale'}</div>
+                <div class="rtf-column-title">${rounds.r32}</div>
                 ${this._renderBracketMatch(85008)}
                 ${this._renderBracketMatch(85009)}
                 ${this._renderBracketMatch(85010)}
@@ -500,6 +515,20 @@ class WorldCupApp {
         if (dateInput) dateInput.addEventListener('change', filterHandler);
         if (hostSelect) hostSelect.addEventListener('change', filterHandler);
         if (favoritesSelect) favoritesSelect.addEventListener('change', filterHandler);
+
+        // Écouteurs pour les onglets de sélection de round sur mobile
+        const bracketContainer = document.getElementById('rtf-bracket');
+        const tabButtons = document.querySelectorAll('.rtf-tab-btn');
+        if (bracketContainer && tabButtons.length > 0) {
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const round = btn.getAttribute('data-round');
+                    bracketContainer.setAttribute('data-active-round', round);
+                });
+            });
+        }
     }
 
     applyFilters() {
@@ -604,6 +633,20 @@ class WorldCupApp {
                 match.awayTeam = data.awayTeam || match.awayTeam;
                 match.awayFlag = data.awayFlag || match.awayFlag;
             }
+            
+            // Recalculer les classements, buteurs et passeurs en temps réel
+            const groupsList = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
+            const groupsStandings = {};
+            groupsList.forEach(g => {
+                groupsStandings[g] = computeGroupStandings(this.data.matches, g);
+            });
+            const realTimeStats = computeScorersAndAssists(this.data.matches);
+            this.data.standings = {
+                groups: groupsStandings,
+                scorers: realTimeStats.scorers,
+                assists: realTimeStats.assists
+            };
+            renderStandings(this.data.standings);
             
             // Rafraîchir les sections live
             renderLiveMatches(this.data.matches);
@@ -955,6 +998,19 @@ class WorldCupApp {
         if (lblTeamA) lblTeamA.innerText = this.t('analyticsZone.teamA', 'Équipe A :');
         const lblTeamB = document.getElementById('lbl-analytics-team-b');
         if (lblTeamB) lblTeamB.innerText = this.t('analyticsZone.teamB', 'Équipe B :');
+
+        // 14. Bracket mobile tabs
+        const tabBtns = document.querySelectorAll('.rtf-tab-btn');
+        if (tabBtns.length > 0) {
+            const lang = this.currentLang || 'fr';
+            const rounds = ROUND_NAMES[lang] || ROUND_NAMES['fr'];
+            tabBtns.forEach(btn => {
+                const roundKey = btn.getAttribute('data-round');
+                if (rounds[roundKey]) {
+                    btn.innerText = rounds[roundKey];
+                }
+            });
+        }
     }
 
     setupLanguageSwitcher() {

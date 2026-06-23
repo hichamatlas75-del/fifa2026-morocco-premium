@@ -324,12 +324,24 @@ function startRealTimeActionSimulation(app) {
                 }
             }
 
+            let assistPlayerName = null;
+            if (goalDetail === 'normal') {
+                if (Math.random() < 0.7) {
+                    const squad = isHome ? homeSquad : awaySquad;
+                    const teammates = squad.filter(p => p.name !== chosenPlayer);
+                    if (teammates.length > 0) {
+                        assistPlayerName = teammates[Math.floor(Math.random() * teammates.length)].name;
+                    }
+                }
+            }
+
             match.events.push({
                 type: 'goal',
                 detail: goalDetail,
                 minute: currentMin,
                 team: isHome ? 'home' : 'away',
-                player: chosenPlayer
+                player: chosenPlayer,
+                assist: assistPlayerName
             });
 
             // Ajuster les stats
