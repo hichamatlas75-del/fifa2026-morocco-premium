@@ -213,5 +213,9 @@
     "red_card": "Red card",
     "penalty_miss": "Penalty missed",
     "none": "No major events to report."
+  },
+  "rtf": {
+    "toggleList": "Classic View",
+    "toggleTree": "Visual View"
   }
 }

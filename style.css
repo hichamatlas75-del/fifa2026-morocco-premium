@@ -1817,4 +1817,336 @@ body.theme-light .rtf-team-score {
     color: var(--blanc);
 }
 
+/* --- Road to the Final (Tree View) Styles --- */
+.rtf-view-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.rtf-toggle-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 0.5rem 1.2rem;
+    border-radius: 30px;
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rtf-toggle-btn:hover {
+    border-color: rgba(255, 215, 0, 0.3);
+    background: rgba(255, 215, 0, 0.05);
+}
+
+.rtf-toggle-btn.active {
+    background: linear-gradient(135deg, var(--or-premium), #B8860B);
+    color: #000000;
+    border-color: var(--or-premium);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.25);
+    font-weight: 700;
+}
+
+body.theme-light .rtf-toggle-btn {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+body.theme-light .rtf-toggle-btn.active {
+    color: #FFFFFF;
+    background: linear-gradient(135deg, var(--green-maroc), #004d28);
+    border-color: var(--green-maroc);
+    box-shadow: 0 4px 15px rgba(0, 98, 51, 0.25);
+}
+
+/* Tree Scroll Area */
+.rtf-tree-scroll {
+    width: 100%;
+    overflow-x: auto;
+    padding: 2rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--or-premium) rgba(0, 0, 0, 0.2);
+    box-sizing: content-box;
+}
+
+.rtf-tree-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+.rtf-tree-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+}
+
+.rtf-tree-scroll::-webkit-scrollbar-thumb {
+    background: var(--or-premium);
+    border-radius: 4px;
+}
+
+.rtf-tree-wrapper {
+    position: relative;
+    min-width: 950px;
+    height: 700px;
+    margin: 0 auto;
+    background: radial-gradient(circle at center, #111b24 0%, #060a0f 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Titre de l'arbre graphique */
+.rtf-tree-title-container {
+    text-align: center;
+    padding: 10px 0;
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    user-select: none;
+    position: absolute;
+    top: 15px;
+    left: 0;
+    right: 0;
+    z-index: 10;
+}
+
+.rtf-tree-main-title {
+    font-family: var(--font-heading), 'Impact', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #FFFFFF;
+    background: linear-gradient(180deg, #FFE57F 0%, #FFC107 50%, #FF8F00 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+    line-height: 1.1;
+    margin-bottom: 2px;
+}
+
+.rtf-tree-sub-title {
+    font-family: var(--font-heading), sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-style: italic;
+    color: #E0E0E0;
+    letter-spacing: 4px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    line-height: 1;
+}
+
+.rtf-tree-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Lignes de connexion de l'arbre */
+.rtf-tree-line-green {
+    stroke: var(--green-maroc);
+    opacity: 0.45;
+    filter: drop-shadow(0 0 3px rgba(0, 98, 51, 0.6));
+}
+
+.rtf-tree-line-red {
+    stroke: var(--rouge-maroc);
+    opacity: 0.45;
+    filter: drop-shadow(0 0 3px rgba(193, 39, 45, 0.6));
+}
+
+.rtf-tree-line-gold {
+    stroke: var(--or-premium);
+    opacity: 0.55;
+    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.7));
+}
+
+body.theme-light .rtf-tree-line-green {
+    opacity: 0.65;
+}
+
+body.theme-light .rtf-tree-line-red {
+    opacity: 0.65;
+}
+
+body.theme-light .rtf-tree-line-gold {
+    opacity: 0.75;
+}
+
+.rtf-tree-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
+    height: 575px;
+    width: 100%;
+    position: relative;
+    z-index: 2;
+    margin-top: 85px;
+}
+
+.rtf-tree-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+    position: relative;
+}
+
+.rtf-tree-col-header {
+    position: absolute;
+    top: -20px;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--or-premium);
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    width: 100%;
+    text-align: center;
+}
+
+body.theme-light .rtf-tree-col-header {
+    color: var(--green-maroc);
+}
+
+.rtf-tree-match {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    position: relative;
+}
+
+/* Circles representing team flags without names */
+.rtf-tree-team-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    background: #111b24;
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.2), 0 3px 6px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+    position: relative;
+    z-index: 3;
+}
+
+/* Glass highlight effect */
+.rtf-tree-team-circle::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.18) 0%, transparent 100%);
+    pointer-events: none;
+    border-radius: 50% 50% 0 0;
+    z-index: 4;
+}
+
+.rtf-tree-team-circle:hover {
+    transform: scale(1.2);
+    border-color: var(--or-premium);
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.2), 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.rtf-tree-team-circle.empty-circle {
+    border: 1.5px dashed rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 0.75rem;
+    font-weight: bold;
+    font-family: var(--font-heading);
+}
+
+body.theme-light .rtf-tree-team-circle {
+    border-color: rgba(0, 0, 0, 0.25);
+    background: #f0f0f0;
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.6), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+body.theme-light .rtf-tree-team-circle.empty-circle {
+    border-color: rgba(0, 0, 0, 0.15);
+    color: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.rtf-tree-team-circle.winner-highlight {
+    border-color: var(--or-premium);
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.2), 0 0 10px rgba(255, 215, 0, 0.65);
+}
+
+.rtf-tree-team-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Central Trophy Column Specific styles */
+.col-final-center {
+    flex: 1.25;
+    justify-content: center !important;
+    gap: 1.2rem;
+}
+
+.rtf-tree-champion-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.rtf-tree-champion-title {
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--or-premium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+}
+
+body.theme-light .rtf-tree-champion-title {
+    color: var(--blanc);
+}
+
+.rtf-tree-trophy {
+    width: 85px;
+    height: auto;
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.45));
+    animation: rtf-pulseTrophy 4s infinite ease-in-out;
+}
+
+.rtf-tree-final-match {
+    margin-top: 0.5rem;
+}
+
+/* Align final match circles horizontally */
+.rtf-tree-final-match .rtf-tree-match {
+    flex-direction: row !important;
+    gap: 20px;
+}
+
+
 

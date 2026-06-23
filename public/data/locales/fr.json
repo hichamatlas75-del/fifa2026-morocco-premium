@@ -213,5 +213,9 @@
     "red_card": "Carton rouge",
     "penalty_miss": "Penalty manqué",
     "none": "Aucun événement majeur à signaler."
+  },
+  "rtf": {
+    "toggleList": "Vue Classique",
+    "toggleTree": "Vue Visuelle"
   }
 }

@@ -146,6 +146,12 @@ class WorldCupApp {
         renderNews(this.data.news);
         this.computeKnockoutBracket();
         this.renderRoadToTheFinal();
+
+        const savedMode = localStorage.getItem('rtf-view-mode') || 'list';
+        if (savedMode === 'tree') {
+            this.renderRoadToTheFinalTree();
+            setTimeout(() => this.adjustTreeScale(), 150);
+        }
     }
 
     computeKnockoutBracket() {
@@ -433,6 +439,327 @@ class WorldCupApp {
         `;
     }
 
+    renderRoadToTheFinalTree() {
+        const container = document.getElementById('rtf-tree-content');
+        if (!container) return;
+
+        const renderTreeCircle = (matchId, type) => {
+            const match = this.data.matches.find(m => m.id === matchId);
+            if (!match) return `<div class="rtf-tree-team-circle empty-circle">?</div>`;
+
+            const tla = type === 'home' ? match.homeTla : match.awayTla;
+            const teamName = type === 'home' ? match.homeTeam : match.awayTeam;
+            const score = type === 'home' ? match.homeScore : match.awayScore;
+            
+            const isWinner = match.status === 'FINISHED' && (
+                (type === 'home' && match.homeScore > match.awayScore) ||
+                (type === 'away' && match.awayScore > match.homeScore)
+            );
+
+            if (!tla || tla === 'TBD') {
+                return `<div class="rtf-tree-team-circle empty-circle" id="tree-circle-${type}-${matchId}" title="${this.t('modal.scheduled', 'Programmé')}">?</div>`;
+            }
+
+            const flagIcon = getFlag(tla);
+            return `
+                <div class="rtf-tree-team-circle ${isWinner ? 'winner-highlight' : ''}" 
+                     id="tree-circle-${type}-${matchId}" 
+                     data-team-tla="${tla}" 
+                     title="${this.t(`teams.${tla}`, teamName)} (${match.status === 'FINISHED' || match.status === 'LIVE' ? score : '-'})"
+                     style="cursor: pointer;">
+                    ${flagIcon}
+                </div>
+            `;
+        };
+
+        const renderTreeMatch = (matchId) => {
+            return `
+                <div class="rtf-tree-match" id="tree-match-${matchId}">
+                    ${renderTreeCircle(matchId, 'home')}
+                    ${renderTreeCircle(matchId, 'away')}
+                </div>
+            `;
+        };
+
+        // Center Trophy and Champion
+        const finalMatch = this.data.matches.find(m => m.id === 85031);
+        let winnerTla = 'TBD';
+        if (finalMatch && finalMatch.status === 'FINISHED') {
+            winnerTla = finalMatch.homeScore > finalMatch.awayScore ? finalMatch.homeTla : finalMatch.awayTla;
+        }
+        
+        const championNames = {
+            fr: 'Champion',
+            en: 'Champion',
+            es: 'Campeón',
+            ar: 'البطل'
+        };
+        const defaultChamp = championNames[this.currentLang] || championNames['fr'];
+        const winnerName = winnerTla === 'TBD' ? defaultChamp : this.t(`teams.${winnerTla}`, winnerTla);
+        const winnerFlag = winnerTla === 'TBD' 
+            ? '<div class="rtf-tree-team-circle empty-circle font-sport" style="width:50px; height:50px; font-size:1.5rem;" id="tree-champion-circle">?</div>' 
+            : `<div class="rtf-tree-team-circle winner-highlight" style="width:50px; height:50px;" id="tree-champion-circle">${getFlag(winnerTla)}</div>`;
+
+        const lang = this.currentLang || 'fr';
+        const rounds = ROUND_NAMES[lang] || ROUND_NAMES['fr'];
+
+        container.innerHTML = `
+            <!-- Left Round of 32 -->
+            <div class="rtf-tree-col col-r32">
+                <div class="rtf-tree-col-header">${rounds.r32}</div>
+                ${renderTreeMatch(85000)}
+                ${renderTreeMatch(85001)}
+                ${renderTreeMatch(85002)}
+                ${renderTreeMatch(85003)}
+                ${renderTreeMatch(85004)}
+                ${renderTreeMatch(85005)}
+                ${renderTreeMatch(85006)}
+                ${renderTreeMatch(85007)}
+            </div>
+
+            <!-- Left Round of 16 -->
+            <div class="rtf-tree-col col-r16">
+                <div class="rtf-tree-col-header">${rounds.r16}</div>
+                ${renderTreeMatch(85016)}
+                ${renderTreeMatch(85017)}
+                ${renderTreeMatch(85018)}
+                ${renderTreeMatch(85019)}
+            </div>
+
+            <!-- Left Quarters -->
+            <div class="rtf-tree-col col-qf">
+                <div class="rtf-tree-col-header">${rounds.qf}</div>
+                ${renderTreeMatch(85024)}
+                ${renderTreeMatch(85025)}
+            </div>
+
+            <!-- Left Semis -->
+            <div class="rtf-tree-col col-sf">
+                <div class="rtf-tree-col-header">${rounds.sf}</div>
+                ${renderTreeMatch(85028)}
+            </div>
+
+            <!-- Center (Trophy & Final) -->
+            <div class="rtf-tree-col col-final-center">
+                <div class="rtf-tree-col-header">${rounds.final}</div>
+                <div class="rtf-tree-champion-wrapper">
+                    ${winnerFlag}
+                    <div class="rtf-tree-champion-title">${winnerName}</div>
+                </div>
+                <img src="https://cdn-icons-png.flaticon.com/512/5323/5323977.png" class="rtf-tree-trophy" alt="FIFA Trophy">
+                
+                <div class="rtf-tree-final-match">
+                    ${renderTreeMatch(85031)}
+                </div>
+            </div>
+
+            <!-- Right Semis -->
+            <div class="rtf-tree-col col-sf">
+                <div class="rtf-tree-col-header">${rounds.sf}</div>
+                ${renderTreeMatch(85029)}
+            </div>
+
+            <!-- Right Quarters -->
+            <div class="rtf-tree-col col-qf">
+                <div class="rtf-tree-col-header">${rounds.qf}</div>
+                ${renderTreeMatch(85026)}
+                ${renderTreeMatch(85027)}
+            </div>
+
+            <!-- Right Round of 16 -->
+            <div class="rtf-tree-col col-r16">
+                <div class="rtf-tree-col-header">${rounds.r16}</div>
+                ${renderTreeMatch(85020)}
+                ${renderTreeMatch(85021)}
+                ${renderTreeMatch(85022)}
+                ${renderTreeMatch(85023)}
+            </div>
+
+            <!-- Right Round of 32 -->
+            <div class="rtf-tree-col col-r32">
+                <div class="rtf-tree-col-header">${rounds.r32}</div>
+                ${renderTreeMatch(85008)}
+                ${renderTreeMatch(85009)}
+                ${renderTreeMatch(85010)}
+                ${renderTreeMatch(85011)}
+                ${renderTreeMatch(85012)}
+                ${renderTreeMatch(85013)}
+                ${renderTreeMatch(85014)}
+                ${renderTreeMatch(85015)}
+            </div>
+        `;
+
+        // Draw connecting lines after rendering has finished in the DOM
+        setTimeout(() => this.drawTreeBracketLines(), 100);
+    }
+
+    drawTreeBracketLines() {
+        const svg = document.getElementById('rtf-tree-svg');
+        const scrollContainer = document.getElementById('rtf-tree-scroll');
+        if (!svg || !scrollContainer) return;
+
+        svg.innerHTML = ''; // Clear previous lines
+
+        const wrapper = svg.parentElement;
+        if (!wrapper) return;
+        svg.setAttribute('width', wrapper.scrollWidth);
+        svg.setAttribute('height', wrapper.scrollHeight);
+
+        const svgRect = svg.getBoundingClientRect();
+        const scale = wrapper.getBoundingClientRect().width / wrapper.offsetWidth || 1;
+
+        const getConnectorCoords = (elementId, side) => {
+            const el = document.getElementById(elementId);
+            if (!el) return null;
+            const rect = el.getBoundingClientRect();
+            
+            let x, y;
+            if (side === 'left') {
+                x = rect.left - svgRect.left;
+                y = rect.top + rect.height / 2 - svgRect.top;
+            } else if (side === 'right') {
+                x = rect.right - svgRect.left;
+                y = rect.top + rect.height / 2 - svgRect.top;
+            } else if (side === 'top') {
+                x = rect.left + rect.width / 2 - svgRect.left;
+                y = rect.top - svgRect.top;
+            } else if (side === 'bottom') {
+                x = rect.left + rect.width / 2 - svgRect.left;
+                y = rect.bottom - svgRect.top;
+            } else {
+                // center
+                x = rect.left + rect.width / 2 - svgRect.left;
+                y = rect.top + rect.height / 2 - svgRect.top;
+            }
+            return { x: x / scale, y: y / scale };
+        };
+
+        const drawFork = (src1Id, src2Id, destId, side) => {
+            const p1 = getConnectorCoords(src1Id, side === 'left' ? 'right' : 'left');
+            const p2 = getConnectorCoords(src2Id, side === 'left' ? 'right' : 'left');
+            const pt = getConnectorCoords(destId, side === 'left' ? 'left' : 'right');
+
+            if (!p1 || !p2 || !pt) return;
+
+            // Compute midpoint X
+            const deltaX = Math.abs(pt.x - p1.x);
+            const offset = side === 'left' ? (deltaX / 2) : -(deltaX / 2);
+            const xMid = p1.x + offset;
+
+            const pathData = `
+                M ${p1.x} ${p1.y}
+                H ${xMid}
+                V ${p2.y}
+                M ${p2.x} ${p2.y}
+                H ${xMid}
+                M ${xMid} ${(p1.y + p2.y) / 2}
+                H ${pt.x}
+            `;
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', pathData);
+            path.setAttribute('stroke', side === 'left' ? 'var(--green-maroc)' : 'var(--rouge-maroc)');
+            path.setAttribute('stroke-width', (2 / scale).toString());
+            path.setAttribute('fill', 'none');
+            path.setAttribute('class', side === 'left' ? 'rtf-tree-line-green' : 'rtf-tree-line-red');
+            svg.appendChild(path);
+        };
+
+        // Left Wing Connectors
+        drawFork('tree-circle-home-85000', 'tree-circle-away-85000', 'tree-circle-home-85016', 'left');
+        drawFork('tree-circle-home-85001', 'tree-circle-away-85001', 'tree-circle-away-85016', 'left');
+        drawFork('tree-circle-home-85002', 'tree-circle-away-85002', 'tree-circle-home-85017', 'left');
+        drawFork('tree-circle-home-85003', 'tree-circle-away-85003', 'tree-circle-away-85017', 'left');
+        drawFork('tree-circle-home-85004', 'tree-circle-away-85004', 'tree-circle-home-85018', 'left');
+        drawFork('tree-circle-home-85005', 'tree-circle-away-85005', 'tree-circle-away-85018', 'left');
+        drawFork('tree-circle-home-85006', 'tree-circle-away-85006', 'tree-circle-home-85019', 'left');
+        drawFork('tree-circle-home-85007', 'tree-circle-away-85007', 'tree-circle-away-85019', 'left');
+
+        drawFork('tree-circle-home-85016', 'tree-circle-away-85016', 'tree-circle-home-85024', 'left');
+        drawFork('tree-circle-home-85017', 'tree-circle-away-85017', 'tree-circle-away-85024', 'left');
+        drawFork('tree-circle-home-85018', 'tree-circle-away-85018', 'tree-circle-home-85025', 'left');
+        drawFork('tree-circle-home-85019', 'tree-circle-away-85019', 'tree-circle-away-85025', 'left');
+
+        drawFork('tree-circle-home-85024', 'tree-circle-away-85024', 'tree-circle-home-85028', 'left');
+        drawFork('tree-circle-home-85025', 'tree-circle-away-85025', 'tree-circle-away-85028', 'left');
+
+        // Right Wing Connectors
+        drawFork('tree-circle-home-85008', 'tree-circle-away-85008', 'tree-circle-home-85020', 'right');
+        drawFork('tree-circle-home-85009', 'tree-circle-away-85009', 'tree-circle-away-85020', 'right');
+        drawFork('tree-circle-home-85010', 'tree-circle-away-85010', 'tree-circle-home-85021', 'right');
+        drawFork('tree-circle-home-85011', 'tree-circle-away-85011', 'tree-circle-away-85021', 'right');
+        drawFork('tree-circle-home-85012', 'tree-circle-away-85012', 'tree-circle-home-85022', 'right');
+        drawFork('tree-circle-home-85013', 'tree-circle-away-85013', 'tree-circle-away-85022', 'right');
+        drawFork('tree-circle-home-85014', 'tree-circle-away-85014', 'tree-circle-home-85023', 'right');
+        drawFork('tree-circle-home-85015', 'tree-circle-away-85015', 'tree-circle-away-85023', 'right');
+
+        drawFork('tree-circle-home-85020', 'tree-circle-away-85020', 'tree-circle-home-85026', 'right');
+        drawFork('tree-circle-home-85021', 'tree-circle-away-85021', 'tree-circle-away-85026', 'right');
+        drawFork('tree-circle-home-85022', 'tree-circle-away-85022', 'tree-circle-home-85027', 'right');
+        drawFork('tree-circle-home-85023', 'tree-circle-away-85023', 'tree-circle-away-85027', 'right');
+
+        drawFork('tree-circle-home-85026', 'tree-circle-away-85026', 'tree-circle-home-85029', 'right');
+        drawFork('tree-circle-home-85027', 'tree-circle-away-85027', 'tree-circle-away-85029', 'right');
+
+        // Connect SF to Final
+        drawFork('tree-circle-home-85028', 'tree-circle-away-85028', 'tree-circle-home-85031', 'left');
+        drawFork('tree-circle-home-85029', 'tree-circle-away-85029', 'tree-circle-away-85031', 'right');
+
+        // Connect Finalists horizontally and vertically to the Champion Circle above the trophy
+        const c1 = getConnectorCoords('tree-circle-home-85031', 'top');
+        const c2 = getConnectorCoords('tree-circle-away-85031', 'top');
+        const cC = getConnectorCoords('tree-champion-circle', 'bottom');
+
+        if (c1 && c2 && cC) {
+            const midX = (c1.x + c2.x) / 2;
+            const pathData = `
+                M ${c1.x} ${c1.y}
+                H ${c2.x}
+                M ${midX} ${c1.y}
+                V ${cC.y}
+            `;
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', pathData);
+            path.setAttribute('stroke', 'var(--or-premium)');
+            path.setAttribute('stroke-width', (2.5 / scale).toString());
+            path.setAttribute('fill', 'none');
+            path.setAttribute('class', 'rtf-tree-line-gold');
+            svg.appendChild(path);
+        }
+    }
+
+    adjustTreeScale() {
+        const scrollContainer = document.getElementById('rtf-tree-scroll');
+        const wrapper = document.querySelector('.rtf-tree-wrapper');
+        if (!scrollContainer || !wrapper) return;
+
+        const isTreeVisible = scrollContainer.style.display !== 'none';
+        if (!isTreeVisible) return;
+
+        const containerWidth = scrollContainer.clientWidth;
+        const baseWidth = 950;
+        const baseHeight = 700;
+
+        if (containerWidth < baseWidth && containerWidth > 0) {
+            const scale = containerWidth / baseWidth;
+            wrapper.style.transform = `scale(${scale})`;
+            wrapper.style.transformOrigin = 'top left';
+            wrapper.style.width = `${baseWidth}px`;
+            wrapper.style.height = `${baseHeight}px`;
+            scrollContainer.style.height = `${baseHeight * scale}px`;
+            scrollContainer.style.overflowX = 'hidden';
+        } else {
+            wrapper.style.transform = 'none';
+            wrapper.style.width = '100%';
+            wrapper.style.height = `${baseHeight}px`;
+            scrollContainer.style.height = 'auto';
+            scrollContainer.style.overflowX = 'auto';
+        }
+
+        // Redraw lines since scale shifts offset coordinates
+        this.drawTreeBracketLines();
+    }
+
     populateFilterDropdowns() {
         const groupSelect = document.getElementById('filter-group');
         const stadiumSelect = document.getElementById('filter-stadium');
@@ -529,6 +856,54 @@ class WorldCupApp {
                 });
             });
         }
+
+        // Toggles pour basculer entre la vue classique (liste/onglets) et la vue visuelle (arbre/bracket)
+        const toggleListBtn = document.getElementById('rtf-toggle-list');
+        const toggleTreeBtn = document.getElementById('rtf-toggle-tree');
+        const classicContainer = document.querySelector('.rtf-bracket-scroll');
+        const mobileTabsContainer = document.getElementById('rtf-mobile-tabs');
+        const treeScrollContainer = document.getElementById('rtf-tree-scroll');
+
+        const switchViewMode = (mode) => {
+            if (mode === 'tree') {
+                if (toggleTreeBtn) toggleTreeBtn.classList.add('active');
+                if (toggleListBtn) toggleListBtn.classList.remove('active');
+                
+                if (classicContainer) classicContainer.style.display = 'none';
+                if (mobileTabsContainer) mobileTabsContainer.style.display = 'none';
+                if (treeScrollContainer) {
+                    treeScrollContainer.style.display = 'block';
+                    this.renderRoadToTheFinalTree();
+                    this.adjustTreeScale();
+                }
+                localStorage.setItem('rtf-view-mode', 'tree');
+            } else {
+                if (toggleListBtn) toggleListBtn.classList.add('active');
+                if (toggleTreeBtn) toggleTreeBtn.classList.remove('active');
+                
+                if (classicContainer) classicContainer.style.display = 'block';
+                if (mobileTabsContainer) mobileTabsContainer.style.display = '';
+                if (treeScrollContainer) treeScrollContainer.style.display = 'none';
+                
+                localStorage.setItem('rtf-view-mode', 'list');
+            }
+        };
+
+        if (toggleListBtn && toggleTreeBtn) {
+            toggleListBtn.addEventListener('click', () => switchViewMode('list'));
+            toggleTreeBtn.addEventListener('click', () => switchViewMode('tree'));
+        }
+
+        // Charger le mode sauvegardé ou par défaut 'list'
+        const savedMode = localStorage.getItem('rtf-view-mode') || 'list';
+        switchViewMode(savedMode);
+
+        // Resize handler pour mettre à jour le scale de l'arbre
+        window.addEventListener('resize', () => {
+            if (localStorage.getItem('rtf-view-mode') === 'tree') {
+                this.adjustTreeScale();
+            }
+        });
     }
 
     applyFilters() {
@@ -653,6 +1028,12 @@ class WorldCupApp {
             refreshPremiumFeatures(this);
             this.computeKnockoutBracket();
             this.renderRoadToTheFinal();
+
+            const savedMode = localStorage.getItem('rtf-view-mode') || 'list';
+            if (savedMode === 'tree') {
+                this.renderRoadToTheFinalTree();
+                setTimeout(() => this.adjustTreeScale(), 150);
+            }
 
             // Mettre à jour l'élément spécifique dans le calendrier s'il est affiché
             const scoreHomeEl = document.getElementById(`score-home-${data.matchId}`);
@@ -931,6 +1312,10 @@ class WorldCupApp {
         if (secMorocco) secMorocco.innerText = this.t('sections.morocco');
         const secRoadToFinal = document.getElementById('sec-title-roadtofinal');
         if (secRoadToFinal) secRoadToFinal.innerText = this.t('sections.roadtofinal', '🏆 Tableau de Phase Finale');
+        const lblToggleList = document.getElementById('lbl-toggle-list');
+        if (lblToggleList) lblToggleList.innerText = this.t('rtf.toggleList', 'Vue Classique');
+        const lblToggleTree = document.getElementById('lbl-toggle-tree');
+        if (lblToggleTree) lblToggleTree.innerText = this.t('rtf.toggleTree', 'Vue Visuelle');
         const secStandings = document.getElementById('sec-title-standings');
         if (secStandings) secStandings.innerText = this.t('sections.standings');
         const secNews = document.getElementById('sec-title-news');

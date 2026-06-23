@@ -75,5 +75,9 @@
     "red_card": "Tarjeta roja",
     "penalty_miss": "Penalti fallado",
     "none": "Ningún evento importante que reportar."
+  },
+  "rtf": {
+    "toggleList": "Vista Clásica",
+    "toggleTree": "Vista Visual"
   }
 }

@@ -173,6 +173,11 @@
             <div class="section-header" data-aos="fade-up">
                 <h2 class="section-title" id="sec-title-roadtofinal" style="color: var(--or-premium);">🏆 Tableau de Phase Finale</h2>
             </div>
+            <!-- Sélecteur de mode d'affichage du tableau -->
+            <div class="rtf-view-toggle" data-aos="fade-up" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
+                <button class="rtf-toggle-btn active" id="rtf-toggle-list"><i class="fa-solid fa-list"></i> <span id="lbl-toggle-list">Vue Classique</span></button>
+                <button class="rtf-toggle-btn" id="rtf-toggle-tree"><i class="fa-solid fa-sitemap"></i> <span id="lbl-toggle-tree">Vue Visuelle</span></button>
+            </div>
             <!-- Commande de navigation mobile pour le tableau -->
             <div class="rtf-mobile-tabs" id="rtf-mobile-tabs" data-aos="fade-up">
                 <button class="rtf-tab-btn active" data-round="r32">1/16</button>
@@ -184,6 +189,21 @@
             <div class="rtf-bracket-scroll" data-aos="fade-up">
                 <div class="rtf-bracket-container" id="rtf-bracket" data-active-round="r32">
                     <!-- Rendu dynamique en JS -->
+                </div>
+            </div>
+            <!-- Conteneur d'affichage de l'arbre graphique -->
+            <div class="rtf-tree-scroll" id="rtf-tree-scroll" style="display: none;" data-aos="fade-up">
+                <div class="rtf-tree-wrapper">
+                    <!-- Titre du tableau en version visuelle (style poster) -->
+                    <div class="rtf-tree-title-container">
+                        <div class="rtf-tree-main-title">WORLD CHAMPIONSHIP 2026</div>
+                        <div class="rtf-tree-sub-title">ROAD TO THE FINAL</div>
+                    </div>
+                    <!-- SVG container for connecting lines -->
+                    <svg class="rtf-tree-svg" id="rtf-tree-svg"></svg>
+                    <div class="rtf-tree-container" id="rtf-tree-content">
+                        <!-- Rendu dynamique en JS -->
+                    </div>
                 </div>
             </div>
         </section>
