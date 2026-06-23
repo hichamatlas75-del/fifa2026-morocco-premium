@@ -179,6 +179,80 @@ class WorldCupApp {
             return (match.id % 2 === 0) ? match.awayTla : match.homeTla;
         };
 
+        // --- CALCUL DES QUALIFIÉS DU PREMIER TOUR (1/16 DE FINALE) ---
+        const groups = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
+        
+        const winners = {};
+        const runnersUp = {};
+        const thirdPlaces = [];
+        
+        groups.forEach(g => {
+            const groupCode = g.charAt(g.length - 1); // A, B, C...
+            const standings = computeGroupStandings(this.data.matches, g);
+            
+            const first = standings[0] ? standings[0].tla : 'TBD';
+            const second = standings[1] ? standings[1].tla : 'TBD';
+            const third = standings[2] ? standings[2].tla : 'TBD';
+            
+            winners[groupCode] = first;
+            runnersUp[groupCode] = second;
+            
+            if (third && third !== 'TBD') {
+                thirdPlaces.push({
+                    tla: third,
+                    pts: standings[2].pts,
+                    gd: (standings[2].gf - standings[2].ga),
+                    gf: standings[2].gf,
+                    group: groupCode
+                });
+            }
+        });
+        
+        // Classer les meilleurs 3èmes
+        thirdPlaces.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.tla.localeCompare(b.tla));
+        
+        const bestThirds = [];
+        for (let i = 0; i < 8; i++) {
+            if (thirdPlaces[i]) {
+                bestThirds.push(thirdPlaces[i].tla);
+            } else {
+                bestThirds.push('TBD');
+            }
+        }
+
+        const r32Pairings = [
+            { id: 85000, home: winners['A'], away: bestThirds[0] },
+            { id: 85001, home: winners['B'], away: runnersUp['C'] },
+            { id: 85002, home: winners['C'], away: bestThirds[1] },
+            { id: 85003, home: winners['D'], away: runnersUp['E'] },
+            { id: 85004, home: winners['E'], away: bestThirds[2] },
+            { id: 85005, home: winners['F'], away: runnersUp['G'] },
+            { id: 85006, home: winners['G'], away: bestThirds[3] },
+            { id: 85007, home: winners['H'], away: runnersUp['I'] },
+            { id: 85008, home: winners['I'], away: bestThirds[4] },
+            { id: 85009, home: winners['J'], away: runnersUp['K'] },
+            { id: 85010, home: winners['K'], away: bestThirds[5] },
+            { id: 85011, home: winners['L'], away: runnersUp['A'] },
+            { id: 85012, home: runnersUp['B'], away: bestThirds[6] },
+            { id: 85013, home: runnersUp['D'], away: runnersUp['F'] },
+            { id: 85014, home: runnersUp['H'], away: runnersUp['J'] },
+            { id: 85015, home: runnersUp['L'], away: bestThirds[7] }
+        ];
+
+        r32Pairings.forEach(pairing => {
+            const m = this.data.matches.find(match => match.id === pairing.id);
+            if (m) {
+                if (m.status === 'SCHEDULED') {
+                    m.homeTla = pairing.home || 'TBD';
+                    m.awayTla = pairing.away || 'TBD';
+                    m.homeTeam = getTeamInfo(m.homeTla).name;
+                    m.awayTeam = getTeamInfo(m.awayTla).name;
+                    m.homeFlag = getFlag(m.homeTla);
+                    m.awayFlag = getFlag(m.awayTla);
+                }
+            }
+        });
+
         // Huitièmes (85016 à 85023)
         const r16Sources = [
             [85000, 85001], // 85016
