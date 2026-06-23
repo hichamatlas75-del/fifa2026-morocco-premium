@@ -137,6 +137,379 @@ class WorldCupApp {
         renderMoroccoSquad(this.data.moroccoSquad);
         renderStandings(this.data.standings);
         renderNews(this.data.news);
+        this.computeKnockoutBracket();
+        this.renderRoadToTheFinal();
+    }
+
+    computeKnockoutBracket() {
+        if (!this.data || !this.data.matches || !this.data.standings || !this.data.standings.groups) return;
+
+        const groups = this.data.standings.groups;
+
+        // Récupérer les vainqueurs, seconds et troisièmes
+        const qualifiers1 = []; 
+        const qualifiers2 = []; 
+        const thirdPlaces = [];  
+
+        const groupsList = ["Groupe A", "Groupe B", "Groupe C", "Groupe D", "Groupe E", "Groupe F", "Groupe G", "Groupe H", "Groupe I", "Groupe J", "Groupe K", "Groupe L"];
+
+        groupsList.forEach(g => {
+            const teams = groups[g] || [];
+            if (teams.length >= 1) qualifiers1.push({ group: g, team: teams[0] });
+            if (teams.length >= 2) qualifiers2.push({ group: g, team: teams[1] });
+            if (teams.length >= 3) thirdPlaces.push({ group: g, team: teams[2] });
+        });
+
+        // Classer les troisièmes pour les 8 meilleurs
+        thirdPlaces.sort((a, b) => {
+            if (b.team.pts !== a.team.pts) return b.team.pts - a.team.pts;
+            const gdA = a.team.gd || 0;
+            const gdB = b.team.gd || 0;
+            if (gdB !== gdA) return gdB - gdA;
+            const gfA = a.team.gf || 0;
+            const gfB = b.team.gf || 0;
+            return gfB - gfA;
+        });
+
+        const best3rd = thirdPlaces.slice(0, 8);
+
+        const getTeamInfo = (tla) => {
+            if (!tla || tla === 'TBD') return { tla: 'TBD', name: 'À déterminer' };
+            const name = this.t(`teams.${tla}`, tla);
+            return { tla, name };
+        };
+
+        const t1A = qualifiers1.find(q => q.group === 'Groupe A')?.team.tla || 'TBD';
+        const t2A = qualifiers2.find(q => q.group === 'Groupe A')?.team.tla || 'TBD';
+        const t1B = qualifiers1.find(q => q.group === 'Groupe B')?.team.tla || 'TBD';
+        const t2B = qualifiers2.find(q => q.group === 'Groupe B')?.team.tla || 'TBD';
+        const t1C = qualifiers1.find(q => q.group === 'Groupe C')?.team.tla || 'TBD';
+        const t2C = qualifiers2.find(q => q.group === 'Groupe C')?.team.tla || 'TBD';
+        const t1D = qualifiers1.find(q => q.group === 'Groupe D')?.team.tla || 'TBD';
+        const t2D = qualifiers2.find(q => q.group === 'Groupe D')?.team.tla || 'TBD';
+        const t1E = qualifiers1.find(q => q.group === 'Groupe E')?.team.tla || 'TBD';
+        const t2E = qualifiers2.find(q => q.group === 'Groupe E')?.team.tla || 'TBD';
+        const t1F = qualifiers1.find(q => q.group === 'Groupe F')?.team.tla || 'TBD';
+        const t2F = qualifiers2.find(q => q.group === 'Groupe F')?.team.tla || 'TBD';
+        const t1G = qualifiers1.find(q => q.group === 'Groupe G')?.team.tla || 'TBD';
+        const t2G = qualifiers2.find(q => q.group === 'Groupe G')?.team.tla || 'TBD';
+        const t1H = qualifiers1.find(q => q.group === 'Groupe H')?.team.tla || 'TBD';
+        const t2H = qualifiers2.find(q => q.group === 'Groupe H')?.team.tla || 'TBD';
+        const t1I = qualifiers1.find(q => q.group === 'Groupe I')?.team.tla || 'TBD';
+        const t2I = qualifiers2.find(q => q.group === 'Groupe I')?.team.tla || 'TBD';
+        const t1J = qualifiers1.find(q => q.group === 'Groupe J')?.team.tla || 'TBD';
+        const t2J = qualifiers2.find(q => q.group === 'Groupe J')?.team.tla || 'TBD';
+        const t1K = qualifiers1.find(q => q.group === 'Groupe K')?.team.tla || 'TBD';
+        const t2K = qualifiers2.find(q => q.group === 'Groupe K')?.team.tla || 'TBD';
+        const t1L = qualifiers1.find(q => q.group === 'Groupe L')?.team.tla || 'TBD';
+        const t2L = qualifiers2.find(q => q.group === 'Groupe L')?.team.tla || 'TBD';
+
+        const t3rd1 = best3rd[0]?.team.tla || 'TBD';
+        const t3rd2 = best3rd[1]?.team.tla || 'TBD';
+        const t3rd3 = best3rd[2]?.team.tla || 'TBD';
+        const t3rd4 = best3rd[3]?.team.tla || 'TBD';
+        const t3rd5 = best3rd[4]?.team.tla || 'TBD';
+        const t3rd6 = best3rd[5]?.team.tla || 'TBD';
+        const t3rd7 = best3rd[6]?.team.tla || 'TBD';
+        const t3rd8 = best3rd[7]?.team.tla || 'TBD';
+
+        const r32Pairings = [
+            [t1A, t2B], // 85000
+            [t1C, t3rd1], // 85001
+            [t1E, t2F], // 85002
+            [t1G, t3rd2], // 85003
+            [t1I, t2J], // 85004
+            [t1K, t3rd3], // 85005
+            [t1B, t2A], // 85006
+            [t1D, t3rd4], // 85007
+            [t1F, t2E], // 85008
+            [t1H, t3rd5], // 85009
+            [t1J, t2I], // 85010
+            [t1L, t3rd6], // 85011
+            [t3rd7, t2C], // 85012
+            [t3rd8, t2D], // 85013
+            [t2G, t2H], // 85014
+            [t2K, t2L]  // 85015
+        ];
+
+        r32Pairings.forEach((pair, idx) => {
+            const m = this.data.matches.find(match => match.id === 85000 + idx);
+            if (m) {
+                m.homeTla = pair[0];
+                m.awayTla = pair[1];
+                m.homeTeam = getTeamInfo(pair[0]).name;
+                m.awayTeam = getTeamInfo(pair[1]).name;
+                m.homeFlag = getFlag(pair[0]);
+                m.awayFlag = getFlag(pair[1]);
+            }
+        });
+
+        const getWinnerTla = (match) => {
+            if (!match || match.homeTla === 'TBD' || match.awayTla === 'TBD') return 'TBD';
+            if (match.status !== 'FINISHED') return 'TBD';
+            if (match.homeScore > match.awayScore) return match.homeTla;
+            if (match.awayScore > match.homeScore) return match.awayTla;
+            return (match.id % 2 === 0) ? match.homeTla : match.awayTla;
+        };
+
+        const getLoserTla = (match) => {
+            if (!match || match.homeTla === 'TBD' || match.awayTla === 'TBD') return 'TBD';
+            if (match.status !== 'FINISHED') return 'TBD';
+            if (match.homeScore > match.awayScore) return match.awayTla;
+            if (match.awayScore > match.homeScore) return match.homeTla;
+            return (match.id % 2 === 0) ? match.awayTla : match.homeTla;
+        };
+
+        // Huitièmes (85016 à 85023)
+        const r16Sources = [
+            [85000, 85001], // 85016
+            [85002, 85003], // 85017
+            [85004, 85005], // 85018
+            [85006, 85007], // 85019
+            [85008, 85009], // 85020
+            [85010, 85011], // 85021
+            [85012, 85013], // 85022
+            [85014, 85015]  // 85023
+        ];
+
+        r16Sources.forEach((src, idx) => {
+            const m = this.data.matches.find(match => match.id === 85016 + idx);
+            const m1 = this.data.matches.find(match => match.id === src[0]);
+            const m2 = this.data.matches.find(match => match.id === src[1]);
+            if (m && m1 && m2) {
+                const w1 = getWinnerTla(m1);
+                const w2 = getWinnerTla(m2);
+                m.homeTla = w1;
+                m.awayTla = w2;
+                m.homeTeam = getTeamInfo(w1).name;
+                m.awayTeam = getTeamInfo(w2).name;
+                m.homeFlag = getFlag(w1);
+                m.awayFlag = getFlag(w2);
+            }
+        });
+
+        // Quarts (85024 à 85027)
+        const qfSources = [
+            [85016, 85017], // 85024
+            [85018, 85019], // 85025
+            [85020, 85021], // 85026
+            [85022, 85023]  // 85027
+        ];
+
+        qfSources.forEach((src, idx) => {
+            const m = this.data.matches.find(match => match.id === 85024 + idx);
+            const m1 = this.data.matches.find(match => match.id === src[0]);
+            const m2 = this.data.matches.find(match => match.id === src[1]);
+            if (m && m1 && m2) {
+                const w1 = getWinnerTla(m1);
+                const w2 = getWinnerTla(m2);
+                m.homeTla = w1;
+                m.awayTla = w2;
+                m.homeTeam = getTeamInfo(w1).name;
+                m.awayTeam = getTeamInfo(w2).name;
+                m.homeFlag = getFlag(w1);
+                m.awayFlag = getFlag(w2);
+            }
+        });
+
+        // Demis (85028 à 85029)
+        const sfSources = [
+            [85024, 85025], // 85028
+            [85026, 85027]  // 85029
+        ];
+
+        sfSources.forEach((src, idx) => {
+            const m = this.data.matches.find(match => match.id === 85028 + idx);
+            const m1 = this.data.matches.find(match => match.id === src[0]);
+            const m2 = this.data.matches.find(match => match.id === src[1]);
+            if (m && m1 && m2) {
+                const w1 = getWinnerTla(m1);
+                const w2 = getWinnerTla(m2);
+                m.homeTla = w1;
+                m.awayTla = w2;
+                m.homeTeam = getTeamInfo(w1).name;
+                m.awayTeam = getTeamInfo(w2).name;
+                m.homeFlag = getFlag(w1);
+                m.awayFlag = getFlag(w2);
+            }
+        });
+
+        // Finale (85031) et Petite Finale (85030)
+        const fMatch = this.data.matches.find(match => match.id === 85031);
+        const sf1 = this.data.matches.find(match => match.id === 85028);
+        const sf2 = this.data.matches.find(match => match.id === 85029);
+
+        if (fMatch && sf1 && sf2) {
+            const w1 = getWinnerTla(sf1);
+            const w2 = getWinnerTla(sf2);
+            fMatch.homeTla = w1;
+            fMatch.awayTla = w2;
+            fMatch.homeTeam = getTeamInfo(w1).name;
+            fMatch.awayTeam = getTeamInfo(w2).name;
+            fMatch.homeFlag = getFlag(w1);
+            fMatch.awayFlag = getFlag(w2);
+        }
+
+        const t3Match = this.data.matches.find(match => match.id === 85030);
+        if (t3Match && sf1 && sf2) {
+            const l1 = getLoserTla(sf1);
+            const l2 = getLoserTla(sf2);
+            t3Match.homeTla = l1;
+            t3Match.awayTla = l2;
+            t3Match.homeTeam = getTeamInfo(l1).name;
+            t3Match.awayTeam = getTeamInfo(l2).name;
+            t3Match.homeFlag = getFlag(l1);
+            t3Match.awayFlag = getFlag(l2);
+        }
+    }
+
+    _renderBracketMatch(matchId) {
+        const match = this.data.matches.find(m => m.id === matchId);
+        if (!match) return '';
+
+        const homeTla = match.homeTla || 'TBD';
+        const awayTla = match.awayTla || 'TBD';
+        const homeFlag = homeTla === 'TBD' ? '<div class="rtf-team-circle empty-circle">?</div>' : `<div class="rtf-team-circle">${getFlag(homeTla)}</div>`;
+        const awayFlag = awayTla === 'TBD' ? '<div class="rtf-team-circle empty-circle">?</div>' : `<div class="rtf-team-circle">${getFlag(awayTla)}</div>`;
+
+        const homeName = homeTla === 'TBD' ? 'À déterminer' : this.t(`teams.${homeTla}`, match.homeTeam);
+        const awayName = awayTla === 'TBD' ? 'À déterminer' : this.t(`teams.${awayTla}`, match.awayTeam);
+
+        const homeScore = (match.status === 'LIVE' || match.status === 'FINISHED') ? match.homeScore : '-';
+        const awayScore = (match.status === 'LIVE' || match.status === 'FINISHED') ? match.awayScore : '-';
+
+        const isHomeWinner = match.status === 'FINISHED' && match.homeScore > match.awayScore;
+        const isAwayWinner = match.status === 'FINISHED' && match.awayScore > match.homeScore;
+
+        return `
+            <div class="rtf-match-pair match-card" id="match-${matchId}" style="cursor: pointer;">
+                <div class="rtf-team-row ${isHomeWinner ? 'winner-row' : ''}">
+                    <div class="rtf-team-info">
+                        ${homeFlag}
+                        <span class="rtf-team-tla" title="${homeName}">${homeTla}</span>
+                    </div>
+                    <span class="rtf-team-score">${homeScore}</span>
+                </div>
+                <div class="rtf-team-row ${isAwayWinner ? 'winner-row' : ''}">
+                    <div class="rtf-team-info">
+                        ${awayFlag}
+                        <span class="rtf-team-tla" title="${awayName}">${awayTla}</span>
+                    </div>
+                    <span class="rtf-team-score">${awayScore}</span>
+                </div>
+                <div class="rtf-match-info-meta">
+                    ${match.status === 'LIVE' ? '<span style="color:var(--red-maroc); font-weight:bold; animation: blink 1s infinite;"><span class="live-pulse" style="display:inline-block; margin-right:4px;"></span>LIVE</span>' : (match.status === 'FINISHED' ? 'Terminé' : match.time)}
+                </div>
+            </div>
+        `;
+    }
+
+    renderRoadToTheFinal() {
+        const container = document.getElementById('rtf-bracket');
+        if (!container) return;
+
+        // Vainqueur final
+        const finalMatch = this.data.matches.find(m => m.id === 85031);
+        let winnerTla = 'TBD';
+        if (finalMatch && finalMatch.status === 'FINISHED') {
+            winnerTla = finalMatch.homeScore > finalMatch.awayScore ? finalMatch.homeTla : finalMatch.awayTla;
+        }
+        
+        const winnerName = winnerTla === 'TBD' ? (this.currentLang === 'en' ? 'Champion' : 'Champion') : this.t(`teams.${winnerTla}`, winnerTla);
+        const winnerFlagHtml = winnerTla === 'TBD' 
+            ? '<i class="fa-solid fa-question text-gold" style="font-size: 1.5rem; opacity: 0.5;"></i>' 
+            : getFlag(winnerTla);
+
+        const isEn = this.currentLang === 'en';
+
+        container.innerHTML = `
+            <!-- 1. Seizièmes Gauche -->
+            <div class="rtf-column rtf-column-left-r32">
+                <div class="rtf-column-title">${isEn ? 'Round of 32' : '1/16 de Finale'}</div>
+                ${this._renderBracketMatch(85000)}
+                ${this._renderBracketMatch(85001)}
+                ${this._renderBracketMatch(85002)}
+                ${this._renderBracketMatch(85003)}
+                ${this._renderBracketMatch(85004)}
+                ${this._renderBracketMatch(85005)}
+                ${this._renderBracketMatch(85006)}
+                ${this._renderBracketMatch(85007)}
+            </div>
+
+            <!-- 2. Huitièmes Gauche -->
+            <div class="rtf-column rtf-column-left-r16">
+                <div class="rtf-column-title">${isEn ? 'Round of 16' : '1/8 de Finale'}</div>
+                ${this._renderBracketMatch(85016)}
+                ${this._renderBracketMatch(85017)}
+                ${this._renderBracketMatch(85018)}
+                ${this._renderBracketMatch(85019)}
+            </div>
+
+            <!-- 3. Quarts Gauche -->
+            <div class="rtf-column rtf-column-left-qf">
+                <div class="rtf-column-title">${isEn ? 'Quarter Finals' : 'Quarts'}</div>
+                ${this._renderBracketMatch(85024)}
+                ${this._renderBracketMatch(85025)}
+            </div>
+
+            <!-- 4. Demis Gauche -->
+            <div class="rtf-column rtf-column-left-sf">
+                <div class="rtf-column-title">${isEn ? 'Semi Finals' : 'Demi-finale'}</div>
+                ${this._renderBracketMatch(85028)}
+            </div>
+
+            <!-- 5. Centre (Finale et Trophée) -->
+            <div class="rtf-center-column">
+                <div class="rtf-column-title" style="top: 15px;">${isEn ? 'Final' : 'Finale'}</div>
+                
+                <div class="rtf-trophy-container">
+                    <div class="rtf-winner-circle">
+                        ${winnerFlagHtml}
+                    </div>
+                    <div class="rtf-winner-label">${winnerName}</div>
+                    <img src="https://cdn-icons-png.flaticon.com/512/5323/5323977.png" class="rtf-trophy-img" alt="World Cup Trophy">
+                </div>
+
+                <div style="margin-top: 1.5rem; width: 100%; display: flex; justify-content: center;">
+                    ${this._renderBracketMatch(85031)}
+                </div>
+            </div>
+
+            <!-- 6. Demis Droite -->
+            <div class="rtf-column rtf-column-right-sf">
+                <div class="rtf-column-title">${isEn ? 'Semi Finals' : 'Demi-finale'}</div>
+                ${this._renderBracketMatch(85029)}
+            </div>
+
+            <!-- 7. Quarts Droite -->
+            <div class="rtf-column rtf-column-right-qf">
+                <div class="rtf-column-title">${isEn ? 'Quarter Finals' : 'Quarts'}</div>
+                ${this._renderBracketMatch(85026)}
+                ${this._renderBracketMatch(85027)}
+            </div>
+
+            <!-- 8. Huitièmes Droite -->
+            <div class="rtf-column rtf-column-right-r16">
+                <div class="rtf-column-title">${isEn ? 'Round of 16' : '1/8 de Finale'}</div>
+                ${this._renderBracketMatch(85020)}
+                ${this._renderBracketMatch(85021)}
+                ${this._renderBracketMatch(85022)}
+                ${this._renderBracketMatch(85023)}
+            </div>
+
+            <!-- 9. Seizièmes Droite -->
+            <div class="rtf-column rtf-column-right-r32">
+                <div class="rtf-column-title">${isEn ? 'Round of 32' : '1/16 de Finale'}</div>
+                ${this._renderBracketMatch(85008)}
+                ${this._renderBracketMatch(85009)}
+                ${this._renderBracketMatch(85010)}
+                ${this._renderBracketMatch(85011)}
+                ${this._renderBracketMatch(85012)}
+                ${this._renderBracketMatch(85013)}
+                ${this._renderBracketMatch(85014)}
+                ${this._renderBracketMatch(85015)}
+            </div>
+        `;
     }
 
     populateFilterDropdowns() {
@@ -317,6 +690,8 @@ class WorldCupApp {
             // Rafraîchir les sections live
             renderLiveMatches(this.data.matches);
             refreshPremiumFeatures(this);
+            this.computeKnockoutBracket();
+            this.renderRoadToTheFinal();
 
             // Mettre à jour l'élément spécifique dans le calendrier s'il est affiché
             const scoreHomeEl = document.getElementById(`score-home-${data.matchId}`);
@@ -481,7 +856,19 @@ class WorldCupApp {
 
         // 1. Liens de navigation (Desktop)
         const navLinks = document.querySelectorAll('.nav-links a');
-        if (navLinks.length >= 10) {
+        if (navLinks.length >= 11) {
+            navLinks[0].innerHTML = this.t('nav.home');
+            navLinks[1].innerHTML = this.t('nav.calendar');
+            navLinks[2].innerHTML = this.t('nav.live');
+            navLinks[3].innerHTML = this.t('nav.teams');
+            navLinks[4].innerHTML = this.t('nav.morocco');
+            navLinks[5].innerHTML = this.t('nav.roadtofinal');
+            navLinks[6].innerHTML = this.t('nav.standings');
+            navLinks[7].innerHTML = this.currentLang === 'en' ? 'Tools' : 'Outils';
+            navLinks[8].innerHTML = this.t('nav.analytics');
+            navLinks[9].innerHTML = this.t('nav.stadiums');
+            navLinks[10].innerHTML = this.t('nav.news');
+        } else if (navLinks.length >= 10) {
             navLinks[0].innerHTML = this.t('nav.home');
             navLinks[1].innerHTML = this.t('nav.calendar');
             navLinks[2].innerHTML = this.t('nav.live');
@@ -511,7 +898,19 @@ class WorldCupApp {
 
         // 2. Liens de navigation (Mobile)
         const mobileLinks = document.querySelectorAll('.mobile-nav-links a');
-        if (mobileLinks.length >= 10) {
+        if (mobileLinks.length >= 11) {
+            mobileLinks[0].innerHTML = this.t('nav.home');
+            mobileLinks[1].innerHTML = this.t('nav.calendar');
+            mobileLinks[2].innerHTML = this.t('nav.live');
+            mobileLinks[3].innerHTML = this.t('nav.teams');
+            mobileLinks[4].innerHTML = this.t('nav.morocco');
+            mobileLinks[5].innerHTML = this.t('nav.roadtofinal');
+            mobileLinks[6].innerHTML = this.t('nav.standings');
+            mobileLinks[7].innerHTML = this.currentLang === 'en' ? 'Tools' : 'Outils';
+            mobileLinks[8].innerHTML = this.t('nav.analytics');
+            mobileLinks[9].innerHTML = this.t('nav.stadiums');
+            mobileLinks[10].innerHTML = this.t('nav.news');
+        } else if (mobileLinks.length >= 10) {
             mobileLinks[0].innerHTML = this.t('nav.home');
             mobileLinks[1].innerHTML = this.t('nav.calendar');
             mobileLinks[2].innerHTML = this.t('nav.live');
@@ -569,6 +968,8 @@ class WorldCupApp {
         if (secTeams) secTeams.innerText = this.t('sections.teams');
         const secMorocco = document.getElementById('sec-title-morocco');
         if (secMorocco) secMorocco.innerText = this.t('sections.morocco');
+        const secRoadToFinal = document.getElementById('sec-title-roadtofinal');
+        if (secRoadToFinal) secRoadToFinal.innerText = this.t('sections.roadtofinal', '🏆 Tableau de Phase Finale');
         const secStandings = document.getElementById('sec-title-standings');
         if (secStandings) secStandings.innerText = this.t('sections.standings');
         const secNews = document.getElementById('sec-title-news');
