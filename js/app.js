@@ -239,19 +239,21 @@ class WorldCupApp {
             { id: 85015, home: runnersUp['L'], away: bestThirds[7] }
         ];
 
-        r32Pairings.forEach(pairing => {
-            const m = this.data.matches.find(match => match.id === pairing.id);
-            if (m) {
-                if (m.status === 'SCHEDULED') {
-                    m.homeTla = pairing.home || 'TBD';
-                    m.awayTla = pairing.away || 'TBD';
-                    m.homeTeam = getTeamInfo(m.homeTla).name;
-                    m.awayTeam = getTeamInfo(m.awayTla).name;
-                    m.homeFlag = getFlag(m.homeTla);
-                    m.awayFlag = getFlag(m.awayTla);
-                }
-            }
-        });
+        // --- ANNULATION DE LA PRÉDICTION DYNAMIQUE POUR LES 16èmes DE FINALE ---
+        // Les équipes qualifiées réellement sont mappées depuis l'API dans mapKnockoutStages.
+        // r32Pairings.forEach(pairing => {
+        //     const m = this.data.matches.find(match => match.id === pairing.id);
+        //     if (m) {
+        //         if (m.status === 'SCHEDULED') {
+        //             m.homeTla = pairing.home || 'TBD';
+        //             m.awayTla = pairing.away || 'TBD';
+        //             m.homeTeam = getTeamInfo(m.homeTla).name;
+        //             m.awayTeam = getTeamInfo(m.awayTla).name;
+        //             m.homeFlag = getFlag(m.homeTla);
+        //             m.awayFlag = getFlag(m.awayTla);
+        //         }
+        //     }
+        // });
 
         // Huitièmes (85016 à 85023)
         const r16Sources = [
