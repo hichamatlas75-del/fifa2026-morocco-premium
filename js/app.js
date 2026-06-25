@@ -164,14 +164,21 @@ class WorldCupApp {
     computeKnockoutBracket() {
         if (!this.data || !this.data.matches) return;
 
+        const isPlaceholderTla = (tla) => {
+            if (!tla || tla === 'TBD') return true;
+            if (tla.length !== 3) return true;
+            if (/\d/.test(tla)) return true; // contient un chiffre (ex: 1F, 2E)
+            return false;
+        };
+
         const getTeamInfo = (tla) => {
-            if (!tla || tla === 'TBD') return { tla: 'TBD', name: 'À déterminer' };
+            if (isPlaceholderTla(tla)) return { tla: 'TBD', name: 'À déterminer' };
             const name = this.t(`teams.${tla}`, tla);
             return { tla, name };
         };
 
         const getWinnerTla = (match) => {
-            if (!match || match.homeTla === 'TBD' || match.awayTla === 'TBD') return 'TBD';
+            if (!match || isPlaceholderTla(match.homeTla) || isPlaceholderTla(match.awayTla)) return 'TBD';
             if (match.status !== 'FINISHED') return 'TBD';
             if (match.homeScore > match.awayScore) return match.homeTla;
             if (match.awayScore > match.homeScore) return match.awayTla;
@@ -179,7 +186,7 @@ class WorldCupApp {
         };
 
         const getLoserTla = (match) => {
-            if (!match || match.homeTla === 'TBD' || match.awayTla === 'TBD') return 'TBD';
+            if (!match || isPlaceholderTla(match.homeTla) || isPlaceholderTla(match.awayTla)) return 'TBD';
             if (match.status !== 'FINISHED') return 'TBD';
             if (match.homeScore > match.awayScore) return match.awayTla;
             if (match.awayScore > match.homeScore) return match.homeTla;
@@ -263,12 +270,12 @@ class WorldCupApp {
                 m.homePlaceholder = pairing.homePlaceholder;
                 m.awayPlaceholder = pairing.awayPlaceholder;
                 // Seulement si non résolu par l'API
-                if (m.homeTla === 'TBD') {
+                if (isPlaceholderTla(m.homeTla)) {
                     m.homeTla = pairing.home || 'TBD';
                     m.homeTeam = getTeamInfo(m.homeTla).name;
                     m.homeFlag = getFlag(m.homeTla);
                 }
-                if (m.awayTla === 'TBD') {
+                if (isPlaceholderTla(m.awayTla)) {
                     m.awayTla = pairing.away || 'TBD';
                     m.awayTeam = getTeamInfo(m.awayTla).name;
                     m.awayFlag = getFlag(m.awayTla);
@@ -299,12 +306,12 @@ class WorldCupApp {
                 if (m1 && m2) {
                     const w1 = getWinnerTla(m1);
                     const w2 = getWinnerTla(m2);
-                    if (m.homeTla === 'TBD') {
+                    if (isPlaceholderTla(m.homeTla)) {
                         m.homeTla = w1;
                         m.homeTeam = getTeamInfo(w1).name;
                         m.homeFlag = getFlag(w1);
                     }
-                    if (m.awayTla === 'TBD') {
+                    if (isPlaceholderTla(m.awayTla)) {
                         m.awayTla = w2;
                         m.awayTeam = getTeamInfo(w2).name;
                         m.awayFlag = getFlag(w2);
@@ -332,12 +339,12 @@ class WorldCupApp {
                 if (m1 && m2) {
                     const w1 = getWinnerTla(m1);
                     const w2 = getWinnerTla(m2);
-                    if (m.homeTla === 'TBD') {
+                    if (isPlaceholderTla(m.homeTla)) {
                         m.homeTla = w1;
                         m.homeTeam = getTeamInfo(w1).name;
                         m.homeFlag = getFlag(w1);
                     }
-                    if (m.awayTla === 'TBD') {
+                    if (isPlaceholderTla(m.awayTla)) {
                         m.awayTla = w2;
                         m.awayTeam = getTeamInfo(w2).name;
                         m.awayFlag = getFlag(w2);
@@ -363,12 +370,12 @@ class WorldCupApp {
                 if (m1 && m2) {
                     const w1 = getWinnerTla(m1);
                     const w2 = getWinnerTla(m2);
-                    if (m.homeTla === 'TBD') {
+                    if (isPlaceholderTla(m.homeTla)) {
                         m.homeTla = w1;
                         m.homeTeam = getTeamInfo(w1).name;
                         m.homeFlag = getFlag(w1);
                     }
-                    if (m.awayTla === 'TBD') {
+                    if (isPlaceholderTla(m.awayTla)) {
                         m.awayTla = w2;
                         m.awayTeam = getTeamInfo(w2).name;
                         m.awayFlag = getFlag(w2);
@@ -389,12 +396,12 @@ class WorldCupApp {
             if (sf1 && sf2) {
                 const w1 = getWinnerTla(sf1);
                 const w2 = getWinnerTla(sf2);
-                if (fMatch.homeTla === 'TBD') {
+                if (isPlaceholderTla(fMatch.homeTla)) {
                     fMatch.homeTla = w1;
                     fMatch.homeTeam = getTeamInfo(w1).name;
                     fMatch.homeFlag = getFlag(w1);
                 }
-                if (fMatch.awayTla === 'TBD') {
+                if (isPlaceholderTla(fMatch.awayTla)) {
                     fMatch.awayTla = w2;
                     fMatch.awayTeam = getTeamInfo(w2).name;
                     fMatch.awayFlag = getFlag(w2);
@@ -410,12 +417,12 @@ class WorldCupApp {
             if (sf1 && sf2) {
                 const l1 = getLoserTla(sf1);
                 const l2 = getLoserTla(sf2);
-                if (t3Match.homeTla === 'TBD') {
+                if (isPlaceholderTla(t3Match.homeTla)) {
                     t3Match.homeTla = l1;
                     t3Match.homeTeam = getTeamInfo(l1).name;
                     t3Match.homeFlag = getFlag(l1);
                 }
-                if (t3Match.awayTla === 'TBD') {
+                if (isPlaceholderTla(t3Match.awayTla)) {
                     t3Match.awayTla = l2;
                     t3Match.awayTeam = getTeamInfo(l2).name;
                     t3Match.awayFlag = getFlag(l2);

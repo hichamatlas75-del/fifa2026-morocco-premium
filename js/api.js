@@ -339,7 +339,25 @@ export function parseOpenLigaDBData(rawData) {
     }
     const isLive = !isFinished && timeDiff > 0 && timeDiff < matchDurationMs;
 
-    const groupName = getGroupForTeam(normHomeTla) || translateOpenLigaGroup(m.group.groupName, normHomeTla);
+    const rawGroupName = (m.group.groupName || "").toLowerCase();
+    const isKnockout = rawGroupName.includes("sechzehntel") || 
+                       rawGroupName.includes("1/16") || 
+                       rawGroupName.includes("achtel") || 
+                       rawGroupName.includes("1/8") || 
+                       rawGroupName.includes("viertel") || 
+                       rawGroupName.includes("1/4") || 
+                       rawGroupName.includes("halb") || 
+                       rawGroupName.includes("1/2") || 
+                       rawGroupName.includes("finale") || 
+                       rawGroupName.includes("endspiel") || 
+                       rawGroupName.includes("seizième") || 
+                       rawGroupName.includes("huitième") || 
+                       rawGroupName.includes("quart") || 
+                       rawGroupName.includes("demi");
+
+    const groupName = isKnockout 
+      ? translateOpenLigaGroup(m.group.groupName, normHomeTla)
+      : (getGroupForTeam(normHomeTla) || translateOpenLigaGroup(m.group.groupName, normHomeTla));
 
     return {
       id: m.matchID,
