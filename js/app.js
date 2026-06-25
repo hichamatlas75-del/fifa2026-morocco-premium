@@ -566,7 +566,11 @@ class WorldCupApp {
         `;
     }
 
-    renderRoadToTheFinalTree() {        const renderTreeCircle = (matchId, type) => {
+    renderRoadToTheFinalTree() {
+        const container = document.getElementById('rtf-tree-content');
+        if (!container) return;
+
+        const renderTreeCircle = (matchId, type) => {
             const match = this.data.matches.find(m => m.id === matchId);
             if (!match) return `<div class="rtf-tree-team-circle empty-circle">?</div>`;
 
