@@ -956,10 +956,18 @@ export function getH2HData(home, away) {
   ];
 }
 
-function getStadiumForMatch(homeTeam, awayTeam, groupName, matchId) {
+export function getStadiumForMatch(homeTeam, awayTeam, groupName, matchId) {
   const home = (homeTeam || "").toLowerCase();
   const away = (awayTeam || "").toLowerCase();
   const group = (groupName || "").toLowerCase();
+
+  // 0. Phase éliminatoire (Knockout)
+  const isKnockout = group.includes("finale") || group.includes("quarter") || group.includes("semi") || group.includes("round") || group.includes("seizième") || group.includes("huitième");
+  if (isKnockout) {
+    if (home.includes("maroc") || home.includes("moroc") || away.includes("maroc") || away.includes("moroc")) {
+      return "Monterrey Stadium";
+    }
+  }
 
   // 1. Groupe A : Matches au Mexique
   if (group.includes("groupe a") || group.includes("group a")) {

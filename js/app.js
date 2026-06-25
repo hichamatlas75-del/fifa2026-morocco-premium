@@ -16,7 +16,7 @@ window.addEventListener('error', (event) => {
     `;
 });
 
-import { initApi, getH2HData, getFlag, getDeterministicEvents, getDeterministicStats, calculateLiveMinute, computeGroupStandings, computeScorersAndAssists } from './api.js';
+import { initApi, getH2HData, getFlag, getDeterministicEvents, getDeterministicStats, calculateLiveMinute, computeGroupStandings, computeScorersAndAssists, getStadiumForMatch } from './api.js';
 import { setupWebSockets } from './socket.js';
 import { TEAMS_SQUADS } from './teams_squads.js';
 import { 
@@ -30,10 +30,17 @@ import {
 import { initPremiumFeatures, refreshPremiumFeatures } from './features.js';
 
 const ROUND_NAMES = {
-    fr: { r32: '1/16 de Finale', r16: '1/8 de Finale', qf: 'Quarts de finale', sf: 'Demi-finales', final: 'Finale' },
+    fr: { r32: 'Seizièmes de finale', r16: 'Huitièmes de finale', qf: 'Quarts de finale', sf: 'Demi-finales', final: 'Finale' },
     en: { r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter Finals', sf: 'Semi Finals', final: 'Final' },
-    es: { r32: '1/16 de Final', r16: '1/8 de Final', qf: 'Cuartos de Final', sf: 'Semifinales', final: 'Final' },
+    es: { r32: 'Dieciseisavos de final', r16: 'Octavos de final', qf: 'Cuartos de final', sf: 'Semifinales', final: 'Final' },
     ar: { r32: 'دور الـ 32', r16: 'دور الـ 16', qf: 'ربع النهائي', sf: 'نصف النهائي', final: 'النهائي' }
+};
+
+const ROUND_SHORT_NAMES = {
+    fr: { r32: '16es', r16: '8es', qf: 'Quarts', sf: 'Demis', final: 'Finale' },
+    en: { r32: 'R32', r16: 'R16', qf: 'Quarters', sf: 'Semis', final: 'Final' },
+    es: { r32: '16vos', r16: '8vos', qf: 'Cuartos', sf: 'Semis', final: 'Final' },
+    ar: { r32: 'دور 32', r16: 'دور 16', qf: 'ربع', sf: 'نصف', final: 'النهائي' }
 };
 
 class WorldCupApp {
@@ -188,16 +195,20 @@ class WorldCupApp {
         
         groups.forEach(g => {
             const groupCode = g.charAt(g.length - 1); // A, B, C...
+            const groupMatches = this.data.matches.filter(m => m.group === g || m.group === g.replace("Groupe", "Group"));
+            const finishedCount = groupMatches.filter(m => m.status === 'FINISHED').length;
+            const hasStarted = finishedCount > 0;
+
             const standings = computeGroupStandings(this.data.matches, g);
             
-            const first = standings[0] ? standings[0].tla : 'TBD';
-            const second = standings[1] ? standings[1].tla : 'TBD';
-            const third = standings[2] ? standings[2].tla : 'TBD';
+            const first = hasStarted && standings[0] ? standings[0].tla : 'TBD';
+            const second = hasStarted && standings[1] ? standings[1].tla : 'TBD';
+            const third = hasStarted && standings[2] ? standings[2].tla : 'TBD';
             
             winners[groupCode] = first;
             runnersUp[groupCode] = second;
             
-            if (third && third !== 'TBD') {
+            if (hasStarted && third && third !== 'TBD') {
                 thirdPlaces.push({
                     tla: third,
                     pts: standings[2].pts,
@@ -239,21 +250,21 @@ class WorldCupApp {
             { id: 85015, home: runnersUp['L'], away: bestThirds[7] }
         ];
 
-        // --- ANNULATION DE LA PRÉDICTION DYNAMIQUE POUR LES 16èmes DE FINALE ---
-        // Les équipes qualifiées réellement sont mappées depuis l'API dans mapKnockoutStages.
-        // r32Pairings.forEach(pairing => {
-        //     const m = this.data.matches.find(match => match.id === pairing.id);
-        //     if (m) {
-        //         if (m.status === 'SCHEDULED') {
-        //             m.homeTla = pairing.home || 'TBD';
-        //             m.awayTla = pairing.away || 'TBD';
-        //             m.homeTeam = getTeamInfo(m.homeTla).name;
-        //             m.awayTeam = getTeamInfo(m.awayTla).name;
-        //             m.homeFlag = getFlag(m.homeTla);
-        //             m.awayFlag = getFlag(m.awayTla);
-        //         }
-        //     }
-        // });
+        // --- PRÉDICTION DYNAMIQUE ACTIVE POUR LES 16èmes DE FINALE ---
+        r32Pairings.forEach(pairing => {
+            const m = this.data.matches.find(match => match.id === pairing.id);
+            if (m) {
+                if (m.status === 'SCHEDULED') {
+                    m.homeTla = pairing.home || 'TBD';
+                    m.awayTla = pairing.away || 'TBD';
+                    m.homeTeam = getTeamInfo(m.homeTla).name;
+                    m.awayTeam = getTeamInfo(m.awayTla).name;
+                    m.homeFlag = getFlag(m.homeTla);
+                    m.awayFlag = getFlag(m.awayTla);
+                    m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
+                }
+            }
+        });
 
         // Huitièmes (85016 à 85023)
         const r16Sources = [
@@ -280,6 +291,7 @@ class WorldCupApp {
                 m.awayTeam = getTeamInfo(w2).name;
                 m.homeFlag = getFlag(w1);
                 m.awayFlag = getFlag(w2);
+                m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
             }
         });
 
@@ -304,6 +316,7 @@ class WorldCupApp {
                 m.awayTeam = getTeamInfo(w2).name;
                 m.homeFlag = getFlag(w1);
                 m.awayFlag = getFlag(w2);
+                m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
             }
         });
 
@@ -326,6 +339,7 @@ class WorldCupApp {
                 m.awayTeam = getTeamInfo(w2).name;
                 m.homeFlag = getFlag(w1);
                 m.awayFlag = getFlag(w2);
+                m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
             }
         });
 
@@ -343,6 +357,7 @@ class WorldCupApp {
             fMatch.awayTeam = getTeamInfo(w2).name;
             fMatch.homeFlag = getFlag(w1);
             fMatch.awayFlag = getFlag(w2);
+            fMatch.stadium = getStadiumForMatch(fMatch.homeTeam, fMatch.awayTeam, fMatch.group, fMatch.id);
         }
 
         const t3Match = this.data.matches.find(match => match.id === 85030);
@@ -355,6 +370,7 @@ class WorldCupApp {
             t3Match.awayTeam = getTeamInfo(l2).name;
             t3Match.homeFlag = getFlag(l1);
             t3Match.awayFlag = getFlag(l2);
+            t3Match.stadium = getStadiumForMatch(t3Match.homeTeam, t3Match.awayTeam, t3Match.group, t3Match.id);
         }
     }
 
@@ -1464,11 +1480,11 @@ class WorldCupApp {
         const tabBtns = document.querySelectorAll('.rtf-tab-btn');
         if (tabBtns.length > 0) {
             const lang = this.currentLang || 'fr';
-            const rounds = ROUND_NAMES[lang] || ROUND_NAMES['fr'];
+            const shortRounds = ROUND_SHORT_NAMES[lang] || ROUND_SHORT_NAMES['fr'];
             tabBtns.forEach(btn => {
                 const roundKey = btn.getAttribute('data-round');
-                if (rounds[roundKey]) {
-                    btn.innerText = rounds[roundKey];
+                if (shortRounds[roundKey]) {
+                    btn.innerText = shortRounds[roundKey];
                 }
             });
         }
