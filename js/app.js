@@ -193,22 +193,28 @@ class WorldCupApp {
         const runnersUp = {};
         const thirdPlaces = [];
         
+        const allGroupsFinished = groups.every(g => {
+            const groupMatches = this.data.matches.filter(m => m.group === g || m.group === g.replace("Groupe", "Group"));
+            const finishedCount = groupMatches.filter(m => m.status === 'FINISHED').length;
+            return groupMatches.length > 0 && finishedCount === groupMatches.length;
+        });
+
         groups.forEach(g => {
             const groupCode = g.charAt(g.length - 1); // A, B, C...
             const groupMatches = this.data.matches.filter(m => m.group === g || m.group === g.replace("Groupe", "Group"));
             const finishedCount = groupMatches.filter(m => m.status === 'FINISHED').length;
-            const hasStarted = finishedCount > 0;
+            const isGroupFinished = groupMatches.length > 0 && finishedCount === groupMatches.length;
 
             const standings = computeGroupStandings(this.data.matches, g);
             
-            const first = hasStarted && standings[0] ? standings[0].tla : 'TBD';
-            const second = hasStarted && standings[1] ? standings[1].tla : 'TBD';
-            const third = hasStarted && standings[2] ? standings[2].tla : 'TBD';
+            const first = isGroupFinished && standings[0] ? standings[0].tla : 'TBD';
+            const second = isGroupFinished && standings[1] ? standings[1].tla : 'TBD';
+            const third = isGroupFinished && standings[2] ? standings[2].tla : 'TBD';
             
             winners[groupCode] = first;
             runnersUp[groupCode] = second;
             
-            if (hasStarted && third && third !== 'TBD') {
+            if (isGroupFinished && third && third !== 'TBD') {
                 thirdPlaces.push({
                     tla: third,
                     pts: standings[2].pts,
@@ -224,7 +230,7 @@ class WorldCupApp {
         
         const bestThirds = [];
         for (let i = 0; i < 8; i++) {
-            if (thirdPlaces[i]) {
+            if (allGroupsFinished && thirdPlaces[i]) {
                 bestThirds.push(thirdPlaces[i].tla);
             } else {
                 bestThirds.push('TBD');
@@ -232,28 +238,30 @@ class WorldCupApp {
         }
 
         const r32Pairings = [
-            { id: 85000, home: winners['A'], away: bestThirds[0] },
-            { id: 85001, home: winners['B'], away: runnersUp['C'] },
-            { id: 85002, home: winners['C'], away: bestThirds[1] },
-            { id: 85003, home: winners['D'], away: runnersUp['E'] },
-            { id: 85004, home: winners['E'], away: bestThirds[2] },
-            { id: 85005, home: winners['F'], away: runnersUp['G'] },
-            { id: 85006, home: winners['G'], away: bestThirds[3] },
-            { id: 85007, home: winners['H'], away: runnersUp['I'] },
-            { id: 85008, home: winners['I'], away: bestThirds[4] },
-            { id: 85009, home: winners['J'], away: runnersUp['K'] },
-            { id: 85010, home: winners['K'], away: bestThirds[5] },
-            { id: 85011, home: winners['L'], away: runnersUp['A'] },
-            { id: 85012, home: runnersUp['B'], away: bestThirds[6] },
-            { id: 85013, home: runnersUp['D'], away: runnersUp['F'] },
-            { id: 85014, home: runnersUp['H'], away: runnersUp['J'] },
-            { id: 85015, home: runnersUp['L'], away: bestThirds[7] }
+            { id: 85000, home: winners['A'], away: bestThirds[0], homePlaceholder: '1A', awayPlaceholder: '3C/D/E/F' },
+            { id: 85001, home: winners['B'], away: runnersUp['C'], homePlaceholder: '1B', awayPlaceholder: '2C' },
+            { id: 85002, home: winners['C'], away: bestThirds[1], homePlaceholder: '1C', awayPlaceholder: '3A/B/F/G' },
+            { id: 85003, home: winners['D'], away: runnersUp['E'], homePlaceholder: '1D', awayPlaceholder: '2E' },
+            { id: 85004, home: winners['E'], away: bestThirds[2], homePlaceholder: '1E', awayPlaceholder: '3A/B/C/D' },
+            { id: 85005, home: winners['F'], away: runnersUp['G'], homePlaceholder: '1F', awayPlaceholder: '2G' },
+            { id: 85006, home: winners['G'], away: bestThirds[3], homePlaceholder: '1G', awayPlaceholder: '3H/I/J/K' },
+            { id: 85007, home: winners['H'], away: runnersUp['I'], homePlaceholder: '1H', awayPlaceholder: '2I' },
+            { id: 85008, home: winners['I'], away: bestThirds[4], homePlaceholder: '1I', awayPlaceholder: '3E/F/G/H' },
+            { id: 85009, home: winners['J'], away: runnersUp['K'], homePlaceholder: '1J', awayPlaceholder: '2K' },
+            { id: 85010, home: winners['K'], away: bestThirds[5], homePlaceholder: '1K', awayPlaceholder: '3I/J/K/L' },
+            { id: 85011, home: winners['L'], away: runnersUp['A'], homePlaceholder: '1L', awayPlaceholder: '2A' },
+            { id: 85012, home: runnersUp['B'], away: bestThirds[6], homePlaceholder: '2B', awayPlaceholder: '3I/J/K/L' },
+            { id: 85013, home: runnersUp['D'], away: runnersUp['F'], homePlaceholder: '2D', awayPlaceholder: '2F' },
+            { id: 85014, home: runnersUp['H'], away: runnersUp['J'], homePlaceholder: '2H', awayPlaceholder: '2J' },
+            { id: 85015, home: runnersUp['L'], away: bestThirds[7], homePlaceholder: '2L', awayPlaceholder: '3E/F/G/H' }
         ];
 
         // --- PRÉDICTION DYNAMIQUE ACTIVE POUR LES 16èmes DE FINALE ---
         r32Pairings.forEach(pairing => {
             const m = this.data.matches.find(match => match.id === pairing.id);
             if (m) {
+                m.homePlaceholder = pairing.homePlaceholder;
+                m.awayPlaceholder = pairing.awayPlaceholder;
                 if (m.status === 'SCHEDULED') {
                     m.homeTla = pairing.home || 'TBD';
                     m.awayTla = pairing.away || 'TBD';
@@ -268,78 +276,90 @@ class WorldCupApp {
 
         // Huitièmes (85016 à 85023)
         const r16Sources = [
-            [85000, 85001], // 85016
-            [85002, 85003], // 85017
-            [85004, 85005], // 85018
-            [85006, 85007], // 85019
-            [85008, 85009], // 85020
-            [85010, 85011], // 85021
-            [85012, 85013], // 85022
-            [85014, 85015]  // 85023
+            { id: 85016, src: [85000, 85001], homePlaceholder: 'V85000', awayPlaceholder: 'V85001' },
+            { id: 85017, src: [85002, 85003], homePlaceholder: 'V85002', awayPlaceholder: 'V85003' },
+            { id: 85018, src: [85004, 85005], homePlaceholder: 'V85004', awayPlaceholder: 'V85005' },
+            { id: 85019, src: [85006, 85007], homePlaceholder: 'V85006', awayPlaceholder: 'V85007' },
+            { id: 85020, src: [85008, 85009], homePlaceholder: 'V85008', awayPlaceholder: 'V85009' },
+            { id: 85021, src: [85010, 85011], homePlaceholder: 'V85010', awayPlaceholder: 'V85011' },
+            { id: 85022, src: [85012, 85013], homePlaceholder: 'V85012', awayPlaceholder: 'V85013' },
+            { id: 85023, src: [85014, 85015], homePlaceholder: 'V85014', awayPlaceholder: 'V85015' }
         ];
 
-        r16Sources.forEach((src, idx) => {
-            const m = this.data.matches.find(match => match.id === 85016 + idx);
-            const m1 = this.data.matches.find(match => match.id === src[0]);
-            const m2 = this.data.matches.find(match => match.id === src[1]);
-            if (m && m1 && m2) {
-                const w1 = getWinnerTla(m1);
-                const w2 = getWinnerTla(m2);
-                m.homeTla = w1;
-                m.awayTla = w2;
-                m.homeTeam = getTeamInfo(w1).name;
-                m.awayTeam = getTeamInfo(w2).name;
-                m.homeFlag = getFlag(w1);
-                m.awayFlag = getFlag(w2);
-                m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
+        r16Sources.forEach(source => {
+            const m = this.data.matches.find(match => match.id === source.id);
+            if (m) {
+                m.homePlaceholder = source.homePlaceholder;
+                m.awayPlaceholder = source.awayPlaceholder;
+                const m1 = this.data.matches.find(match => match.id === source.src[0]);
+                const m2 = this.data.matches.find(match => match.id === source.src[1]);
+                if (m1 && m2) {
+                    const w1 = getWinnerTla(m1);
+                    const w2 = getWinnerTla(m2);
+                    m.homeTla = w1;
+                    m.awayTla = w2;
+                    m.homeTeam = getTeamInfo(w1).name;
+                    m.awayTeam = getTeamInfo(w2).name;
+                    m.homeFlag = getFlag(w1);
+                    m.awayFlag = getFlag(w2);
+                    m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
+                }
             }
         });
 
         // Quarts (85024 à 85027)
         const qfSources = [
-            [85016, 85017], // 85024
-            [85018, 85019], // 85025
-            [85020, 85021], // 85026
-            [85022, 85023]  // 85027
+            { id: 85024, src: [85016, 85017], homePlaceholder: 'V85016', awayPlaceholder: 'V85017' },
+            { id: 85025, src: [85018, 85019], homePlaceholder: 'V85018', awayPlaceholder: 'V85019' },
+            { id: 85026, src: [85020, 85021], homePlaceholder: 'V85020', awayPlaceholder: 'V85021' },
+            { id: 85027, src: [85022, 85023], homePlaceholder: 'V85022', awayPlaceholder: 'V85023' }
         ];
 
-        qfSources.forEach((src, idx) => {
-            const m = this.data.matches.find(match => match.id === 85024 + idx);
-            const m1 = this.data.matches.find(match => match.id === src[0]);
-            const m2 = this.data.matches.find(match => match.id === src[1]);
-            if (m && m1 && m2) {
-                const w1 = getWinnerTla(m1);
-                const w2 = getWinnerTla(m2);
-                m.homeTla = w1;
-                m.awayTla = w2;
-                m.homeTeam = getTeamInfo(w1).name;
-                m.awayTeam = getTeamInfo(w2).name;
-                m.homeFlag = getFlag(w1);
-                m.awayFlag = getFlag(w2);
-                m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
+        qfSources.forEach(source => {
+            const m = this.data.matches.find(match => match.id === source.id);
+            if (m) {
+                m.homePlaceholder = source.homePlaceholder;
+                m.awayPlaceholder = source.awayPlaceholder;
+                const m1 = this.data.matches.find(match => match.id === source.src[0]);
+                const m2 = this.data.matches.find(match => match.id === source.src[1]);
+                if (m1 && m2) {
+                    const w1 = getWinnerTla(m1);
+                    const w2 = getWinnerTla(m2);
+                    m.homeTla = w1;
+                    m.awayTla = w2;
+                    m.homeTeam = getTeamInfo(w1).name;
+                    m.awayTeam = getTeamInfo(w2).name;
+                    m.homeFlag = getFlag(w1);
+                    m.awayFlag = getFlag(w2);
+                    m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
+                }
             }
         });
 
         // Demis (85028 à 85029)
         const sfSources = [
-            [85024, 85025], // 85028
-            [85026, 85027]  // 85029
+            { id: 85028, src: [85024, 85025], homePlaceholder: 'V85024', awayPlaceholder: 'V85025' },
+            { id: 85029, src: [85026, 85027], homePlaceholder: 'V85026', awayPlaceholder: 'V85027' }
         ];
 
-        sfSources.forEach((src, idx) => {
-            const m = this.data.matches.find(match => match.id === 85028 + idx);
-            const m1 = this.data.matches.find(match => match.id === src[0]);
-            const m2 = this.data.matches.find(match => match.id === src[1]);
-            if (m && m1 && m2) {
-                const w1 = getWinnerTla(m1);
-                const w2 = getWinnerTla(m2);
-                m.homeTla = w1;
-                m.awayTla = w2;
-                m.homeTeam = getTeamInfo(w1).name;
-                m.awayTeam = getTeamInfo(w2).name;
-                m.homeFlag = getFlag(w1);
-                m.awayFlag = getFlag(w2);
-                m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
+        sfSources.forEach(source => {
+            const m = this.data.matches.find(match => match.id === source.id);
+            if (m) {
+                m.homePlaceholder = source.homePlaceholder;
+                m.awayPlaceholder = source.awayPlaceholder;
+                const m1 = this.data.matches.find(match => match.id === source.src[0]);
+                const m2 = this.data.matches.find(match => match.id === source.src[1]);
+                if (m1 && m2) {
+                    const w1 = getWinnerTla(m1);
+                    const w2 = getWinnerTla(m2);
+                    m.homeTla = w1;
+                    m.awayTla = w2;
+                    m.homeTeam = getTeamInfo(w1).name;
+                    m.awayTeam = getTeamInfo(w2).name;
+                    m.homeFlag = getFlag(w1);
+                    m.awayFlag = getFlag(w2);
+                    m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
+                }
             }
         });
 
@@ -348,29 +368,37 @@ class WorldCupApp {
         const sf1 = this.data.matches.find(match => match.id === 85028);
         const sf2 = this.data.matches.find(match => match.id === 85029);
 
-        if (fMatch && sf1 && sf2) {
-            const w1 = getWinnerTla(sf1);
-            const w2 = getWinnerTla(sf2);
-            fMatch.homeTla = w1;
-            fMatch.awayTla = w2;
-            fMatch.homeTeam = getTeamInfo(w1).name;
-            fMatch.awayTeam = getTeamInfo(w2).name;
-            fMatch.homeFlag = getFlag(w1);
-            fMatch.awayFlag = getFlag(w2);
-            fMatch.stadium = getStadiumForMatch(fMatch.homeTeam, fMatch.awayTeam, fMatch.group, fMatch.id);
+        if (fMatch) {
+            fMatch.homePlaceholder = 'V85028';
+            fMatch.awayPlaceholder = 'V85029';
+            if (sf1 && sf2) {
+                const w1 = getWinnerTla(sf1);
+                const w2 = getWinnerTla(sf2);
+                fMatch.homeTla = w1;
+                fMatch.awayTla = w2;
+                fMatch.homeTeam = getTeamInfo(w1).name;
+                fMatch.awayTeam = getTeamInfo(w2).name;
+                fMatch.homeFlag = getFlag(w1);
+                fMatch.awayFlag = getFlag(w2);
+                fMatch.stadium = getStadiumForMatch(fMatch.homeTeam, fMatch.awayTeam, fMatch.group, fMatch.id);
+            }
         }
 
         const t3Match = this.data.matches.find(match => match.id === 85030);
-        if (t3Match && sf1 && sf2) {
-            const l1 = getLoserTla(sf1);
-            const l2 = getLoserTla(sf2);
-            t3Match.homeTla = l1;
-            t3Match.awayTla = l2;
-            t3Match.homeTeam = getTeamInfo(l1).name;
-            t3Match.awayTeam = getTeamInfo(l2).name;
-            t3Match.homeFlag = getFlag(l1);
-            t3Match.awayFlag = getFlag(l2);
-            t3Match.stadium = getStadiumForMatch(t3Match.homeTeam, t3Match.awayTeam, t3Match.group, t3Match.id);
+        if (t3Match) {
+            t3Match.homePlaceholder = 'P85028';
+            t3Match.awayPlaceholder = 'P85029';
+            if (sf1 && sf2) {
+                const l1 = getLoserTla(sf1);
+                const l2 = getLoserTla(sf2);
+                t3Match.homeTla = l1;
+                t3Match.awayTla = l2;
+                t3Match.homeTeam = getTeamInfo(l1).name;
+                t3Match.awayTeam = getTeamInfo(l2).name;
+                t3Match.homeFlag = getFlag(l1);
+                t3Match.awayFlag = getFlag(l2);
+                t3Match.stadium = getStadiumForMatch(t3Match.homeTeam, t3Match.awayTeam, t3Match.group, t3Match.id);
+            }
         }
     }
 
@@ -380,11 +408,18 @@ class WorldCupApp {
 
         const homeTla = match.homeTla || 'TBD';
         const awayTla = match.awayTla || 'TBD';
+        
+        const homePlaceholder = match.homePlaceholder || 'TBD';
+        const awayPlaceholder = match.awayPlaceholder || 'TBD';
+
         const homeFlag = homeTla === 'TBD' ? '<div class="rtf-team-circle empty-circle">?</div>' : `<div class="rtf-team-circle">${getFlag(homeTla)}</div>`;
         const awayFlag = awayTla === 'TBD' ? '<div class="rtf-team-circle empty-circle">?</div>' : `<div class="rtf-team-circle">${getFlag(awayTla)}</div>`;
 
         const homeName = homeTla === 'TBD' ? 'À déterminer' : this.t(`teams.${homeTla}`, match.homeTeam);
         const awayName = awayTla === 'TBD' ? 'À déterminer' : this.t(`teams.${awayTla}`, match.awayTeam);
+
+        const homeText = homeTla === 'TBD' ? homePlaceholder : `${homeTla} (${homePlaceholder})`;
+        const awayText = awayTla === 'TBD' ? awayPlaceholder : `${awayTla} (${awayPlaceholder})`;
 
         const homeScore = (match.status === 'LIVE' || match.status === 'FINISHED') ? match.homeScore : '-';
         const awayScore = (match.status === 'LIVE' || match.status === 'FINISHED') ? match.awayScore : '-';
@@ -397,14 +432,14 @@ class WorldCupApp {
                 <div class="rtf-team-row ${isHomeWinner ? 'winner-row' : ''}">
                     <div class="rtf-team-info">
                         ${homeFlag}
-                        <span class="rtf-team-tla" title="${homeName}">${homeTla}</span>
+                        <span class="rtf-team-tla" title="${homeName}">${homeText}</span>
                     </div>
                     <span class="rtf-team-score">${homeScore}</span>
                 </div>
                 <div class="rtf-team-row ${isAwayWinner ? 'winner-row' : ''}">
                     <div class="rtf-team-info">
                         ${awayFlag}
-                        <span class="rtf-team-tla" title="${awayName}">${awayTla}</span>
+                        <span class="rtf-team-tla" title="${awayName}">${awayText}</span>
                     </div>
                     <span class="rtf-team-score">${awayScore}</span>
                 </div>
@@ -531,11 +566,7 @@ class WorldCupApp {
         `;
     }
 
-    renderRoadToTheFinalTree() {
-        const container = document.getElementById('rtf-tree-content');
-        if (!container) return;
-
-        const renderTreeCircle = (matchId, type) => {
+    renderRoadToTheFinalTree() {        const renderTreeCircle = (matchId, type) => {
             const match = this.data.matches.find(m => m.id === matchId);
             if (!match) return `<div class="rtf-tree-team-circle empty-circle">?</div>`;
 
@@ -543,13 +574,15 @@ class WorldCupApp {
             const teamName = type === 'home' ? match.homeTeam : match.awayTeam;
             const score = type === 'home' ? match.homeScore : match.awayScore;
             
+            const placeholder = type === 'home' ? (match.homePlaceholder || 'TBD') : (match.awayPlaceholder || 'TBD');
+
             const isWinner = match.status === 'FINISHED' && (
                 (type === 'home' && match.homeScore > match.awayScore) ||
                 (type === 'away' && match.awayScore > match.homeScore)
             );
 
             if (!tla || tla === 'TBD') {
-                return `<div class="rtf-tree-team-circle empty-circle" id="tree-circle-${type}-${matchId}" title="${this.t('modal.scheduled', 'Programmé')}">?</div>`;
+                return `<div class="rtf-tree-team-circle empty-circle" id="tree-circle-${type}-${matchId}" title="${placeholder} - ${this.t('modal.scheduled', 'Programmé')}" style="font-size:0.75rem; display:flex; align-items:center; justify-content:center; font-weight:bold; color:rgba(255,255,255,0.4);">${placeholder}</div>`;
             }
 
             const flagIcon = getFlag(tla);
@@ -557,9 +590,9 @@ class WorldCupApp {
                 <div class="rtf-tree-team-circle ${isWinner ? 'winner-highlight' : ''}" 
                      id="tree-circle-${type}-${matchId}" 
                      data-team-tla="${tla}" 
-                     title="${this.t(`teams.${tla}`, teamName)} (${match.status === 'FINISHED' || match.status === 'LIVE' ? score : '-'})"
+                     title="${this.t(`teams.${tla}`, teamName)} (${placeholder}) (${match.status === 'FINISHED' || match.status === 'LIVE' ? score : '-'})"
                      style="cursor: pointer;">
-                    ${flagIcon}
+                     ${flagIcon}
                 </div>
             `;
         };
