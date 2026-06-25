@@ -251,16 +251,16 @@ class WorldCupApp {
             { id: 85003, home: winners['F'], away: runnersUp['C'], homePlaceholder: '1F', awayPlaceholder: '2C' }, // M75
             { id: 85004, home: runnersUp['K'], away: runnersUp['L'], homePlaceholder: '2K', awayPlaceholder: '2L' }, // M83
             { id: 85005, home: winners['H'], away: runnersUp['J'], homePlaceholder: '1H', awayPlaceholder: '2J' }, // M84
-            { id: 85006, home: winners['B'], away: bestThirds[1], homePlaceholder: '1B', awayPlaceholder: '3EFGIJ' }, // M85
-            { id: 85007, home: runnersUp['D'], away: runnersUp['G'], homePlaceholder: '2D', awayPlaceholder: '2G' }, // M87
+            { id: 85006, home: winners['G'], away: bestThirds[4], homePlaceholder: '1G', awayPlaceholder: '3AEHIJ' }, // M81
+            { id: 85007, home: winners['D'], away: bestThirds[2], homePlaceholder: '1D', awayPlaceholder: '3BEFIJ' }, // M82 (USA)
             { id: 85008, home: winners['C'], away: runnersUp['F'], homePlaceholder: '1C', awayPlaceholder: '2F' }, // M76
             { id: 85009, home: runnersUp['E'], away: runnersUp['I'], homePlaceholder: '2E', awayPlaceholder: '2I' }, // M78
             { id: 85010, home: winners['A'], away: bestThirds[0], homePlaceholder: '1A', awayPlaceholder: '3CEFHI' }, // M79
             { id: 85011, home: winners['L'], away: bestThirds[7], homePlaceholder: '1L', awayPlaceholder: '3EHIJK' }, // M80
-            { id: 85012, home: winners['G'], away: bestThirds[4], homePlaceholder: '1G', awayPlaceholder: '3AEHIJ' }, // M81
-            { id: 85013, home: winners['D'], away: bestThirds[2], homePlaceholder: '1D', awayPlaceholder: '3BEFIJ' }, // M82
-            { id: 85014, home: winners['K'], away: runnersUp['H'], homePlaceholder: '1K', awayPlaceholder: '2H' }, // M86
-            { id: 85015, home: winners['J'], away: bestThirds[6], homePlaceholder: '1J', awayPlaceholder: '3DEIJL' }  // M88
+            { id: 85012, home: winners['K'], away: runnersUp['H'], homePlaceholder: '1K', awayPlaceholder: '2H' }, // M86
+            { id: 85013, home: winners['J'], away: bestThirds[6], homePlaceholder: '1J', awayPlaceholder: '3DEIJL' }, // M88
+            { id: 85014, home: winners['B'], away: bestThirds[1], homePlaceholder: '1B', awayPlaceholder: '3EFGIJ' }, // M85 (SUI)
+            { id: 85015, home: runnersUp['D'], away: runnersUp['G'], homePlaceholder: '2D', awayPlaceholder: '2G' }  // M87
         ];
 
         // --- PRÉDICTION DYNAMIQUE ACTIVE POUR LES 16èmes DE FINALE ---
