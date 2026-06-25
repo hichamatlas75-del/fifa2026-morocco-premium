@@ -259,8 +259,25 @@ function mapKnockoutStages(parsedMatches) {
     const stagePlaceholders = placeholders.filter(p => p.group === stage.name);
     
     stageRealMatches.forEach((realMatch, idx) => {
-      if (stagePlaceholders[idx]) {
-        const p = stagePlaceholders[idx];
+      let p;
+      if (stage.name === "Seizièmes de finale") {
+        const r32ApiToPlaceholder = {
+          82099: 85000, 82101: 85001, 82102: 85002, 82100: 85003,
+          82103: 85004, 82104: 85005, 82105: 85006, 82106: 85007,
+          82107: 85008, 82108: 85009, 82109: 85010, 82110: 85011,
+          82111: 85012, 82112: 85013, 82113: 85014, 82114: 85015
+        };
+        const pId = r32ApiToPlaceholder[realMatch.id];
+        if (pId !== undefined) {
+          p = stagePlaceholders.find(x => x.id === pId);
+        }
+      }
+      
+      if (!p) {
+        p = stagePlaceholders[idx];
+      }
+      
+      if (p) {
         p.homeTla = realMatch.homeTla;
         p.awayTla = realMatch.awayTla;
         p.homeTeam = realMatch.homeTeam;

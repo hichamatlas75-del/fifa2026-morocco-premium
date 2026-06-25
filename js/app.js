@@ -245,22 +245,22 @@ class WorldCupApp {
         }
 
         const r32Pairings = [
-            { id: 85000, home: winners['A'], away: bestThirds[0], homePlaceholder: '1A', awayPlaceholder: '3C/D/E/F' },
-            { id: 85001, home: winners['B'], away: runnersUp['C'], homePlaceholder: '1B', awayPlaceholder: '2C' },
-            { id: 85002, home: winners['C'], away: bestThirds[1], homePlaceholder: '1C', awayPlaceholder: '3A/B/F/G' },
-            { id: 85003, home: winners['D'], away: runnersUp['E'], homePlaceholder: '1D', awayPlaceholder: '2E' },
-            { id: 85004, home: winners['E'], away: bestThirds[2], homePlaceholder: '1E', awayPlaceholder: '3A/B/C/D' },
-            { id: 85005, home: winners['F'], away: runnersUp['G'], homePlaceholder: '1F', awayPlaceholder: '2G' },
-            { id: 85006, home: winners['G'], away: bestThirds[3], homePlaceholder: '1G', awayPlaceholder: '3H/I/J/K' },
-            { id: 85007, home: winners['H'], away: runnersUp['I'], homePlaceholder: '1H', awayPlaceholder: '2I' },
-            { id: 85008, home: winners['I'], away: bestThirds[4], homePlaceholder: '1I', awayPlaceholder: '3E/F/G/H' },
-            { id: 85009, home: winners['J'], away: runnersUp['K'], homePlaceholder: '1J', awayPlaceholder: '2K' },
-            { id: 85010, home: winners['K'], away: bestThirds[5], homePlaceholder: '1K', awayPlaceholder: '3I/J/K/L' },
-            { id: 85011, home: winners['L'], away: runnersUp['A'], homePlaceholder: '1L', awayPlaceholder: '2A' },
-            { id: 85012, home: runnersUp['B'], away: bestThirds[6], homePlaceholder: '2B', awayPlaceholder: '3I/J/K/L' },
-            { id: 85013, home: runnersUp['D'], away: runnersUp['F'], homePlaceholder: '2D', awayPlaceholder: '2F' },
-            { id: 85014, home: runnersUp['H'], away: runnersUp['J'], homePlaceholder: '2H', awayPlaceholder: '2J' },
-            { id: 85015, home: runnersUp['L'], away: bestThirds[7], homePlaceholder: '2L', awayPlaceholder: '3E/F/G/H' }
+            { id: 85000, home: runnersUp['A'], away: runnersUp['B'], homePlaceholder: '2A', awayPlaceholder: '2B' },
+            { id: 85001, home: winners['E'], away: bestThirds[3], homePlaceholder: '1E', awayPlaceholder: '3A/B/C/D/F' },
+            { id: 85002, home: winners['F'], away: runnersUp['C'], homePlaceholder: '1F', awayPlaceholder: '2C' },
+            { id: 85003, home: winners['C'], away: runnersUp['F'], homePlaceholder: '1C', awayPlaceholder: '2F' },
+            { id: 85004, home: runnersUp['I'], away: runnersUp['E'], homePlaceholder: '2I', awayPlaceholder: '2E' },
+            { id: 85005, home: winners['I'], away: bestThirds[5], homePlaceholder: '1I', awayPlaceholder: '3C/D/F/G/H' },
+            { id: 85006, home: winners['A'], away: bestThirds[0], homePlaceholder: '1A', awayPlaceholder: '3C/E/F/H/I' },
+            { id: 85007, home: winners['L'], away: bestThirds[7], homePlaceholder: '1L', awayPlaceholder: '3E/H/I/J/K' },
+            { id: 85008, home: winners['G'], away: bestThirds[4], homePlaceholder: '1G', awayPlaceholder: '3A/E/H/I/J' },
+            { id: 85009, home: winners['D'], away: bestThirds[2], homePlaceholder: '1D', awayPlaceholder: '3B/E/F/I/J' },
+            { id: 85010, home: winners['H'], away: runnersUp['J'], homePlaceholder: '1H', awayPlaceholder: '2J' },
+            { id: 85011, home: runnersUp['K'], away: runnersUp['L'], homePlaceholder: '2K', awayPlaceholder: '2L' },
+            { id: 85012, home: winners['B'], away: bestThirds[1], homePlaceholder: '1B', awayPlaceholder: '3E/F/G/I/J' },
+            { id: 85013, home: runnersUp['D'], away: runnersUp['G'], homePlaceholder: '2D', awayPlaceholder: '2G' },
+            { id: 85014, home: winners['K'], away: runnersUp['H'], homePlaceholder: '1K', awayPlaceholder: '2H' },
+            { id: 85015, home: winners['J'], away: bestThirds[6], homePlaceholder: '1J', awayPlaceholder: '3D/E/I/J/L' }
         ];
 
         // --- PRÉDICTION DYNAMIQUE ACTIVE POUR LES 16èmes DE FINALE ---
@@ -286,14 +286,14 @@ class WorldCupApp {
 
         // Huitièmes (85016 à 85023)
         const r16Sources = [
-            { id: 85016, src: [85000, 85001], homePlaceholder: 'V85000', awayPlaceholder: 'V85001' },
-            { id: 85017, src: [85002, 85003], homePlaceholder: 'V85002', awayPlaceholder: 'V85003' },
-            { id: 85018, src: [85004, 85005], homePlaceholder: 'V85004', awayPlaceholder: 'V85005' },
-            { id: 85019, src: [85006, 85007], homePlaceholder: 'V85006', awayPlaceholder: 'V85007' },
-            { id: 85020, src: [85008, 85009], homePlaceholder: 'V85008', awayPlaceholder: 'V85009' },
-            { id: 85021, src: [85010, 85011], homePlaceholder: 'V85010', awayPlaceholder: 'V85011' },
-            { id: 85022, src: [85012, 85013], homePlaceholder: 'V85012', awayPlaceholder: 'V85013' },
-            { id: 85023, src: [85014, 85015], homePlaceholder: 'V85014', awayPlaceholder: 'V85015' }
+            { id: 85016, src: [85000, 85002], homePlaceholder: 'V85000', awayPlaceholder: 'V85002' },
+            { id: 85017, src: [85001, 85004], homePlaceholder: 'V85001', awayPlaceholder: 'V85004' },
+            { id: 85018, src: [85010, 85011], homePlaceholder: 'V85010', awayPlaceholder: 'V85011' },
+            { id: 85019, src: [85008, 85009], homePlaceholder: 'V85008', awayPlaceholder: 'V85009' },
+            { id: 85020, src: [85003, 85005], homePlaceholder: 'V85003', awayPlaceholder: 'V85005' },
+            { id: 85021, src: [85006, 85007], homePlaceholder: 'V85006', awayPlaceholder: 'V85007' },
+            { id: 85022, src: [85013, 85015], homePlaceholder: 'V85013', awayPlaceholder: 'V85015' },
+            { id: 85023, src: [85012, 85014], homePlaceholder: 'V85012', awayPlaceholder: 'V85014' }
         ];
 
         r16Sources.forEach(source => {
