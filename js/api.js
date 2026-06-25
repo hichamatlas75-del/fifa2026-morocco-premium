@@ -332,7 +332,11 @@ export function parseOpenLigaDBData(rawData) {
     const now = new Date();
     const timeDiff = now.getTime() - matchDate.getTime();
     const matchDurationMs = 2 * 60 * 60 * 1000;
-    const isFinished = m.matchIsFinished;
+    
+    let isFinished = m.matchIsFinished;
+    if (!isFinished && timeDiff >= matchDurationMs) {
+      isFinished = true;
+    }
     const isLive = !isFinished && timeDiff > 0 && timeDiff < matchDurationMs;
 
     const groupName = getGroupForTeam(normHomeTla) || translateOpenLigaGroup(m.group.groupName, normHomeTla);
@@ -441,8 +445,15 @@ export function parseFootballData(rawData) {
     const homeScore = m.score?.fullTime?.home !== null && m.score?.fullTime?.home !== undefined ? m.score.fullTime.home : 0;
     const awayScore = m.score?.fullTime?.away !== null && m.score?.fullTime?.away !== undefined ? m.score.fullTime.away : 0;
 
-    const isFinished = m.status === 'FINISHED' || m.status === 'AWARDED';
-    const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'LIVE';
+    const now = new Date();
+    const timeDiff = now.getTime() - matchDate.getTime();
+    const matchDurationMs = 2 * 60 * 60 * 1000;
+
+    let isFinished = m.status === 'FINISHED' || m.status === 'AWARDED';
+    if (!isFinished && timeDiff >= matchDurationMs) {
+      isFinished = true;
+    }
+    const isLive = !isFinished && (m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'LIVE' || (timeDiff > 0 && timeDiff < matchDurationMs));
     const status = isLive ? 'LIVE' : isFinished ? 'FINISHED' : 'SCHEDULED';
 
     const groupName = m.stage === 'GROUP_STAGE' 
