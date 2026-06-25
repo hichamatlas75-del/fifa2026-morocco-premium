@@ -262,15 +262,18 @@ class WorldCupApp {
             if (m) {
                 m.homePlaceholder = pairing.homePlaceholder;
                 m.awayPlaceholder = pairing.awayPlaceholder;
-                if (m.status === 'SCHEDULED') {
+                // Seulement si non résolu par l'API
+                if (m.homeTla === 'TBD') {
                     m.homeTla = pairing.home || 'TBD';
-                    m.awayTla = pairing.away || 'TBD';
                     m.homeTeam = getTeamInfo(m.homeTla).name;
-                    m.awayTeam = getTeamInfo(m.awayTla).name;
                     m.homeFlag = getFlag(m.homeTla);
-                    m.awayFlag = getFlag(m.awayTla);
-                    m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
                 }
+                if (m.awayTla === 'TBD') {
+                    m.awayTla = pairing.away || 'TBD';
+                    m.awayTeam = getTeamInfo(m.awayTla).name;
+                    m.awayFlag = getFlag(m.awayTla);
+                }
+                m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
             }
         });
 
@@ -296,12 +299,16 @@ class WorldCupApp {
                 if (m1 && m2) {
                     const w1 = getWinnerTla(m1);
                     const w2 = getWinnerTla(m2);
-                    m.homeTla = w1;
-                    m.awayTla = w2;
-                    m.homeTeam = getTeamInfo(w1).name;
-                    m.awayTeam = getTeamInfo(w2).name;
-                    m.homeFlag = getFlag(w1);
-                    m.awayFlag = getFlag(w2);
+                    if (m.homeTla === 'TBD') {
+                        m.homeTla = w1;
+                        m.homeTeam = getTeamInfo(w1).name;
+                        m.homeFlag = getFlag(w1);
+                    }
+                    if (m.awayTla === 'TBD') {
+                        m.awayTla = w2;
+                        m.awayTeam = getTeamInfo(w2).name;
+                        m.awayFlag = getFlag(w2);
+                    }
                     m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
                 }
             }
@@ -325,12 +332,16 @@ class WorldCupApp {
                 if (m1 && m2) {
                     const w1 = getWinnerTla(m1);
                     const w2 = getWinnerTla(m2);
-                    m.homeTla = w1;
-                    m.awayTla = w2;
-                    m.homeTeam = getTeamInfo(w1).name;
-                    m.awayTeam = getTeamInfo(w2).name;
-                    m.homeFlag = getFlag(w1);
-                    m.awayFlag = getFlag(w2);
+                    if (m.homeTla === 'TBD') {
+                        m.homeTla = w1;
+                        m.homeTeam = getTeamInfo(w1).name;
+                        m.homeFlag = getFlag(w1);
+                    }
+                    if (m.awayTla === 'TBD') {
+                        m.awayTla = w2;
+                        m.awayTeam = getTeamInfo(w2).name;
+                        m.awayFlag = getFlag(w2);
+                    }
                     m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
                 }
             }
@@ -352,12 +363,16 @@ class WorldCupApp {
                 if (m1 && m2) {
                     const w1 = getWinnerTla(m1);
                     const w2 = getWinnerTla(m2);
-                    m.homeTla = w1;
-                    m.awayTla = w2;
-                    m.homeTeam = getTeamInfo(w1).name;
-                    m.awayTeam = getTeamInfo(w2).name;
-                    m.homeFlag = getFlag(w1);
-                    m.awayFlag = getFlag(w2);
+                    if (m.homeTla === 'TBD') {
+                        m.homeTla = w1;
+                        m.homeTeam = getTeamInfo(w1).name;
+                        m.homeFlag = getFlag(w1);
+                    }
+                    if (m.awayTla === 'TBD') {
+                        m.awayTla = w2;
+                        m.awayTeam = getTeamInfo(w2).name;
+                        m.awayFlag = getFlag(w2);
+                    }
                     m.stadium = getStadiumForMatch(m.homeTeam, m.awayTeam, m.group, m.id);
                 }
             }
@@ -374,12 +389,16 @@ class WorldCupApp {
             if (sf1 && sf2) {
                 const w1 = getWinnerTla(sf1);
                 const w2 = getWinnerTla(sf2);
-                fMatch.homeTla = w1;
-                fMatch.awayTla = w2;
-                fMatch.homeTeam = getTeamInfo(w1).name;
-                fMatch.awayTeam = getTeamInfo(w2).name;
-                fMatch.homeFlag = getFlag(w1);
-                fMatch.awayFlag = getFlag(w2);
+                if (fMatch.homeTla === 'TBD') {
+                    fMatch.homeTla = w1;
+                    fMatch.homeTeam = getTeamInfo(w1).name;
+                    fMatch.homeFlag = getFlag(w1);
+                }
+                if (fMatch.awayTla === 'TBD') {
+                    fMatch.awayTla = w2;
+                    fMatch.awayTeam = getTeamInfo(w2).name;
+                    fMatch.awayFlag = getFlag(w2);
+                }
                 fMatch.stadium = getStadiumForMatch(fMatch.homeTeam, fMatch.awayTeam, fMatch.group, fMatch.id);
             }
         }
@@ -391,12 +410,16 @@ class WorldCupApp {
             if (sf1 && sf2) {
                 const l1 = getLoserTla(sf1);
                 const l2 = getLoserTla(sf2);
-                t3Match.homeTla = l1;
-                t3Match.awayTla = l2;
-                t3Match.homeTeam = getTeamInfo(l1).name;
-                t3Match.awayTeam = getTeamInfo(l2).name;
-                t3Match.homeFlag = getFlag(l1);
-                t3Match.awayFlag = getFlag(l2);
+                if (t3Match.homeTla === 'TBD') {
+                    t3Match.homeTla = l1;
+                    t3Match.homeTeam = getTeamInfo(l1).name;
+                    t3Match.homeFlag = getFlag(l1);
+                }
+                if (t3Match.awayTla === 'TBD') {
+                    t3Match.awayTla = l2;
+                    t3Match.awayTeam = getTeamInfo(l2).name;
+                    t3Match.awayFlag = getFlag(l2);
+                }
                 t3Match.stadium = getStadiumForMatch(t3Match.homeTeam, t3Match.awayTeam, t3Match.group, t3Match.id);
             }
         }
