@@ -774,7 +774,7 @@ function getStaticSquad() {
 function getStaticScorers() {
   return [
     { rank: 1, player: "Vinícius Júnior", team: "Brésil", tla: "BRA", flag: getFlag("BRA"), goals: 5 },
-    { rank: 2, player: "Brahim Díaz", team: "Maroc", tla: "MAR", flag: getFlag("MAR"), goals: 4 },
+    { rank: 2, player: "Ismael Saibari", team: "Maroc", tla: "MAR", flag: getFlag("MAR"), goals: 3 },
     { rank: 3, player: "Santiago Giménez", team: "Mexique", tla: "MEX", flag: getFlag("MEX"), goals: 3 },
     { rank: 4, player: "Christian Pulisic", team: "États-Unis", tla: "USA", flag: getFlag("USA"), goals: 2 }
   ];
