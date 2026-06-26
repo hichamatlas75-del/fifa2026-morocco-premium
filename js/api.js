@@ -1334,30 +1334,6 @@ export function computeScorersAndAssists(matches) {
   const scorersMap = new Map();
   const assistsMap = new Map();
 
-  // Charger les buteurs et passeurs statiques par défaut au départ
-  const staticScorers = getStaticScorers();
-  const staticAssists = getStaticAssists();
-
-  staticScorers.forEach(st => {
-    const key = `${st.player}_${st.tla}`;
-    scorersMap.set(key, {
-      player: st.player,
-      tla: st.tla,
-      team: st.team,
-      goals: st.goals
-    });
-  });
-
-  staticAssists.forEach(sa => {
-    const key = `${sa.player}_${sa.tla}`;
-    assistsMap.set(key, {
-      player: sa.player,
-      tla: sa.tla,
-      team: sa.team,
-      assists: sa.assists
-    });
-  });
-
   matches.forEach(m => {
     // On ne compte que les buts des matchs commencés ou terminés
     if ((m.status === 'LIVE' || m.status === 'FINISHED') && m.events) {
@@ -1404,29 +1380,73 @@ export function computeScorersAndAssists(matches) {
     }
   });
 
-  // Trier et formater les buteurs avec réindexation propre des rangs
-  const sortedScorers = Array.from(scorersMap.values())
-    .sort((a, b) => b.goals - a.goals || a.player.localeCompare(b.player))
-    .map((s, idx) => ({
-      rank: idx + 1,
-      player: s.player,
-      team: s.team,
-      tla: s.tla,
-      flag: getFlag(s.tla),
-      goals: s.goals
-    }));
+  const hasRealGoals = scorersMap.size > 0;
+  const hasRealAssists = assistsMap.size > 0;
 
-  // Trier et formater les passeurs avec réindexation propre des rangs
-  const sortedAssists = Array.from(assistsMap.values())
-    .sort((a, b) => b.assists - a.assists || a.player.localeCompare(b.player))
-    .map((s, idx) => ({
-      rank: idx + 1,
-      player: s.player,
-      team: s.team,
-      tla: s.tla,
-      flag: getFlag(s.tla),
-      assists: s.assists
+  const staticScorers = getStaticScorers();
+  const staticAssists = getStaticAssists();
+
+  let sortedScorers = [];
+  let sortedAssists = [];
+
+  if (hasRealGoals) {
+    sortedScorers = Array.from(scorersMap.values())
+      .sort((a, b) => b.goals - a.goals || a.player.localeCompare(b.player))
+      .map((s, idx) => ({
+        rank: idx + 1,
+        player: s.player,
+        team: s.team,
+        tla: s.tla,
+        flag: getFlag(s.tla),
+        goals: s.goals
+      }));
+
+    // Compléter avec les statiques à 0 but
+    staticScorers.forEach(st => {
+      if (sortedScorers.length < 10 && !sortedScorers.some(s => s.player === st.player)) {
+        sortedScorers.push({
+          ...st,
+          goals: 0,
+          rank: sortedScorers.length + 1
+        });
+      }
+    });
+  } else {
+    // Si aucun but réel (avant-tournoi / hors-ligne sans buts réels), on utilise le classement statique complet
+    sortedScorers = staticScorers.map(st => ({
+      ...st,
+      flag: getFlag(st.tla)
     }));
+  }
+
+  if (hasRealAssists) {
+    sortedAssists = Array.from(assistsMap.values())
+      .sort((a, b) => b.assists - a.assists || a.player.localeCompare(b.player))
+      .map((s, idx) => ({
+        rank: idx + 1,
+        player: s.player,
+        team: s.team,
+        tla: s.tla,
+        flag: getFlag(s.tla),
+        assists: s.assists
+      }));
+
+    // Compléter avec les statiques à 0 passe
+    staticAssists.forEach(sa => {
+      if (sortedAssists.length < 10 && !sortedAssists.some(s => s.player === sa.player)) {
+        sortedAssists.push({
+          ...sa,
+          assists: 0,
+          rank: sortedAssists.length + 1
+        });
+      }
+    });
+  } else {
+    sortedAssists = staticAssists.map(sa => ({
+      ...sa,
+      flag: getFlag(sa.tla)
+    }));
+  }
 
   return {
     scorers: sortedScorers.slice(0, 10),
