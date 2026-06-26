@@ -16,7 +16,7 @@ window.addEventListener('error', (event) => {
     `;
 });
 
-import { initApi, getH2HData, getFlag, getDeterministicEvents, getDeterministicStats, calculateLiveMinute, computeGroupStandings, computeScorersAndAssists, getStadiumForMatch } from './api.js';
+import { initApi, getFallbackData, getH2HData, getFlag, getDeterministicEvents, getDeterministicStats, calculateLiveMinute, computeGroupStandings, computeScorersAndAssists, getStadiumForMatch } from './api.js';
 import { setupWebSockets } from './socket.js';
 import { TEAMS_SQUADS } from './teams_squads.js';
 import { 
@@ -84,39 +84,53 @@ class WorldCupApp {
         // Charger les traductions initiales
         await this.loadTranslations();
 
-        // Initialisation des API & WebSockets
-        try {
-            this.data = await initApi();
+        // Rendu immédiat des données de secours locales pour un affichage instantané
+        this.data = getFallbackData();
+        
+        // Initialisation des rendus de base immédiats
+        this.applyInitialRender(true);
+        initPremiumFeatures(this);
+
+        // Remplissage dynamique des filtres de recherche
+        this.populateFilterDropdowns();
+
+        // Attacher les écouteurs sur les filtres
+        this.setupFilterListeners();
+
+        // Attacher l'écouteur pour les détails de match
+        this.setupMatchDetailsListener();
+
+        // Configurer le switcher de langue
+        this.setupLanguageSwitcher();
+
+        // Initialiser la carte Leaflet
+        this.initMap(this.data.stadiums);
+
+        // Initialiser le graphique tactique
+        this.initChart();
+
+        // Lancement asynchrone de la synchronisation de l'API en arrière-plan
+        (async () => {
+            try {
+                const apiData = await initApi();
+                // Si des données en ligne ont été récupérées avec succès
+                if (apiData && apiData.matches && apiData.matches.length > 0) {
+                    this.data = apiData;
+                    console.log("⚡ [App] Synchronisation API réussie, mise à jour instantanée de l'affichage.");
+                    this.applyInitialRender(false);
+                    refreshPremiumFeatures(this);
+                    
+                    // Ré-initialiser la carte et le graphique avec les nouvelles données
+                    this.initMap(this.data.stadiums);
+                    this.initChart();
+                }
+            } catch (error) {
+                console.warn("⚠️ [App] Échec de la synchronisation API en arrière-plan, conservation des données de secours :", error);
+            }
             
-            // Initialisation des rendus de base
-            this.applyInitialRender(true);
-            initPremiumFeatures(this);
-
-            // Remplissage dynamique des filtres de recherche
-            this.populateFilterDropdowns();
-
-            // Attacher les écouteurs sur les filtres
-            this.setupFilterListeners();
-
-            // Attacher l'écouteur pour les détails de match (délégation d'événements unique)
-            this.setupMatchDetailsListener();
-
-            // Configurer le switcher de langue
-            this.setupLanguageSwitcher();
-
-            // Initialiser les sockets (avec simulation si en local)
+            // Initialiser les WebSockets et le polling après la tentative de synchro
             setupWebSockets(this);
-
-            // Initialiser la carte Leaflet
-            this.initMap(this.data.stadiums);
-
-            // Initialiser le graphique tactique
-            this.initChart();
-
-        } catch (error) {
-            console.error('Erreur de chargement des données FIFA:', error);
-            this.displayOnlineError(error);
-        }
+        })();
     }
 
     displayOnlineError(error) {

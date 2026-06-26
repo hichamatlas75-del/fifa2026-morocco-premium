@@ -773,10 +773,16 @@ function getStaticSquad() {
 
 function getStaticScorers() {
   return [
-    { rank: 1, player: "Vinícius Júnior", team: "Brésil", tla: "BRA", flag: getFlag("BRA"), goals: 5 },
-    { rank: 2, player: "Ismael Saibari", team: "Maroc", tla: "MAR", flag: getFlag("MAR"), goals: 3 },
-    { rank: 3, player: "Santiago Giménez", team: "Mexique", tla: "MEX", flag: getFlag("MEX"), goals: 3 },
-    { rank: 4, player: "Christian Pulisic", team: "États-Unis", tla: "USA", flag: getFlag("USA"), goals: 2 }
+    { rank: 1, player: "Lionel Messi", team: "Argentine", tla: "ARG", flag: getFlag("ARG"), goals: 5 },
+    { rank: 2, player: "Vinícius Júnior", team: "Brésil", tla: "BRA", flag: getFlag("BRA"), goals: 4 },
+    { rank: 3, player: "Kylian Mbappé", team: "France", tla: "FRA", flag: getFlag("FRA"), goals: 4 },
+    { rank: 4, player: "Erling Haaland", team: "Norvège", tla: "NOR", flag: getFlag("NOR"), goals: 4 },
+    { rank: 5, player: "Deniz Undav", team: "Allemagne", tla: "GER", flag: getFlag("GER"), goals: 3 },
+    { rank: 6, player: "Matheus Cunha", team: "Brésil", tla: "BRA", flag: getFlag("BRA"), goals: 3 },
+    { rank: 7, player: "Jonathan David", team: "Canada", tla: "CAN", flag: getFlag("CAN"), goals: 3 },
+    { rank: 8, player: "Ismael Saibari", team: "Maroc", tla: "MAR", flag: getFlag("MAR"), goals: 3 },
+    { rank: 9, player: "Brian Brobbey", team: "Pays-Bas", tla: "NED", flag: getFlag("NED"), goals: 3 },
+    { rank: 10, player: "Johan Manzambi", team: "Suisse", tla: "SUI", flag: getFlag("SUI"), goals: 3 }
   ];
 }
 
@@ -907,7 +913,7 @@ const groupsData = {
   ]
 };
 
-function getFallbackData() {
+export function getFallbackData() {
   const matches = realMatches.map(m => {
     const utcDate = m.utcDate || parseMatchDateTimeToUTC(m.date, m.time);
     const matchDate = new Date(utcDate);

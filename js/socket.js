@@ -242,7 +242,7 @@ function startPolling(app) {
         } catch (e) {
             console.warn("Erreur lors de la mise à jour des scores réels:", e);
         }
-    }, 30000);
+    }, 5000);
 }
 
 let simulationIntervalId = null;
@@ -506,6 +506,6 @@ function startRealTimeActionSimulation(app) {
                 app.sendPushNotification(notificationMsg);
             }
         }
-    }, 12000); // Toutes les 12 secondes
+    }, 5000); // Toutes les 5 secondes
 }
 
