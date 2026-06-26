@@ -773,19 +773,19 @@ function getStaticSquad() {
 
 function getStaticScorers() {
   return [
-    { rank: 1, player: "Vinícius Júnior", team: "Brésil", tla: "BRA", flag: getFlag("BRA"), goals: 0 },
-    { rank: 2, player: "Brahim Díaz", team: "Maroc", tla: "MAR", flag: getFlag("MAR"), goals: 0 },
-    { rank: 3, player: "Santiago Giménez", team: "Mexique", tla: "MEX", flag: getFlag("MEX"), goals: 0 },
-    { rank: 4, player: "Christian Pulisic", team: "États-Unis", tla: "USA", flag: getFlag("USA"), goals: 0 }
+    { rank: 1, player: "Vinícius Júnior", team: "Brésil", tla: "BRA", flag: getFlag("BRA"), goals: 5 },
+    { rank: 2, player: "Brahim Díaz", team: "Maroc", tla: "MAR", flag: getFlag("MAR"), goals: 4 },
+    { rank: 3, player: "Santiago Giménez", team: "Mexique", tla: "MEX", flag: getFlag("MEX"), goals: 3 },
+    { rank: 4, player: "Christian Pulisic", team: "États-Unis", tla: "USA", flag: getFlag("USA"), goals: 2 }
   ];
 }
 
 function getStaticAssists() {
   return [
-    { rank: 1, player: "Rodrygo", team: "Brésil", tla: "BRA", flag: getFlag("BRA"), assists: 0 },
-    { rank: 2, player: "Achraf Hakimi", team: "Maroc", tla: "MAR", flag: getFlag("MAR"), assists: 0 },
-    { rank: 3, player: "Hirving Lozano", team: "Mexique", tla: "MEX", flag: getFlag("MEX"), assists: 0 },
-    { rank: 4, player: "Weston McKennie", team: "États-Unis", tla: "USA", flag: getFlag("USA"), assists: 0 }
+    { rank: 1, player: "Rodrygo", team: "Brésil", tla: "BRA", flag: getFlag("BRA"), assists: 4 },
+    { rank: 2, player: "Achraf Hakimi", team: "Maroc", tla: "MAR", flag: getFlag("MAR"), assists: 3 },
+    { rank: 3, player: "Hirving Lozano", team: "Mexique", tla: "MEX", flag: getFlag("MEX"), assists: 2 },
+    { rank: 4, player: "Weston McKennie", team: "États-Unis", tla: "USA", flag: getFlag("USA"), assists: 2 }
   ];
 }
 
@@ -1328,6 +1328,30 @@ export function computeScorersAndAssists(matches) {
   const scorersMap = new Map();
   const assistsMap = new Map();
 
+  // Charger les buteurs et passeurs statiques par défaut au départ
+  const staticScorers = getStaticScorers();
+  const staticAssists = getStaticAssists();
+
+  staticScorers.forEach(st => {
+    const key = `${st.player}_${st.tla}`;
+    scorersMap.set(key, {
+      player: st.player,
+      tla: st.tla,
+      team: st.team,
+      goals: st.goals
+    });
+  });
+
+  staticAssists.forEach(sa => {
+    const key = `${sa.player}_${sa.tla}`;
+    assistsMap.set(key, {
+      player: sa.player,
+      tla: sa.tla,
+      team: sa.team,
+      assists: sa.assists
+    });
+  });
+
   matches.forEach(m => {
     // On ne compte que les buts des matchs commencés ou terminés
     if ((m.status === 'LIVE' || m.status === 'FINISHED') && m.events) {
@@ -1357,12 +1381,13 @@ export function computeScorersAndAssists(matches) {
 
           if (e.assist) {
             const assistPlayer = e.assist;
+            const assistTeam = e.team === 'home' ? m.homeTeam : m.awayTeam;
             const assistKey = `${assistPlayer}_${scoringTeamTla}`;
             if (!assistsMap.has(assistKey)) {
               assistsMap.set(assistKey, {
                 player: assistPlayer,
                 tla: scoringTeamTla,
-                team: e.team === 'home' ? m.homeTeam : m.awayTeam,
+                team: assistTeam,
                 assists: 0
               });
             }
@@ -1373,7 +1398,7 @@ export function computeScorersAndAssists(matches) {
     }
   });
 
-  // Trier et formater les buteurs
+  // Trier et formater les buteurs avec réindexation propre des rangs
   const sortedScorers = Array.from(scorersMap.values())
     .sort((a, b) => b.goals - a.goals || a.player.localeCompare(b.player))
     .map((s, idx) => ({
@@ -1385,7 +1410,7 @@ export function computeScorersAndAssists(matches) {
       goals: s.goals
     }));
 
-  // Trier et formater les passeurs
+  // Trier et formater les passeurs avec réindexation propre des rangs
   const sortedAssists = Array.from(assistsMap.values())
     .sort((a, b) => b.assists - a.assists || a.player.localeCompare(b.player))
     .map((s, idx) => ({
@@ -1396,30 +1421,6 @@ export function computeScorersAndAssists(matches) {
       flag: getFlag(s.tla),
       assists: s.assists
     }));
-
-  // Charger les buteurs et passeurs statiques par défaut pour remplir si vide
-  const staticScorers = getStaticScorers();
-  const staticAssists = getStaticAssists();
-
-  // Si on a moins de 4 buteurs réels, on complète avec les statiques par défaut
-  staticScorers.forEach(st => {
-    if (sortedScorers.length < 10 && !sortedScorers.some(s => s.player === st.player)) {
-      sortedScorers.push({
-        ...st,
-        rank: sortedScorers.length + 1
-      });
-    }
-  });
-
-  // Si on a moins de 4 passeurs réels, on complète avec les statiques par défaut
-  staticAssists.forEach(sa => {
-    if (sortedAssists.length < 10 && !sortedAssists.some(s => s.player === sa.player)) {
-      sortedAssists.push({
-        ...sa,
-        rank: sortedAssists.length + 1
-      });
-    }
-  });
 
   return {
     scorers: sortedScorers.slice(0, 10),
