@@ -183,10 +183,10 @@ const TEAM_NAMES_FR = {
 
 function mapKnockoutStages(parsedMatches) {
   const knockoutStages = [
-    { name: "Seizièmes de finale", count: 16, startDay: 13, gap: 4 },
-    { name: "Huitièmes de finale", count: 8, startDay: 18, gap: 4 },
-    { name: "Quarts de finale", count: 4, startDay: 23, gap: 3 },
-    { name: "Demi-finales", count: 2, startDay: 28, gap: 2 },
+    { name: "Seizièmes de finale", count: 16, startDay: 17, gap: 5 },
+    { name: "Huitièmes de finale", count: 8, startDay: 23, gap: 4 },
+    { name: "Quarts de finale", count: 4, startDay: 28, gap: 3 },
+    { name: "Demi-finales", count: 2, startDay: 33, gap: 2 },
     { name: "Match 3e place", count: 1, startDay: 37, gap: 1 },
     { name: "Finale", count: 1, startDay: 38, gap: 1 }
   ];
