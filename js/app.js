@@ -1142,11 +1142,11 @@ class WorldCupApp {
                 const bIsMaroc = b.homeTla === 'MAR' || b.awayTla === 'MAR';
                 if (aIsMaroc && !bIsMaroc) return -1;
                 if (!aIsMaroc && bIsMaroc) return 1;
-                return a.id - b.id;
+                return new Date(a.utcDate) - new Date(b.utcDate) || a.id - b.id;
             });
         } else {
-            // Tri Chronologique simple (par id)
-            filtered.sort((a, b) => a.id - b.id);
+            // Tri Chronologique par date/heure (utcDate)
+            filtered.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate) || a.id - b.id);
         }
 
         renderMatches(filtered);

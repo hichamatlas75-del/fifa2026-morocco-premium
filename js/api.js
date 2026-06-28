@@ -209,11 +209,33 @@ function mapKnockoutStages(parsedMatches) {
   let currentMatchId = 85000;
   knockoutStages.forEach(stage => {
     for (let i = 0; i < stage.count; i++) {
-      const dayOffset = stage.startDay + Math.floor((i * stage.gap) / stage.count);
-      const utcHour = i % 2 === 0 ? 19 : 22;
-      
-      const matchDateObj = new Date(Date.UTC(2026, 5, 11, utcHour - 1, 0, 0));
-      matchDateObj.setUTCDate(matchDateObj.getUTCDate() + dayOffset);
+      let matchDateObj;
+      if (stage.name === "Seizièmes de finale") {
+        const r32UtcDates = [
+          "2026-06-29T20:30:00Z", // 85000 (M74)
+          "2026-06-30T21:00:00Z", // 85001 (M77)
+          "2026-06-28T19:00:00Z", // 85002 (M73)
+          "2026-06-30T01:00:00Z", // 85003 (M75)
+          "2026-07-02T23:00:00Z", // 85004 (M83)
+          "2026-07-02T19:00:00Z", // 85005 (M84)
+          "2026-07-02T00:00:00Z", // 85006 (M81)
+          "2026-07-01T20:00:00Z", // 85007 (M82)
+          "2026-06-29T17:00:00Z", // 85008 (M76)
+          "2026-06-30T17:00:00Z", // 85009 (M78)
+          "2026-07-01T01:00:00Z", // 85010 (M79)
+          "2026-07-01T16:00:00Z", // 85011 (M80)
+          "2026-07-03T22:00:00Z", // 85012 (M86)
+          "2026-07-03T18:00:00Z", // 85013 (M88)
+          "2026-07-03T03:00:00Z", // 85014 (M85)
+          "2026-07-04T01:30:00Z"  // 85015 (M87)
+        ];
+        matchDateObj = new Date(r32UtcDates[i]);
+      } else {
+        const dayOffset = stage.startDay + Math.floor((i * stage.gap) / stage.count);
+        const utcHour = i % 2 === 0 ? 19 : 22;
+        matchDateObj = new Date(Date.UTC(2026, 5, 11, utcHour - 1, 0, 0));
+        matchDateObj.setUTCDate(matchDateObj.getUTCDate() + dayOffset);
+      }
       
       const dateStr = matchDateObj.toLocaleDateString('fr-FR', {
         day: 'numeric',
