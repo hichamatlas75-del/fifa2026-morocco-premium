@@ -159,13 +159,13 @@ class WorldCupApp {
 
     applyInitialRender(shouldScroll = false) {
         if (!this.data) return;
+        this.computeKnockoutBracket();
         renderMatches(this.data.matches, 'calendar-grid', shouldScroll);
         renderLiveMatches(this.data.matches);
         renderTeams(this.data.matches);
         renderMoroccoSquad(this.data.moroccoSquad);
         renderStandings(this.data.standings);
         renderNews(this.data.news);
-        this.computeKnockoutBracket();
         this.renderRoadToTheFinal();
 
         const savedMode = localStorage.getItem('rtf-view-mode') || 'list';
