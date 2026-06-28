@@ -160,7 +160,7 @@ class WorldCupApp {
     applyInitialRender(shouldScroll = false) {
         if (!this.data) return;
         this.computeKnockoutBracket();
-        renderMatches(this.data.matches, 'calendar-grid', shouldScroll);
+        this.applyFilters(shouldScroll);
         renderLiveMatches(this.data.matches);
         renderTeams(this.data.matches);
         renderMoroccoSquad(this.data.moroccoSquad);
@@ -1083,7 +1083,7 @@ class WorldCupApp {
         });
     }
 
-    applyFilters() {
+    applyFilters(shouldScroll = false) {
         const query = (document.getElementById('search-match')?.value || '').toLowerCase().trim();
         const selectedGroup = document.getElementById('filter-group')?.value || '';
         const selectedStadium = document.getElementById('filter-stadium')?.value || '';
@@ -1149,7 +1149,7 @@ class WorldCupApp {
             filtered.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate) || a.id - b.id);
         }
 
-        renderMatches(filtered);
+        renderMatches(filtered, 'calendar-grid', shouldScroll);
         refreshPremiumFeatures(this);
     }
 
