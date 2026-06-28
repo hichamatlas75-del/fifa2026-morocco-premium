@@ -258,23 +258,27 @@ class WorldCupApp {
             }
         }
 
+        const getOrFallback = (calculated, fallbackVal) => {
+            return (calculated && calculated !== 'TBD') ? calculated : fallbackVal;
+        };
+
         const r32Pairings = [
-            { id: 85000, home: winners['E'], away: bestThirds[3], homePlaceholder: '1E', awayPlaceholder: '3ABCDF' }, // M74
-            { id: 85001, home: winners['I'], away: bestThirds[5], homePlaceholder: '1I', awayPlaceholder: '3CDFGH' }, // M77
-            { id: 85002, home: runnersUp['A'], away: runnersUp['B'], homePlaceholder: '2A', awayPlaceholder: '2B' }, // M73
-            { id: 85003, home: winners['F'], away: runnersUp['C'], homePlaceholder: '1F', awayPlaceholder: '2C' }, // M75
-            { id: 85004, home: runnersUp['K'], away: runnersUp['L'], homePlaceholder: '2K', awayPlaceholder: '2L' }, // M83
-            { id: 85005, home: winners['H'], away: runnersUp['J'], homePlaceholder: '1H', awayPlaceholder: '2J' }, // M84
-            { id: 85006, home: winners['G'], away: bestThirds[4], homePlaceholder: '1G', awayPlaceholder: '3AEHIJ' }, // M81
-            { id: 85007, home: winners['D'], away: bestThirds[2], homePlaceholder: '1D', awayPlaceholder: '3BEFIJ' }, // M82 (USA)
-            { id: 85008, home: winners['C'], away: runnersUp['F'], homePlaceholder: '1C', awayPlaceholder: '2F' }, // M76
-            { id: 85009, home: runnersUp['E'], away: runnersUp['I'], homePlaceholder: '2E', awayPlaceholder: '2I' }, // M78
-            { id: 85010, home: winners['A'], away: bestThirds[0], homePlaceholder: '1A', awayPlaceholder: '3CEFHI' }, // M79
-            { id: 85011, home: winners['L'], away: bestThirds[7], homePlaceholder: '1L', awayPlaceholder: '3EHIJK' }, // M80
-            { id: 85012, home: winners['K'], away: runnersUp['H'], homePlaceholder: '1K', awayPlaceholder: '2H' }, // M86
-            { id: 85013, home: winners['J'], away: bestThirds[6], homePlaceholder: '1J', awayPlaceholder: '3DEIJL' }, // M88
-            { id: 85014, home: winners['B'], away: bestThirds[1], homePlaceholder: '1B', awayPlaceholder: '3EFGIJ' }, // M85 (SUI)
-            { id: 85015, home: runnersUp['D'], away: runnersUp['G'], homePlaceholder: '2D', awayPlaceholder: '2G' }  // M87
+            { id: 85000, home: getOrFallback(winners['E'], 'GER'), away: getOrFallback(bestThirds[3], 'PAR'), homePlaceholder: '1E', awayPlaceholder: '3ABCDF' }, // M74
+            { id: 85001, home: getOrFallback(winners['I'], 'FRA'), away: getOrFallback(bestThirds[5], 'SWE'), homePlaceholder: '1I', awayPlaceholder: '3CDFGH' }, // M77
+            { id: 85002, home: getOrFallback(runnersUp['A'], 'RSA'), away: getOrFallback(runnersUp['B'], 'CAN'), homePlaceholder: '2A', awayPlaceholder: '2B' }, // M73
+            { id: 85003, home: getOrFallback(winners['F'], 'NED'), away: getOrFallback(runnersUp['C'], 'MAR'), homePlaceholder: '1F', awayPlaceholder: '2C' }, // M75
+            { id: 85004, home: getOrFallback(runnersUp['K'], 'PRT'), away: getOrFallback(runnersUp['L'], 'CRO'), homePlaceholder: '2K', awayPlaceholder: '2L' }, // M83
+            { id: 85005, home: getOrFallback(winners['H'], 'ESP'), away: getOrFallback(runnersUp['J'], 'AUT'), homePlaceholder: '1H', awayPlaceholder: '2J' }, // M84
+            { id: 85006, home: getOrFallback(winners['G'], 'USA'), away: getOrFallback(bestThirds[4], 'BIH'), homePlaceholder: '1G', awayPlaceholder: '3AEHIJ' }, // M81
+            { id: 85007, home: getOrFallback(winners['D'], 'BEL'), away: getOrFallback(bestThirds[2], 'SEN'), homePlaceholder: '1D', awayPlaceholder: '3BEFIJ' }, // M82 (USA)
+            { id: 85008, home: getOrFallback(winners['C'], 'BRA'), away: getOrFallback(runnersUp['F'], 'JPN'), homePlaceholder: '1C', awayPlaceholder: '2F' }, // M76
+            { id: 85009, home: getOrFallback(runnersUp['E'], 'CIV'), away: getOrFallback(runnersUp['I'], 'NOR'), homePlaceholder: '2E', awayPlaceholder: '2I' }, // M78
+            { id: 85010, home: getOrFallback(winners['A'], 'MEX'), away: getOrFallback(bestThirds[0], 'ECU'), homePlaceholder: '1A', awayPlaceholder: '3CEFHI' }, // M79
+            { id: 85011, home: getOrFallback(winners['L'], 'ENG'), away: getOrFallback(bestThirds[7], 'COD'), homePlaceholder: '1L', awayPlaceholder: '3EHIJK' }, // M80
+            { id: 85012, home: getOrFallback(winners['K'], 'ARG'), away: getOrFallback(runnersUp['H'], 'CPV'), homePlaceholder: '1K', awayPlaceholder: '2H' }, // M86
+            { id: 85013, home: getOrFallback(winners['J'], 'AUS'), away: getOrFallback(bestThirds[6], 'EGY'), homePlaceholder: '1J', awayPlaceholder: '3DEIJL' }, // M88
+            { id: 85014, home: getOrFallback(winners['B'], 'SUI'), away: getOrFallback(bestThirds[1], 'DZA'), homePlaceholder: '1B', awayPlaceholder: '3EFGIJ' }, // M85 (SUI)
+            { id: 85015, home: getOrFallback(runnersUp['D'], 'COL'), away: getOrFallback(runnersUp['G'], 'GHA'), homePlaceholder: '2D', awayPlaceholder: '2G' }  // M87
         ];
 
         // --- PRÉDICTION DYNAMIQUE ACTIVE POUR LES 16èmes DE FINALE ---
