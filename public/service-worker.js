@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fifa2026-ma-v3';
+const CACHE_NAME = 'fifa2026-ma-v4';
 const APP_SHELL = [
   '/',
   '/index.html',
