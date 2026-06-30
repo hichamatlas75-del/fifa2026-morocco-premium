@@ -293,6 +293,7 @@ function mapKnockoutStages(parsedMatches) {
           82107: 85006, // M81
           82108: 85007, // M82 (USA)
           82100: 85008, // M76
+          83124: 85008, // M76 (Brazil vs Japan rescheduled)
           82103: 85009, // M78
           82105: 85010, // M79
           82106: 85011, // M80
@@ -302,6 +303,57 @@ function mapKnockoutStages(parsedMatches) {
           82112: 85015  // M87
         };
         const pId = r32ApiToPlaceholder[realMatch.id];
+        if (pId !== undefined) {
+          p = stagePlaceholders.find(x => x.id === pId);
+        }
+      } else if (stage.name === "Huitièmes de finale") {
+        const r16ApiToPlaceholder = {
+          82128: 85016, // M85000/M85001 winner vs winner -> 85016 (PAR vs FRA/SWE)
+          82127: 85017, // M85002/M85003 winner vs winner -> 85017 (CAN vs MAR)
+          82131: 85018, // M85004/M85005 winner vs winner -> 85018 (POR/CRO vs ESP/AUT)
+          82132: 85019, // M85006/M85007 winner vs winner -> 85019 (USA/BIH vs BEL/SEN)
+          82129: 85020, // M85008/M85009 winner vs winner -> 85020 (BRA vs CIV/NOR)
+          82130: 85021, // M85010/M85011 winner vs winner -> 85021 (MEX/ECU vs ENG/COD)
+          82133: 85022, // M85012/M85013 winner vs winner -> 85022 (ARG/CPV vs AUS/EGY)
+          82134: 85023  // M85014/M85015 winner vs winner -> 85023 (SUI/ALG vs COL/GHA)
+        };
+        const pId = r16ApiToPlaceholder[realMatch.id];
+        if (pId !== undefined) {
+          p = stagePlaceholders.find(x => x.id === pId);
+        }
+      } else if (stage.name === "Quarts de finale") {
+        const qfApiToPlaceholder = {
+          82135: 85024,
+          82136: 85025,
+          82137: 85026,
+          82138: 85027
+        };
+        const pId = qfApiToPlaceholder[realMatch.id];
+        if (pId !== undefined) {
+          p = stagePlaceholders.find(x => x.id === pId);
+        }
+      } else if (stage.name === "Demi-finales") {
+        const sfApiToPlaceholder = {
+          82139: 85028,
+          82140: 85029
+        };
+        const pId = sfApiToPlaceholder[realMatch.id];
+        if (pId !== undefined) {
+          p = stagePlaceholders.find(x => x.id === pId);
+        }
+      } else if (stage.name === "Match 3e place") {
+        const thirdApiToPlaceholder = {
+          82141: 85030
+        };
+        const pId = thirdApiToPlaceholder[realMatch.id];
+        if (pId !== undefined) {
+          p = stagePlaceholders.find(x => x.id === pId);
+        }
+      } else if (stage.name === "Finale") {
+        const finalApiToPlaceholder = {
+          82142: 85031
+        };
+        const pId = finalApiToPlaceholder[realMatch.id];
         if (pId !== undefined) {
           p = stagePlaceholders.find(x => x.id === pId);
         }
